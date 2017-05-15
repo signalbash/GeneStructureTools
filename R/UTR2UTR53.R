@@ -87,8 +87,6 @@ UTR2UTR53 <- function(gtf){
         }
     }
 
-    gtf@elementMetadata$type2 <- as.character(gtf@elementMetadata$type)
-
     gtf_sub_df <- data.frame(chr=gtf_sub@seqnames,
                              gtf_sub@ranges,
                              transcript_id=gtf_sub@elementMetadata$transcript_id)
