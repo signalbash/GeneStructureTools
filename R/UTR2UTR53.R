@@ -101,6 +101,8 @@ UTR2UTR53 <- function(gtf){
     m5 <- which(gtf_names %in% gtf_sub_names[gtf_sub@elementMetadata$type2 == "UTR5"])
     m3 <- which(gtf_names %in% gtf_sub_names[gtf_sub@elementMetadata$type2 == "UTR3"])
 
+    gtf@elementMetadata$type <- as.character(gtf@elementMetadata$type)
+
     gtf@elementMetadata$type[m5] <- "UTR5"
     gtf@elementMetadata$type[m3] <- "UTR3"
 
