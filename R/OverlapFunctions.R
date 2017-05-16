@@ -16,8 +16,8 @@ overlapTypes <- function(query_ranges, gtf, set=c("from", "to", "overlap")){
     gtf_overlap <- gtf_overlap[(gtf_overlap@elementMetadata$type %in%
                                     c("exon", "CDS","UTR","UTR3","UTR5"))]
 
-    gtf_overlap <- filter_gtf_overlap(gtf_overlap)
-    gtf_overlap <- add_broad_types(gtf_overlap)
+    gtf_overlap <- filterGtfOverlap(gtf_overlap)
+    gtf_overlap <- addBroadTypes(gtf_overlap)
 
     if(any(set=="from")){
         gtf_from <- gtf_overlap[end(gtf_overlap) ==
