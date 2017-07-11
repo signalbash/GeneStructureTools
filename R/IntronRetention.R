@@ -8,23 +8,31 @@
 #' @author Beth Signal
 findIntronContainingTranscripts <- function(intronRanges, gtf.exons){
 
+    # remove any duplicates
+    overlaps <- GenomicRanges::findOverlaps(intronRanges, type="equal")
+    overlaps <- overlaps[which(overlaps@from != overlaps@to)]
+    if(length(overlaps) > 0){
+        duplicates <- unique(overlaps@to)
+        intronRanges <- intronRanges[-duplicates]
+    }
+
     # start of intron // end of exon a
     IR_range_start <- intronRanges
     end(IR_range_start) <- start(IR_range_start)
 
-    overlaps <- findOverlaps(IR_range_start, gtf.exons, type="end")
+    overlaps <- GenomicRanges::findOverlaps(IR_range_start, gtf.exons, type="end")
     gtf_from_a <- gtf.exons[overlaps@to]
     gtf_from_a$from <- overlaps@from
-    gtf_from_a$new_id <- with(mcols(gtf_from_a), paste0(transcript_id, "_",from))
+    gtf_from_a$new_id <- with(as.data.frame(GenomicRanges::mcols(gtf_from_a)), paste0(transcript_id, "_",from))
 
     # end of intron // start of exon b
     IR_range_end <- intronRanges
     start(IR_range_end) <- end(IR_range_end)
 
-    overlaps <- findOverlaps(IR_range_end, gtf.exons, type="start")
+    overlaps <- GenomicRanges::findOverlaps(IR_range_end, gtf.exons, type="start")
     gtf_to_a <- gtf.exons[overlaps@to]
     gtf_to_a$from <- overlaps@from
-    gtf_to_a$new_id <- with(mcols(gtf_to_a), paste0(transcript_id, "_",from))
+    gtf_to_a$new_id <- with(as.data.frame(GenomicRanges::mcols(gtf_to_a)), paste0(transcript_id, "_",from))
 
     keep_from <- which(gtf_from_a@elementMetadata$new_id %in% gtf_to_a@elementMetadata$new_id)
     gtf_from_a <- gtf_from_a[keep_from]
@@ -35,13 +43,14 @@ findIntronContainingTranscripts <- function(intronRanges, gtf.exons){
     gtf_to_a$from_exon_number <- as.numeric(gtf_from_a$exon_number)
     gtf_to_a$to_exon_number <- as.numeric(gtf_to_a$exon_number)
 
-    gtf_to_a$intron_exon_number <- apply(mcols(gtf_to_a)[,c('to_exon_number','from_exon_number')], 1, mean)
+    gtf_to_a$intron_exon_number <- apply(GenomicRanges::mcols(gtf_to_a)[,c('to_exon_number','from_exon_number')], 1, mean)
 
-    flanking_exons <- as.data.frame(mcols(gtf_to_a)[,c('gene_id','transcript_id','transcript_type',
+    flanking_exons <- as.data.frame(GenomicRanges::mcols(gtf_to_a)[,c('gene_id','transcript_id','transcript_type',
                                                        'from','from_exon_number',
                                                        'intron_exon_number','to_exon_number')])
 
     flanking_exons$from <- intronRanges$id[flanking_exons$from]
+
     return(flanking_exons)
 }
 
