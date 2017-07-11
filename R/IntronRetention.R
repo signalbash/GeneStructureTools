@@ -1,5 +1,3 @@
-# Intron Retention Related Functions
-
 #' Given the location of a whole retained intron, find transcripts which splice out this intron
 #' @param intronRanges GRanges object with ranges for introns
 #' @param gtf.exons GRanges object made from a GTF with ONLY exon annotations (no gene, transcript, CDS etc.)
