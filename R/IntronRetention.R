@@ -12,8 +12,11 @@ findIntronContainingTranscripts <- function(intronRanges, gtf.exons){
     overlaps <- GenomicRanges::findOverlaps(intronRanges, type="equal")
     overlaps <- overlaps[which(overlaps@from != overlaps@to)]
     if(length(overlaps) > 0){
-        duplicates <- unique(overlaps@to)
-        intronRanges <- intronRanges[-duplicates]
+        overlaps <- overlaps[which(overlaps@from < overlaps@to)]
+        if(length(overlaps) > 0){
+            duplicates <- unique(overlaps@to)
+            intronRanges <- intronRanges[-duplicates]
+        }
     }
 
     # start of intron // end of exon a
@@ -58,12 +61,13 @@ findIntronContainingTranscripts <- function(intronRanges, gtf.exons){
 #' @param intronRanges GRanges object with ranges for introns
 #' @param flanking_exons data.frame generataed by findIntronContainingTranscripts()
 #' @param gtf.exons GRanges object made from a GTF with ONLY exon annotations (no gene, transcript, CDS etc.)
+#' @param glueExons Join together exons that are not seperated by introns?
 #' @return GRanges with transcripts containing retained introns
 #' @export
 #' @import GenomicRanges
 #' @examples
 #' @author Beth Signal
-addIntronInTranscript <- function(intronRanges = IR_range, flanking_exons, gtf.exons){
+addIntronInTranscript <- function(intronRanges = IR_range, flanking_exons, gtf.exons, glueExons=TRUE){
 
     intronRanges <- intronRanges[match(flanking_exons$from, intronRanges$id)]
     intronRanges$exon_number <- flanking_exons$intron_exon_number
@@ -97,6 +101,45 @@ addIntronInTranscript <- function(intronRanges = IR_range, flanking_exons, gtf.e
     gtf_transcripts_all <- c(gtf_transcripts, intronRanges)
     mcols(gtf_transcripts_all) <- mcols(gtf_transcripts_all)[,c('gene_id','new_transcript_id','transcript_type','exon_id','exon_number')]
     colnames(mcols(gtf_transcripts_all))[2] <- "transcript_id"
+
+    gtf_transcripts_all$exon_number <- as.numeric(gtf_transcripts_all$exon_number)
+    order <- order(gtf_transcripts_all$transcript_id, gtf_transcripts_all$exon_number)
+    gtf_transcripts_all <- gtf_transcripts_all[order]
+
+    #join together exons that are not seperated by an intron
+    if(glueExons==TRUE){
+
+        #extend starts <---<---<---
+        w <- which(end(ranges(gtf_transcripts_all))[-length(gtf_transcripts_all)] == start(ranges(gtf_transcripts_all[-1])))
+        gtf_transcripts_all <- gtf_transcripts_all
+        GenomicRanges::start(GenomicRanges::ranges(gtf_transcripts_all))[w+1] <-
+            GenomicRanges::start(GenomicRanges::ranges(gtf_transcripts_all))[w]
+
+        # remove exons that cover now redundant regions
+        overlaps <- findOverlaps(gtf_transcripts_all.dup, type="within")
+        overlaps <- overlaps[overlaps@from == overlaps@to - 1]
+        rm <- unique(overlaps@from)
+        if(length(rm) >0){
+            gtf_transcripts_all <- gtf_transcripts_all[-rm]
+        }
+
+        #extend ends --->--->--->
+        overlaps <- findOverlaps(gtf_transcripts_all)
+        overlaps <- overlaps[overlaps@from==overlaps@to +1]
+
+        GenomicRanges::end(GenomicRanges::ranges(gtf_transcripts_all))[overlaps@to] <-
+            GenomicRanges::end(GenomicRanges::ranges(gtf_transcripts_all))[overlaps@from]
+
+        # remove exons that cover now redundant regions
+        overlaps <- findOverlaps(gtf_transcripts_all, type="within")
+        overlaps <- overlaps[overlaps@from == overlaps@to + 1]
+
+        rm <- unique(overlaps@from)
+        if(length(rm) >0){
+            gtf_transcripts_all <- gtf_transcripts_all[-rm]
+        }
+
+    }
     return(gtf_transcripts_all)
 }
 
