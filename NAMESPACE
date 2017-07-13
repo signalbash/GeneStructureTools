@@ -3,7 +3,7 @@
 export(UTR2UTR53)
 export(addBroadTypes)
 export(addIntronInTranscript)
-export(distance_to_junction_b)
+export(cumsumANDpad)
 export(filterGtfOverlap)
 export(findIntronContainingTranscripts)
 export(get_orfs)
