@@ -201,6 +201,8 @@ get_orfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, all_fram
     orf_df$min_dist_to_junction_b[which(is.infinite(orf_df$min_dist_to_junction_b))] <- NA
     orf_df$exon_b_from_final <- (apply(diffs, 2,function(x) length(x[x <= 0 & !is.na(x)]))) - 1
 
+    orf_df$utr3_length <- orf_df$seq_length*3 - orf_df$stop_site_nt
+
     orf_df$aa_sequence <- NULL
 
     if(returnLongestOnly == TRUE){
