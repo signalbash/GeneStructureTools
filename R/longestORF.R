@@ -116,6 +116,14 @@ get_orfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, all_fram
     seq_cat <- aggregate(seq ~ transcript_id, mcols(transcripts), function(x) (paste(x, collapse="")))
     ids <- as.character(seq_cat$transcript_id)
     seq_cat <- seq_cat$seq
+    rm <- which(grepl("N", seq_cat))
+
+    if(length(rm) > 0){
+        seq_cat <- seq_cat[-rm]
+        remove_id <- ids[rm]
+        ids <- ids[-rm]
+        transcripts <- transcripts[-which(transcripts$transcript_id %in% remove_id)]
+    }
 
     # 3 frames
     seq_cat <- c(seq_cat, str_sub(seq_cat, 2), str_sub(seq_cat, 3))
