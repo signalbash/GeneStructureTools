@@ -217,6 +217,10 @@ getOrfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, all_frame
     }
 
     orf_df <- plyr::arrange(orf_df, id)
+    m <- match(orf_df$id, transcripts$transcript_id)
+    orf_df$gene_id <- transcripts$gene_id[m]
+    orf_df <- orf_df[,c(1, ncol(orf_df), 2:(ncol(orf_df)-1))]
+
     return(orf_df)
 }
 

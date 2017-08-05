@@ -35,7 +35,8 @@ findExonContainingTranscripts <- function(exonRanges, gtf.exons){
                                                                        'from',
                                                                        'exon_number')])
 
-    equal_exons$from <- exonRanges$id[equal_exons$from]
+    equal_exons$alt_id <- exonRanges$id[equal_exons$from]
+    equal_exons$from <- NULL
 
     return(equal_exons)
 }
@@ -52,7 +53,7 @@ findExonContainingTranscripts <- function(exonRanges, gtf.exons){
 #' @author Beth Signal
 removeExonInTranscript <- function(exonRanges, equal_exons, gtf.exons, glueExons=TRUE){
 
-    exonRanges <- exonRanges[match(equal_exons$from, exonRanges$id)]
+    exonRanges <- exonRanges[match(equal_exons$alt_id, exonRanges$id)]
     exonRanges$exon_number <- equal_exons$exon_number
     exonRanges$transcript_id <- equal_exons$transcript_id
     exonRanges$transcript_type <- equal_exons$transcript_type
@@ -62,8 +63,8 @@ removeExonInTranscript <- function(exonRanges, equal_exons, gtf.exons, glueExons
     transcripts <- as.data.frame(table(equal_exons$transcript_id))
     gtf_transcripts <- gtf.exons[gtf.exons$transcript_id %in% transcripts$Var1]
     m <- match(gtf_transcripts$transcript_id, exonRanges$transcript_id)
-    mcols(gtf_transcripts) <- cbind(mcols(gtf_transcripts), DataFrame(new_transcript_id=paste0(gtf_transcripts$transcript_id,"-EXON ",exonRanges$exon_id[m])))
-    mcols(exonRanges) <- cbind(mcols(exonRanges), DataFrame(new_transcript_id = paste0(exonRanges$transcript_id,"-EXON ",exonRanges$exon_id)))
+    mcols(gtf_transcripts) <- cbind(mcols(gtf_transcripts), DataFrame(new_transcript_id=paste0(gtf_transcripts$transcript_id,"+AS ",exonRanges$exon_id[m])))
+    mcols(exonRanges) <- cbind(mcols(exonRanges), DataFrame(new_transcript_id = paste0(exonRanges$transcript_id,"+AS ",exonRanges$exon_id)))
 
     mcols(gtf_transcripts) <- mcols(gtf_transcripts)[,c('gene_id','transcript_id','transcript_type','exon_id','exon_number', 'new_transcript_id')]
     mcols(exonRanges) <- mcols(exonRanges)[,c('gene_id','transcript_id','transcript_type','exon_id','exon_number','new_transcript_id')]
@@ -77,13 +78,13 @@ removeExonInTranscript <- function(exonRanges, equal_exons, gtf.exons, glueExons
     while(length(needs_dup) > 0){
         gtf_transcripts_add <- gtf_transcripts_add[gtf_transcripts_add$transcript_id %in% exonRanges$transcript_id[needs_dup]]
         m <- match(gtf_transcripts_add$transcript_id, exonRanges$transcript_id[needs_dup])
-        gtf_transcripts_add$new_transcript_id <- paste0(gtf_transcripts_add$transcript_id,"-EXON ",exonRanges$exon_id[needs_dup][m])
+        gtf_transcripts_add$new_transcript_id <- paste0(gtf_transcripts_add$transcript_id,"+AS ",exonRanges$exon_id[needs_dup][m])
         gtf_transcripts <- c(gtf_transcripts, gtf_transcripts_add)
         needs_dup <- which(!(exonRanges$new_transcript_id %in% gtf_transcripts$new_transcript_id))
     }
 
     exon_names <- with(as.data.frame(gtf_transcripts), paste0(seqnames, ":", start,"-",end))
-    rm <- which(unlist(lapply(stringr::str_split(gtf_transcripts$new_transcript_id, "-EXON "), "[[", 2)) == exon_names)
+    rm <- which(unlist(lapply(stringr::str_split(gtf_transcripts$new_transcript_id, "AS "), "[[", 2)) == exon_names)
     gtf_transcripts_rm <- gtf_transcripts[-rm]
 
     mcols(gtf_transcripts_rm) <- mcols(gtf_transcripts_rm)[,c('gene_id','new_transcript_id','transcript_type','exon_id','exon_number')]
@@ -142,4 +143,7 @@ removeExonInTranscript <- function(exonRanges, equal_exons, gtf.exons, glueExons
     }
     return(gtf_transcripts_rm)
 }
+
+
+
 

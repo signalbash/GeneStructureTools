@@ -79,11 +79,11 @@ addIntronInTranscript <- function(intronRanges = IR_range, flanking_exons, gtf.e
     transcripts <- as.data.frame(table(flanking_exons$transcript_id))
     gtf_transcripts <- gtf.exons[gtf.exons$transcript_id %in% transcripts$Var1]
     m <- match(gtf_transcripts$transcript_id, intronRanges$transcript_id)
-    mcols(gtf_transcripts) <- cbind(mcols(gtf_transcripts), DataFrame(new_transcript_id=paste0(gtf_transcripts$transcript_id,"+INTRON ",intronRanges$exon_id[m])))
-    mcols(intronRanges) <- cbind(mcols(intronRanges), DataFrame(new_transcript_id = paste0(intronRanges$transcript_id,"+INTRON ",intronRanges$exon_id)))
+    mcols(gtf_transcripts) <- cbind(mcols(gtf_transcripts), DataFrame(new_transcript_id=paste0(gtf_transcripts$transcript_id,"+AS ",intronRanges$exon_id[m])))
+    mcols(intronRanges) <- cbind(mcols(intronRanges), DataFrame(new_transcript_id = paste0(intronRanges$transcript_id,"+AS ",intronRanges$exon_id)))
 
-    #mcols(gtf_transcripts)$new_transcript_id <- paste0(gtf_transcripts$transcript_id,"+INTRON ",intronRanges$exon_id[m])
-    #mcols(intronRanges)$new_transcript_id <- paste0(intronRanges$transcript_id,"+INTRON ",intronRanges$exon_id)
+    #mcols(gtf_transcripts)$new_transcript_id <- paste0(gtf_transcripts$transcript_id,"+AS ",intronRanges$exon_id[m])
+    #mcols(intronRanges)$new_transcript_id <- paste0(intronRanges$transcript_id,"+AS ",intronRanges$exon_id)
 
     mcols(gtf_transcripts) <- mcols(gtf_transcripts)[,c('gene_id','transcript_id','transcript_type','exon_id','exon_number', 'new_transcript_id')]
     mcols(intronRanges) <- mcols(intronRanges)[,c('gene_id','transcript_id','transcript_type','exon_id','exon_number','new_transcript_id')]
@@ -97,7 +97,7 @@ addIntronInTranscript <- function(intronRanges = IR_range, flanking_exons, gtf.e
     while(length(needs_dup) > 0){
         gtf_transcripts_add <- gtf_transcripts_add[gtf_transcripts_add$transcript_id %in% intronRanges$transcript_id[needs_dup]]
         m <- match(gtf_transcripts_add$transcript_id, intronRanges$transcript_id[needs_dup])
-        gtf_transcripts_add$new_transcript_id <- paste0(gtf_transcripts_add$transcript_id,"+INTRON ",intronRanges$exon_id[needs_dup][m])
+        gtf_transcripts_add$new_transcript_id <- paste0(gtf_transcripts_add$transcript_id,"+AS ",intronRanges$exon_id[needs_dup][m])
         gtf_transcripts <- c(gtf_transcripts, gtf_transcripts_add)
         needs_dup <- which(!(intronRanges$new_transcript_id %in% gtf_transcripts$new_transcript_id))
     }
