@@ -1,3 +1,42 @@
+#' Find a DEXSeq exons' biotype
+#'
+#' @param DEX_exon_id vector of DEXSeq exon ids
+#' @param dex_gtf GRanges object of the DEXSeq formatted gtf
+#' @param gtf GRanges object of the GTF annotated with exon biotypes - i.e. exon, CDS, UTR
+#' @param set which overlapping set of exon biotypes to return - to, from, and/or overlap
+#' @return overlaping types
+#' @export
+#' @import GenomicRanges
+#' @examples
+#' @author Beth Signal
+findDEXexonType <- function(DEX_exon_id, dex_gtf, gtf,set="overlap"){
+    dex_gtf$id <- paste0(dex_gtf$gene_id,":E", dex_gtf$exonic_part_number)
+    dex_gtf.query <- dex_gtf[match(rownames(dexseq_results.query),dex_gtf$id)]
+
+    query_ranges <- dex_gtf.query
+    overlap_types <- overlapTypes(dex_gtf.query, gtf, set = set)[,2]
+    return(overlap_types)
+}
+
+#' Summarise exon biotypes to broader categories
+#' @param types vector of exon biotypes
+#' @return vector of broader exon biotypes
+#' @export
+#' @examples
+#' @author Beth Signal
+summariseExonTypes <- function(types){
+    types2 <- types
+    types2[grep("protein_coding-start_codon", types2)] <- "start_codon"
+    types2[grep("protein_coding-stop_codon", types2)] <- "stop_codon"
+    types2[grep("protein_coding-UTR5", types2)] <- "UTR5"
+    types2[grep("protein_coding-UTR3", types2)] <- "UTR3"
+    types2[grep("protein_coding-CDS", types2)] <- "CDS"
+    types2[!(types2 %in% c("start_codon", "stop_codon","UTR5","UTR3","CDS"))] <- "noncoding_exon"
+
+    return(types2)
+}
+
+
 #' Annotate introns and exonic parts by overlaping exon biotype
 #'
 #' Annotate introns and exonic parts by overlaping exon biotype
@@ -38,9 +77,9 @@ overlapTypes <- function(query_ranges, gtf, set=c("from", "to", "overlap")){
         gtf_to <- gtf_to[tid_index_to %in% tid_index_from]
     }
 
-    if(any(set=="from")){
+    if(any(set=="from") & length(gtf_from) > 0){
         gtf_from@elementMetadata$typetype <- paste0(gtf_from@elementMetadata$transcript_type_broad,
-                                                    "|",gtf_from@elementMetadata$type)
+                                                    "-",gtf_from@elementMetadata$type)
         #remove nmd/retained introns -- these tend to be isoexons of protein coding exons
         rm <- which(gtf_from@elementMetadata$typetype == "retained_intron|exon" |
                         gtf_from@elementMetadata$transcript_type_broad == "nmd")
@@ -56,9 +95,9 @@ overlapTypes <- function(query_ranges, gtf, set=c("from", "to", "overlap")){
                                     gtf_from@elementMetadata[-rm,],
                                     function(x) paste0(sort(unique(x)),collapse=":"))
     }
-    if(any(set=="to")){
+    if(any(set=="to") & length(gtf_to) > 0){
         gtf_to@elementMetadata$typetype <- paste0(gtf_to@elementMetadata$transcript_type_broad,
-                                                  "|",gtf_to@elementMetadata$type)
+                                                  "-",gtf_to@elementMetadata$type)
         #remove nmd/retained introns -- these tend to be isoexons of protein coding exons
         rm <- which(gtf_to@elementMetadata$typetype == "retained_intron|exon" |
                         gtf_to@elementMetadata$transcript_type_broad == "nmd")
@@ -74,7 +113,7 @@ overlapTypes <- function(query_ranges, gtf, set=c("from", "to", "overlap")){
     }
     if(any(set=="overlap")){
         gtf_overlap@elementMetadata$typetype <- paste0(gtf_overlap@elementMetadata$transcript_type_broad,
-                                                       "|",gtf_overlap@elementMetadata$type)
+                                                       "-",gtf_overlap@elementMetadata$type)
         #remove nmd/retained introns -- these tend to be isoexons of protein coding exons
         rm <- which(gtf_overlap@elementMetadata$typetype == "retained_intron|exon" |
                         gtf_overlap@elementMetadata$transcript_type_broad == "nmd")
@@ -118,7 +157,10 @@ overlapTypes <- function(query_ranges, gtf, set=c("from", "to", "overlap")){
 addBroadTypes <- function(gtf){
     transcript_types_new <- gtf@elementMetadata$transcript_type
     transcript_types_new[which(transcript_types_new %in% c("3prime_overlapping_ncrna",
+                                                           "3prime_overlapping_ncRNA",
                                                            "antisense",
+                                                           "bidirectional_promoter_lncRNA",
+                                                           "macro_lncRNA",
                                                            "known_ncrna",
                                                            "lincRNA",
                                                            "non_coding",
@@ -128,9 +170,13 @@ addBroadTypes <- function(gtf){
     transcript_types_new[which(transcript_types_new %in% c("IG_C_gene","IG_C_pseudogene",
                                                            "IG_D_gene","IG_J_gene",
                                                            "IG_J_pseudogene","IG_V_gene",
+                                                           "IG_D_pseudogene", "IG_LV_gene",
+                                                           "IG_pseudogene",
+                                                           "ribozyme",
                                                            "IG_V_pseudogene","miRNA",
                                                            "misc_RNA","Mt_rRNA","Mt_tRNA",
                                                            "rRNA","snoRNA","snRNA","TEC",
+                                                           "scaRNA","scRNA","sRNA",
                                                            "TR_C_gene","TR_D_gene",
                                                            "TR_J_gene","TR_J_pseudogene" ,
                                                            "TR_V_gene","TR_V_pseudogene"))] <- "short_ncRNA"
@@ -139,6 +185,7 @@ addBroadTypes <- function(gtf){
                                                            "transcribed_unprocessed_pseudogene",
                                                            "translated_processed_pseudogene",
                                                            "translated_unprocessed_pseudogene",
+                                                           "polymorphic_pseudogene",
                                                            "unitary_pseudogene",
                                                            "unprocessed_pseudogene"))] <- "pseudogene"
 
