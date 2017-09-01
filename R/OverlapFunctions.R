@@ -1,3 +1,46 @@
+#' Convert DEXSeq ids to gene ids
+#'
+#' @param dexseq_ids vector of DEXSeq group or exon ids
+#' @param removeVersion remove the version (.xx) of the gene?
+#' @return vector of unique gene ids
+#' @export
+#' @import stringr
+#' @examples
+#' # multiple genes in name
+#' dex_id <- "ENSMUSG00000027618.17+ENSMUSG00000098950.7+ENSMUSG00000089824.10+ENSMUSG00000074643.12"
+#' DEXSeqIdsToGeneIds(dex_id)
+#'
+#' # exonic part number in id
+#' DEXSeqIdsToGeneIds("ENSMUSG00000001017.15:E013", removeVersion=TRUE)
+#' @author Beth Signal
+DEXSeqIdsToGeneIds <- function(dexseq_ids, removeVersion=FALSE){
+    contains_exon <- grep(":E", dexseq_ids)
+
+    if(length(contains_exon) >0 ){
+        dexseq_ids[contains_exon] <- unlist(lapply(stringr::str_split(dexseq_ids[contains_exon], ":E"), "[[",1))
+    }
+
+    gene_ids <- unique(unlist(stringr::str_split(dexseq_ids, "[+]")))
+
+    if(removeVersion==TRUE){
+        gene_ids <- removeVersion(gene_ids)
+    }
+
+    return(gene_ids)
+}
+
+#' Remove version number from ensembl gene/transcript ids
+#'
+#' @param ids vector of ensembl ids
+#' @return vector of ensembl ids without the version number
+#' @export
+#' @examples
+#' removeVersion("ENSMUSG00000001017.15")
+#' @author Beth Signal
+removeVersion <- function(ids){
+    return(unlist(lapply(str_split(ids, "[.]"), "[[",1)))
+}
+
 #' Find a DEXSeq exons' biotype
 #'
 #' @param DEX_exon_id vector of DEXSeq exon ids
@@ -8,12 +51,27 @@
 #' @export
 #' @import GenomicRanges
 #' @examples
+#' gtf_file <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+#' package = "GeneStructureTools")
+#' dex_gtf_file <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
+#' package = "GeneStructureTools")
+#'
+#' gtf <- rtracklayer::import(gtf_file)
+#' gtf <- UTR2UTR53(gtf)
+#' dex_gtf <- rtracklayer::import(dex_gtf_file)
+#'
+#' findDEXexonType("ENSMUSG00000032366.15:E028", dex_gtf, gtf)
+#'
+#' dex_results_file <- system.file("extdata","dexseq_results.small.txt",
+#' package = "GeneStructureTools")
+#' dex_results <- read.table(dex_results_file, sep="\t")
+#'
+#' findDEXexonType(rownames(dex_results), dex_gtf, gtf)
+#'
 #' @author Beth Signal
 findDEXexonType <- function(DEX_exon_id, dex_gtf, gtf,set="overlap"){
     dex_gtf$id <- paste0(dex_gtf$gene_id,":E", dex_gtf$exonic_part_number)
-    dex_gtf.query <- dex_gtf[match(rownames(dexseq_results.query),dex_gtf$id)]
-
-    query_ranges <- dex_gtf.query
+    dex_gtf.query <- dex_gtf[match(DEX_exon_id,dex_gtf$id)]
     overlap_types <- overlapTypes(dex_gtf.query, gtf, set = set)[,2]
     return(overlap_types)
 }
@@ -23,8 +81,29 @@ findDEXexonType <- function(DEX_exon_id, dex_gtf, gtf,set="overlap"){
 #' @return vector of broader exon biotypes
 #' @export
 #' @examples
+#' gtf_file <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+#' package = "GeneStructureTools")
+#' dex_gtf_file <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
+#' package = "GeneStructureTools")
+#'
+#' gtf <- rtracklayer::import(gtf_file)
+#' gtf <- UTR2UTR53(gtf)
+#' dex_gtf <- rtracklayer::import(dex_gtf_file)
+#'
+#' dex_results_file <- system.file("extdata","dexseq_results.small.txt",
+#' package = "GeneStructureTools")
+#' dex_results <- read.table(dex_results_file, sep="\t")
+#'
+#' types <- findDEXexonType(rownames(dex_results), dex_gtf, gtf)
+#' summarised_types <- summariseExonTypes(types)
+#' table(types, sumamrised_types)
 #' @author Beth Signal
 summariseExonTypes <- function(types){
+
+    types <- gsub("protein_coding-CDS:protein_coding-UTR3:protein_coding-UTR5", "protein_coding-CDS", types)
+    types <- gsub("protein_coding-CDS:protein_coding-UTR5", "protein_coding-start_codon", types)
+    types <- gsub("protein_coding-CDS:protein_coding-UTR3", "protein_coding-stop_codon", types)
+
     types2 <- types
     types2[grep("protein_coding-start_codon", types2)] <- "start_codon"
     types2[grep("protein_coding-stop_codon", types2)] <- "stop_codon"
@@ -57,6 +136,9 @@ overlapTypes <- function(query_ranges, gtf, set=c("from", "to", "overlap")){
 
     gtf_overlap <- filterGtfOverlap(gtf_overlap)
     gtf_overlap <- addBroadTypes(gtf_overlap)
+
+    gtf_from <- NULL
+    gtf_to <- NULL
 
     if(any(set=="from")){
         gtf_from <- gtf_overlap[end(gtf_overlap) ==
@@ -129,11 +211,11 @@ overlapTypes <- function(query_ranges, gtf, set=c("from", "to", "overlap")){
     }
 
     type_types <- data.frame(index=1:length(start(ranges(query_ranges))))
-    if(any(set=="from")){
+    if(any(set=="from") & length(gtf_from) > 0){
         type_types$from <- from_typetypes$typetype[match(type_types$index,
                                                          from_typetypes$index)]
     }
-    if(any(set=="to")){
+    if(any(set=="to") & length(gtf_to) > 0){
         type_types$to <- to_typetypes$typetype[match(type_types$index,
                                                      to_typetypes$index)]
     }
