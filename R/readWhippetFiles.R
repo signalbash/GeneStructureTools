@@ -8,7 +8,7 @@
 readWhippetJNCfiles <- function(files){
 
     for(f in seq_along(files)){
-        whip <- fread(paste0("zcat < ", files[f]), data.table=F)
+        whip <- data.table::fread(paste0("zcat < ", files[f]), data.table=F)
         colnames(whip) <- c("chromosome","start","end","id","count","strand")
 
         if(exists("whip.all")){
@@ -45,7 +45,7 @@ readWhippetJNCfiles <- function(files){
 readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
 
     for(f in seq_along(files)){
-        whip <- fread(paste0("zcat < ", files[f]), data.table=F)
+        whip <- data.table::fread(paste0("zcat < ", files[f]), data.table=F)
         wanted_col <- which(colnames(whip) == attribute)
 
         if(exists("whip.all")){
@@ -55,7 +55,7 @@ readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
         }
     }
 
-    colnames(whip.all)[-(1:5)] <- gsub(".psi.gz","", files)
+    colnames(whip.all)[-(1:5)] <- gsub(".psi.gz","", basename(files))
     whip.all$na_count <- apply(whip.all[,-c(1:5)], 1, function(x) length(which(is.na(x))))
     whip.all$unique_name <- with(whip.all, paste0(Gene,"_",Coord,"_",Type,"_",Node))
     if(!is.na(maxNA)){
@@ -75,7 +75,7 @@ readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
 readWhippetDIFFfiles <- function(files){
 
     for(f in seq_along(files)){
-        whip <- fread(paste0("zcat < ", files[f]), data.table=F, skip=1)
+        whip <- data.table::fread(paste0("zcat < ", files[f]), data.table=F, skip=1)
 
         #remove the NA column
         keepcol <- which(apply(whip, 2, function(x) all(!is.na(x))))
@@ -101,6 +101,7 @@ readWhippetDIFFfiles <- function(files){
 #' @return GRanges object with events
 #' @export
 #' @import GenomicRanges
+#' @import IRanges
 #' @import stringr
 #' @examples
 #' @author Beth Signal
@@ -119,3 +120,4 @@ formatWhippetEvents <- function(whippet){
                           strand=whippet$strand, id=whippet$coord)
     return(event_ranges)
 }
+

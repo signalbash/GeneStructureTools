@@ -6,10 +6,12 @@
 #' @export
 #' @import GenomicRanges
 #' @examples
-#' gtf <- rtracklayer::import("gencode.v21.annotation.gtf")
+#' gtf_file <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+#' package = "GeneStructureTools")
+#' gtf <- rtracklayer::import(gtf_file)
 #' gtf <- UTR2UTR53(gtf)
+#' table(gtf$type)
 #' @author Beth Signal
-
 UTR2UTR53 <- function(gtf){
 
     #transcripts with CDS/UTR annotated
@@ -82,8 +84,7 @@ UTR2UTR53 <- function(gtf){
         if(all(gtf_sub@elementMetadata$type2[UTRTranscripts] == "UTR")){
             gtf_sub@elementMetadata$type2[UTRTranscripts] <- "UTR_NA"
         }else{
-            UTRTranscripts <- which(gtf_sub@elementMetadata$type2 == "UTR" &
-                                        gtf_sub@elementMetadata$transcript_type == "protein_coding")
+            UTRTranscripts <- which(gtf_sub@elementMetadata$type2 == "UTR")
         }
     }
 
