@@ -21,6 +21,25 @@ overlaping types
 \description{
 Find a DEXSeq exons' biotype
 }
+\examples{
+gtf_file <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+package = "GeneStructureTools")
+dex_gtf_file <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
+package = "GeneStructureTools")
+
+gtf <- rtracklayer::import(gtf_file)
+gtf <- UTR2UTR53(gtf)
+dex_gtf <- rtracklayer::import(dex_gtf_file)
+
+findDEXexonType("ENSMUSG00000032366.15:E028", dex_gtf, gtf)
+
+dex_results_file <- system.file("extdata","dexseq_results.small.txt",
+package = "GeneStructureTools")
+dex_results <- read.table(dex_results_file, sep="\\t")
+
+findDEXexonType(rownames(dex_results), dex_gtf, gtf)
+
+}
 \author{
 Beth Signal
 }

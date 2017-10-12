@@ -15,6 +15,24 @@ vector of broader exon biotypes
 \description{
 Summarise exon biotypes to broader categories
 }
+\examples{
+gtf_file <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+package = "GeneStructureTools")
+dex_gtf_file <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
+package = "GeneStructureTools")
+
+gtf <- rtracklayer::import(gtf_file)
+gtf <- UTR2UTR53(gtf)
+dex_gtf <- rtracklayer::import(dex_gtf_file)
+
+dex_results_file <- system.file("extdata","dexseq_results.small.txt",
+package = "GeneStructureTools")
+dex_results <- read.table(dex_results_file, sep="\\t")
+
+types <- findDEXexonType(rownames(dex_results), dex_gtf, gtf)
+summarised_types <- summariseExonTypes(types)
+table(types, sumamrised_types)
+}
 \author{
 Beth Signal
 }

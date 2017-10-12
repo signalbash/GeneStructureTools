@@ -2,20 +2,20 @@
 % Please edit documentation in R/compareTranscripts.R
 \name{orfSimilarity}
 \alias{orfSimilarity}
-\title{calculate percentage of orf_b contained in orf_a}
+\title{calculate percentage of orfB contained in orfA}
 \usage{
-orfSimilarity(orf_a, orf_b)
+orfSimilarity(orfA, orfB)
 }
 \arguments{
-\item{orf_a}{character string of ORF amino acid sequence}
+\item{orfA}{character string of ORF amino acid sequence}
 
-\item{orf_b}{character string of ORF amino acid sequence}
+\item{orfB}{character string of ORF amino acid sequence}
 }
 \value{
-percentage of orf_b contained in orf_a
+percentage of orfB contained in orfA
 }
 \description{
-calculate percentage of orf_b contained in orf_a
+calculate percentage of orfB contained in orfA
 }
 \author{
 Beth Signal
