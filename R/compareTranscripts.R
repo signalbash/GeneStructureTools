@@ -11,32 +11,45 @@
 orfDiff <- function(orfsX,
                     orfsY,
                     filterNMD = TRUE,
-                    geneSimilarity = TRUE){
+                    geneSimilarity = TRUE,
+                    compareUTR = FALSE){
     if(filterNMD == TRUE){
         orfChanges <- attrChangeAltSpliced(orfsX[orfsX$nmd_prob < 0.5,],
                                             orfsY[orfsY$nmd_prob < 0.5,],
                                             attribute = "orf_length",
-                                            compareBy="gene",useMax = TRUE)
-        orfChanges$filtered <- "both"
+                                            compareBy="gene",useMax = TRUE,
+                                           compareUTR = compareUTR)
 
         orfChanges.filterx <- attrChangeAltSpliced(orfsX[orfsX$nmd_prob < 0.5,],
                                                     orfsY,
                                                     attribute = "orf_length",
-                                                    compareBy="gene",useMax = TRUE)
-        orfChanges.filterx$filtered <- "x"
+                                                    compareBy="gene",useMax = TRUE,
+                                                   compareUTR = compareUTR)
 
         orfChanges.filtery <- attrChangeAltSpliced(orfsX,
                                                     orfsY[orfsY$nmd_prob < 0.5,],
                                                     attribute = "orf_length",
-                                                    compareBy="gene",useMax = TRUE)
-        orfChanges.filtery$filtered <- "y"
+                                                    compareBy="gene",useMax = TRUE,
+                                                   compareUTR = compareUTR)
 
         orfChanges.nofilter <- attrChangeAltSpliced(orfsX,
                                                      orfsY,
                                                      attribute = "orf_length",
-                                                     compareBy="gene",useMax = TRUE)
-        orfChanges.nofilter$filtered <- "none"
+                                                     compareBy="gene",useMax = TRUE,
+                                                    compareUTR = compareUTR)
 
+        if(nrow(orfChanges) > 0){
+            orfChanges$filtered <- "both"
+        }
+        if(nrow(orfChanges.filterx) > 0){
+            orfChanges.filterx$filtered <- "x"
+        }
+        if(nrow(orfChanges.filtery) > 0){
+            orfChanges.filtery$filtered <- "y"
+        }
+        if(nrow(orfChanges.nofilter) > 0){
+            orfChanges.nofilter$filtered <- "none"
+        }
         add <- which(!(orfChanges.filterx$id %in% orfChanges$id))
         orfChanges <- rbind(orfChanges, orfChanges.filterx[add,])
         add <- which(!(orfChanges.filtery$id %in% orfChanges$id))
@@ -46,7 +59,8 @@ orfDiff <- function(orfsX,
 
     }else{
         orfChanges <- attrChangeAltSpliced(orfsX,orfsY,attribute = "orf_length",
-                                            compareBy="gene",useMax = TRUE)
+                                            compareBy="gene",useMax = TRUE,
+                                           compareUTR = compareUTR)
         orfChanges$filtered <- FALSE
     }
 
@@ -137,79 +151,112 @@ orfDiff <- function(orfsX,
 attrChangeAltSpliced <- function(orfsX,
                                  orfsY,
                                  attribute = "orf_length",
-                                 compareBy = "transcript",
-                                 useMax = TRUE){
+                                 compareBy = "gene",
+                                 useMax = TRUE,
+                                 compareUTR = FALSE){
 
-    if(useMax){
-        aggFun <- max
-    }else{
-        aggFun <- min
-    }
+    if(nrow(orfsX) > 0 & nrow(orfsY) > 0){
 
-    m <- match(c('id','gene_id', attribute), colnames(orfsX))
-    orfsX.part <- orfsX[,m]
-    attributeX <- aggregate(. ~ id+gene_id, orfsX.part, aggFun)
-
-    if(all(grepl("AS", attributeX$id))){
-        attributeX$as_group <- unlist(lapply(str_split(attributeX$id, " "), '[[', 2))
-        attributeX$transcript_id <- unlist(lapply(str_split(attributeX$id, "[+]"), '[[', 1))
-    }
-
-    m <- match(c('id','gene_id', attribute), colnames(orfsY))
-    orfsY.part <- orfsY[,m]
-    attributeY <- aggregate(. ~ id+gene_id, orfsY.part, aggFun)
-
-    if(all(grepl("AS", attributeY$id))){
-        attributeY$as_group <- unlist(lapply(str_split(attributeY$id, " "), '[[', 2))
-        attributeY$transcript_id <- unlist(lapply(str_split(attributeY$id, "[+]"), '[[', 1))
-    }
-
-
-    if(all(colnames(attributeX) != "as_group")){
-        m <- match(attributeY$transcript_id, attributeX$id)
-        attributeX <- attributeX[m,]
-        attributeX$as_group <- attributeY$as_group
-        attributeX$id <- attributeY$id
-    }else if(all(colnames(attributeY) != "as_group")){
-        m <- match(attributeX$transcript_id, attributeY$id)
-        attributeY <- attributeY[m,]
-        attributeY$as_group <- attributeX$as_group
-        attributeY$id <- attributeX$id
-    }
-
-    colnames(attributeX)[3] <- "attr"
-    colnames(attributeY)[3] <- "attr"
-
-    if(compareBy == "transcript"){
-        m <- match(attributeX$id, attributeY$id)
-        attributeComparisons <- data.frame(id=attributeX$id,
-                                 attr_bygroup_x=attributeX$attr,
-                                 attr_bygroup_y=attributeY$attr[m])
-
-        m <- match(attributeY$id, attributeX$id)
-        attributeComparisonsY <- data.frame(id=attributeY$id,
-                                   attr_bygroup_x=attributeX$attr[m],
-                                   attr_bygroup_y=attributeY$attr)
-
-        add <- which(!(attributeComparisonsY$id %in% attributeComparisons$id))
-
-        if(length(add) > 0){
-            attributeComparisons <- rbind(attributeComparisons, attributeComparisonsY[add,])
+        if(useMax){
+            aggFun <- max
+        }else{
+            aggFun <- min
         }
-    }else if(compareBy=="gene"){
-        attributeX2 <- aggregate(attr ~ as_group, attributeX, aggFun)
-        attributeY2 <- aggregate(attr ~ as_group, attributeY, aggFun)
 
-        m <- match(attributeX2$as_group, attributeY2$as_group)
-        attributeComparisons <- data.frame(id=attributeX2[,1],
-                                 attr_bygroup_x=attributeX2[,-1],
-                                 attr_bygroup_y=attributeY2[m,-1])
-        attributeComparisons <- attributeComparisons[which(!is.na(m)),]
 
+
+        m <- match(c('id','gene_id', attribute), colnames(orfsX))
+
+        orfsX.part <- orfsX[,m]
+
+        attributeX <- aggregate(. ~ id+gene_id, orfsX.part, aggFun)
+
+        if(all(grepl("AS", attributeX$id))){
+            attributeX$as_group <- unlist(lapply(str_split(attributeX$id, " "), '[[', 2))
+            attributeX$transcript_id <- unlist(lapply(str_split(attributeX$id, "[+]"), '[[', 1))
+        }
+
+        m <- match(c('id','gene_id', attribute), colnames(orfsY))
+        orfsY.part <- orfsY[,m]
+        attributeY <- aggregate(. ~ id+gene_id, orfsY.part, aggFun)
+
+        if(all(grepl("AS", attributeY$id))){
+            attributeY$as_group <- unlist(lapply(str_split(attributeY$id, " "), '[[', 2))
+            attributeY$transcript_id <- unlist(lapply(str_split(attributeY$id, "[+]"), '[[', 1))
+        }
+
+
+        if(all(colnames(attributeX) != "as_group")){
+            m <- match(attributeY$transcript_id, attributeX$id)
+            attributeX <- attributeX[m,]
+            attributeX$as_group <- attributeY$as_group
+            attributeX$id <- attributeY$id
+        }else if(all(colnames(attributeY) != "as_group")){
+            m <- match(attributeX$transcript_id, attributeY$id)
+            attributeY <- attributeY[m,]
+            attributeY$as_group <- attributeX$as_group
+            attributeY$id <- attributeX$id
+        }
+
+        colnames(attributeX)[3] <- "attr"
+        colnames(attributeY)[3] <- "attr"
+
+        if(compareBy == "transcript"){
+            m <- match(attributeX$id, attributeY$id)
+            attributeComparisons <- data.frame(id=attributeX$id,
+                                     attr_bygroup_x=attributeX$attr,
+                                     attr_bygroup_y=attributeY$attr[m])
+
+            m <- match(attributeY$id, attributeX$id)
+            attributeComparisonsY <- data.frame(id=attributeY$id,
+                                       attr_bygroup_x=attributeX$attr[m],
+                                       attr_bygroup_y=attributeY$attr)
+
+            add <- which(!(attributeComparisonsY$id %in% attributeComparisons$id))
+
+            if(length(add) > 0){
+                attributeComparisons <- rbind(attributeComparisons, attributeComparisonsY[add,])
+            }
+        }else if(compareBy=="gene"){
+            attributeX2 <- aggregate(attr ~ as_group, attributeX, aggFun)
+            attributeY2 <- aggregate(attr ~ as_group, attributeY, aggFun)
+
+            m <- match(attributeX2$as_group, attributeY2$as_group)
+            attributeComparisons <- data.frame(id=attributeX2[,1],
+                                     attr_bygroup_x=attributeX2[,-1],
+                                     attr_bygroup_y=attributeY2[m,-1])
+            attributeComparisons <- attributeComparisons[which(!is.na(m)),]
+
+        }
+        colnames(attributeComparisons) <- gsub("attr", attribute, colnames(attributeComparisons))
+
+        if(compareUTR == TRUE){
+            id_x <- paste0(attributeComparisons$id,"_" ,attributeComparisons$orf_length_bygroup_x)
+            m1 <- match(id_x, paste0(unlist(lapply(str_split(orfsX$id, "AS "), "[[", 2)), "_", orfsX$orf_length))
+
+            id_y <- paste0(attributeComparisons$id,"_" ,attributeComparisons$orf_length_bygroup_y)
+            m2 <- match(id_y, paste0(unlist(lapply(str_split(orfsY$id, "AS "), "[[", 2)), "_", orfsY$orf_length))
+
+            attributeComparisons$utr3_length_bygroup_x <- orfsX$utr3_length[m1]
+            attributeComparisons$utr3_length_bygroup_y <- orfsY$utr3_length[m2]
+            attributeComparisons$utr5_length_bygroup_x <- orfsX$start_site_nt[m1]
+            attributeComparisons$utr5_length_bygroup_y <- orfsY$start_site_nt[m2]
+        }
+
+        return(attributeComparisons)
+    }else{
+        blank <- data.frame(id=character(0),
+                            attr_bygroup_x=numeric(0),
+                            attr_bygroup_y=numeric(0))
+        colnames(blank) <- gsub("attr", attribute, colnames(blank))
+        if(compareUTR == TRUE){
+            blank$utr3_length_bygroup_x <- numeric(0)
+            blank$utr3_length_bygroup_y <- numeric(0)
+            blank$utr5_length_bygroup_x <- numeric(0)
+            blank$utr5_length_bygroup_y <- numeric(0)
+        }
+        return(blank)
     }
-    colnames(attributeComparisons) <- gsub("attr", attribute, colnames(attributeComparisons))
-
-    return(attributeComparisons)
 }
 #' calculate percentage of orfB contained in orfA
 #' @param orfA character string of ORF amino acid sequence
