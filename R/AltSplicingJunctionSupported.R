@@ -7,11 +7,11 @@
 #' @examples
 #' @author Beth Signal
 formatJunctions <- function(junctions){
-    jnc_ranges <- GRanges(seqnames=Rle(junctions$chrom),
+    jncRanges <- GRanges(seqnames=Rle(junctions$chrom),
                           ranges=IRanges(start=as.numeric(junctions$start),
                                          end=as.numeric(junctions$end)),
                           strand=junctions$strand, id=junctions$id)
-    return(jnc_ranges)
+    return(jncRanges)
 }
 
 
@@ -50,20 +50,20 @@ findJunctionPairs <- function(exonRanges, jncRanges, type=NA){
         }else{
             start(junction_SJA.right) <- end(junction_SJA.right)
         }
-        ol_A.right <- findOverlaps(junction_SJA.right, jnc_ranges, type="start")
+        ol_A.right <- findOverlaps(junction_SJA.right, jncRanges, type="start")
         ol_A_from <- append(ol_A_from,
                             as.character(junction_SJA.right$id[ol_A.right@from]))
-        junctions_A <- jnc_ranges[ol_A.right@to]
+        junctions_A <- jncRanges[ol_A.right@to]
     }
     if(length(junction_SJA.left) > 0){
         end(junction_SJA.left) <- start(junction_SJA.left)
-        ol_A.left <- findOverlaps(junction_SJA.left, jnc_ranges, type="end")
+        ol_A.left <- findOverlaps(junction_SJA.left, jncRanges, type="end")
         ol_A_from <- append(ol_A_from,
                             as.character(junction_SJA.left$id[ol_A.left@from]))
         if(exists("junctions_A")){
-            junctions_A <- c(junctions_A, jnc_ranges[ol_A.left@to])
+            junctions_A <- c(junctions_A, jncRanges[ol_A.left@to])
         }else{
-            junctions_A <- jnc_ranges[ol_A.left@to]
+            junctions_A <- jncRanges[ol_A.left@to]
         }
     }
 
@@ -81,21 +81,21 @@ findJunctionPairs <- function(exonRanges, jncRanges, type=NA){
         ol_B_from <- vector()
         if(length(junction_SJB.right) > 0){
             start(junction_SJB.right) <- end(junction_SJB.right)
-            ol_B.right <- findOverlaps(junction_SJB.right, jnc_ranges, type="start")
+            ol_B.right <- findOverlaps(junction_SJB.right, jncRanges, type="start")
             ol_B_from <- append(ol_B_from,
                                 as.character(junction_SJB.right$id[ol_B.right@from]))
-            junctions_B <- jnc_ranges[ol_B.right@to]
+            junctions_B <- jncRanges[ol_B.right@to]
         }
         if(length(junction_SJB.left) > 0){
             end(junction_SJB.left) <- end(junction_SJB.left) +1
             start(junction_SJB.left) <- end(junction_SJB.left)
-            ol_B.left <- findOverlaps(junction_SJB.left, jnc_ranges, type="end")
+            ol_B.left <- findOverlaps(junction_SJB.left, jncRanges, type="end")
             ol_B_from <- append(ol_B_from,
                                 as.character(junction_SJB.left$id[ol_B.left@from]))
             if(exists("junctions_B")){
-                junctions_B <- c(junctions_B, jnc_ranges[ol_B.left@to])
+                junctions_B <- c(junctions_B, jncRanges[ol_B.left@to])
             }else{
-                junctions_B <- jnc_ranges[ol_B.left@to]
+                junctions_B <- jncRanges[ol_B.left@to]
             }
         }
         junctions_B$whippet_id <- ol_B_from
@@ -110,8 +110,8 @@ findJunctionPairs <- function(exonRanges, jncRanges, type=NA){
 
         if(length(junctions_A.left) > 0){
             end(junctions_A.left) <- start(junctions_A.left)
-            ol_C.left <- findOverlaps(junctions_A.left, jnc_ranges, type="start")
-            junctions_C.left <- jnc_ranges[ol_C.left@to]
+            ol_C.left <- findOverlaps(junctions_A.left, jncRanges, type="start")
+            junctions_C.left <- jncRanges[ol_C.left@to]
             junctions_C.left$whippet_id <- junctions_A.left$whippet_id[ol_C.left@from]
             junctions_C.left$search <- junctions_A.left$search[ol_C.left@from]
             ol <- findOverlaps(junctions_C.left, junctions_A, type="equal")
@@ -122,8 +122,8 @@ findJunctionPairs <- function(exonRanges, jncRanges, type=NA){
         }
         if(length(junctions_A.right) > 0){
             start(junctions_A.right) <- end(junctions_A.right)
-            ol_C.right <- findOverlaps(junctions_A.right, jnc_ranges, type="end")
-            junctions_C.right <- jnc_ranges[ol_C.right@to]
+            ol_C.right <- findOverlaps(junctions_A.right, jncRanges, type="end")
+            junctions_C.right <- jncRanges[ol_C.right@to]
             junctions_C.right$whippet_id <- junctions_A.right$whippet_id[ol_C.right@from]
             junctions_C.right$search <- junctions_A.right$search[ol_C.right@from]
             ol <- findOverlaps(junctions_C.right, junctions_A, type="equal")
