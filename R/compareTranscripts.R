@@ -121,7 +121,7 @@ orfDiff <- function(orfsX,
 
         orfSimilarity.bygeneAgg <- aggregate(similarity ~ spliced_id, orfSimilarity.bygene, max)
         m <- match(orfChanges$id, orfSimilarity.bygeneAgg$spliced_id)
-        orfChanges$max_orf_kept_bygene <- orfSimilarity.bygeneAgg$similarity[m]
+        orfChanges$max_orf_similarity_bygene <- orfSimilarity.bygeneAgg$similarity[m]
 
         orfNew.bygeneAgg <- aggregate(orf_percent_new ~ spliced_id, orfSimilarity.bygene, min)
         m <- match(orfChanges$id, orfNew.bygeneAgg$spliced_id)
