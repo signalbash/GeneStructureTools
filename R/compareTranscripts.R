@@ -231,9 +231,14 @@ attrChangeAltSpliced <- function(orfsX,
         colnames(attributeComparisons) <- gsub("attr", attribute, colnames(attributeComparisons))
 
         if(compareUTR == TRUE){
-            id_x <- paste0(attributeComparisons$id,"_" ,attributeComparisons$orf_length_bygroup_x)
-            m1 <- match(id_x, paste0(unlist(lapply(str_split(orfsX$id, "AS "), "[[", 2)), "_", orfsX$orf_length))
-
+            if(all(grepl("AS", orfsX$id))){
+                id_x <- paste0(attributeComparisons$id,"_" ,attributeComparisons$orf_length_bygroup_x)
+                m1 <- match(id_x, paste0(unlist(lapply(str_split(orfsX$id, "AS "), "[[", 2)), "_", orfsX$orf_length))
+            }else{
+                m_toGene <- match(attributeComparisons$id, attributeX$as_group)
+                id_x <- paste0(unlist(lapply(str_split(attributeX$id[m_toGene], "[+]"),"[[",1)),"_" ,attributeComparisons$orf_length_bygroup_x)
+                m1 <- match(id_x, paste0((orfsX$id), "_", orfsX$orf_length))
+            }
             id_y <- paste0(attributeComparisons$id,"_" ,attributeComparisons$orf_length_bygroup_y)
             m2 <- match(id_y, paste0(unlist(lapply(str_split(orfsY$id, "AS "), "[[", 2)), "_", orfsY$orf_length))
 
