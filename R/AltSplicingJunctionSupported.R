@@ -171,93 +171,55 @@ findJunctionPairs <- function(exonRanges, jncRanges, type=NA){
 #' @author Beth Signal
 replaceJunction <- function(junctionPairs, exonRanges, gtf.exons, type=NA){
 
-    junctionPairs <- findJunctionPairs(ranges.af, jncRanges = jnc_ranges, type="AF")
-
     junctionPairs$type <- type
     range <- junctionPairs
 
-    end(range)[which(range$search=="right")] <- start(range)[which(range$search=="right")]
-    start(range)[which(range$search=="left")] <- end(range)[which(range$search=="left")]
+    if(type %in% c("AA", "AD")){
+        ## find exons that use/overlap the junction - at the side where it's alternative
+        end(range)[which(range$seach=="right")] <- start(range)[which(range$seach=="right")]
+        start(range)[which(range$seach=="left")] <- end(range)[which(range$seach=="left")]
 
-    if(type=="AF" | type=="AL"){
+        ol_junction <- findOverlaps(range, gtf.exons)
+        ol_junction <- cbind(as.data.frame(ol_junction),
+                             transcript_id=gtf.exons$transcript_id[ol_junction@to])
 
-        ol_firstLast.left <- findOverlaps(range[which(range$search=="left")], gtf.exons, type="start")
-        ol_firstLast.right <- findOverlaps(range[which(range$search=="right")], gtf.exons, type="end")
+        ## table of transcripts overlapping the junction
+        # tid: transcript id
+        tid_table <- as.data.frame(table(ol_junction$queryHits, ol_junction$transcript_id))
+        tid_table <- tid_table[tid_table$Freq > 0,]
+        colnames(tid_table)[1:2] <- c("from_index","to_transcript_id")
+        tids <- unique(tid_table$to_transcript_id)
+        tid_table$junction_id <- range$id[tid_table$from_index]
+        ## new transcript id -- unique if different junctions are going to be used in same transcript base
+        tid_table$new_transcript_id <- paste0(tid_table$to_transcript_id,"+AS ",tid_table$junction_id)
 
-        ol_firstLast.left <- cbind(as.data.frame(ol_firstLast.left),
-                                   transcript_id=gtf.exons$transcript_id[ol_firstLast.left@to])
-        ol_firstLast.right <- cbind(as.data.frame(ol_firstLast.right),
-                                    transcript_id=gtf.exons$transcript_id[ol_firstLast.right@to])
+        ## all transcripts for structural altercations
+        gtf_transcripts <- gtf.exons[gtf.exons$transcript_id %in% tids]
+        mcols(gtf_transcripts) <- mcols(gtf_transcripts)[,c('gene_id','transcript_id','exon_number')]
+        m <- match(gtf_transcripts$transcript_id, tid_table$to_transcript_id)
+        # add new transcript id
+        gtf_transcripts$new_transcript_id <-
+            paste0(gtf_transcripts$transcript_id,"+AS ",range$id[tid_table$from_index[m]])
+        gtf_transcripts$new_transcript_id_exnum <- paste0(gtf_transcripts$new_transcript_id, "_", as.numeric(gtf_transcripts$exon_number))
 
-        ol_firstLast <- rbind(ol_firstLast.left, ol_firstLast.right)
-
-        exons_firstLast <- gtf.exons[ol_firstLast$subjectHits]
-        exons_firstLast$set <- range$set[ol_firstLast$queryHits]
-        exons_firstLast$search <- range$search[ol_firstLast$queryHits]
-
-        exons_firstLast$junction_id <- range$id[ol_firstLast$queryHits]
-        new_id.left <- paste0(seqnames(exons_firstLast),":",
-                              start(junctionPairs)[ol_firstLast$queryHits],"-",
-                              end(junctionPairs)[ol_firstLast$queryHits],"+",
-                              end(exons_firstLast))
-        new_id.right <- paste0(seqnames(exons_firstLast),":",
-                               start(junctionPairs)[ol_firstLast$queryHits],"-",
-                               end(junctionPairs)[ol_firstLast$queryHits],"+",
-                               start(exons_firstLast))
-        exons_firstLast$new_id[which(exons_firstLast$search=="left")] <- new_id.left[which(exons_firstLast$search=="left")]
-        exons_firstLast$new_id[which(exons_firstLast$search=="right")] <- new_id.right[which(exons_firstLast$search=="right")]
-
-        m <- match(exons_firstLast$junction_id, junctionPairs$id)
-        junctionPairs <- junctionPairs[m]
-        range <- junctionPairs
-        range$id <- exons_firstLast$new_id
-        end(range)[which(range$search=="left")] <- start(range)[which(range$search=="left")]
-        start(range)[which(range$search=="right")] <- end(range)[which(range$search=="right")]
-
-    }
-
-    ol_junction <- findOverlaps(range, gtf.exons)
-    ol_junction <- cbind(as.data.frame(ol_junction),
-                         transcript_id=gtf.exons$transcript_id[ol_junction@to])
-
-    ## table of transcripts overlapping the junction
-    # tid: transcript id
-    tid_table <- as.data.frame(table(ol_junction$queryHits, ol_junction$transcript_id))
-    tid_table <- tid_table[tid_table$Freq > 0,]
-    colnames(tid_table)[1:2] <- c("from_index","to_transcript_id")
-    tids <- unique(tid_table$to_transcript_id)
-
-    tid_table$junction_id <- range$id[tid_table$from_index]
-    ## new transcript id -- unique if different junctions are going to be used in same transcript base
-    tid_table$new_transcript_id <- paste0(tid_table$to_transcript_id,"+AS ",tid_table$junction_id)
-    ## all transcripts for structural altercations
-    gtf_transcripts <- gtf.exons[gtf.exons$transcript_id %in% tids]
-    mcols(gtf_transcripts) <- mcols(gtf_transcripts)[,c('gene_id','transcript_id','exon_number')]
-    m <- match(gtf_transcripts$transcript_id, tid_table$to_transcript_id)
-    # add new transcript id
-    gtf_transcripts$new_transcript_id <-
-        paste0(gtf_transcripts$transcript_id,"+AS ",range$id[tid_table$from_index[m]])
-    gtf_transcripts$new_transcript_id_exnum <- paste0(gtf_transcripts$new_transcript_id, "_", as.numeric(gtf_transcripts$exon_number))
-
-    # duplicate core transcripts if needed
-    needs_dup <- which(!(tid_table$new_transcript_id %in% gtf_transcripts$new_transcript_id))
-    if(length(needs_dup) > 0){
-        gtf_transcripts_add <- gtf_transcripts[gtf_transcripts$transcript_id %in% tid_table$to_transcript_id[needs_dup]]
-    }
-    while(length(needs_dup) > 0){
-        gtf_transcripts_add <- gtf_transcripts_add[gtf_transcripts_add$transcript_id %in% tid_table$to_transcript_id[needs_dup]]
-        m <- match(gtf_transcripts_add$transcript_id, tid_table$to_transcript_id[needs_dup])
-        gtf_transcripts_add$new_transcript_id <- paste0(gtf_transcripts_add$transcript_id,"+AS ",tid_table$junction_id[needs_dup][m])
-        gtf_transcripts <- c(gtf_transcripts, gtf_transcripts_add)
+        # duplicate core transcripts if needed
         needs_dup <- which(!(tid_table$new_transcript_id %in% gtf_transcripts$new_transcript_id))
-    }
+        if(length(needs_dup) > 0){
+            gtf_transcripts_add <- gtf_transcripts[gtf_transcripts$transcript_id %in% tid_table$to_transcript_id[needs_dup]]
+        }
+        while(length(needs_dup) > 0){
+            gtf_transcripts_add <- gtf_transcripts_add[gtf_transcripts_add$transcript_id %in% tid_table$to_transcript_id[needs_dup]]
+            m <- match(gtf_transcripts_add$transcript_id, tid_table$to_transcript_id[needs_dup])
+            gtf_transcripts_add$new_transcript_id <- paste0(gtf_transcripts_add$transcript_id,"+AS ",tid_table$junction_id[needs_dup][m])
+            gtf_transcripts <- c(gtf_transcripts, gtf_transcripts_add)
+            needs_dup <- which(!(tid_table$new_transcript_id %in% gtf_transcripts$new_transcript_id))
+        }
 
-    gtf_transcripts$from <- unlist(lapply(str_split(gtf_transcripts$new_transcript_id, "AS "),"[[",2))
-    gtf_transcripts <- gtf_transcripts[order(gtf_transcripts$transcript_id, start(gtf_transcripts))]
+        gtf_transcripts$from <- unlist(lapply(str_split(gtf_transcripts$new_transcript_id, "AS "),"[[",2))
+        gtf_transcripts <- gtf_transcripts[order(gtf_transcripts$transcript_id, start(gtf_transcripts))]
 
-    ## alter exons hitting the junctions so they all break at the same place
-    # range is at the alt. points defined in exonRanges
-    if(type=="AA" | type=="AD"){
+        ## alter exons hitting the junctions so they all break at the same place
+        # range is at the alt. points defined in exonRanges
         range <- junctionPairs
         end(range) <- start(range)
 
@@ -291,9 +253,6 @@ replaceJunction <- function(junctionPairs, exonRanges, gtf.exons, type=NA){
         exons_glued <- exons_left
         end(exons_glued) <- end(exons_right)
 
-        exons_glued <- exons_left
-        end(exons_glued) <- end(exons_right)
-
         # replacement exon pairs
         gtf_transcripts_replacement <- c(exons_left,exons_right)
 
@@ -302,14 +261,95 @@ replaceJunction <- function(junctionPairs, exonRanges, gtf.exons, type=NA){
                                                        gtf_transcripts_replacement$new_transcript_id]
 
 
-
         ol <- as.data.frame(findOverlaps(exons_glued, gtf_transcripts_altered))
         ol$from_id <- exons_glued$new_transcript_id[ol$queryHits]
         ol$to_id <- gtf_transcripts_altered$new_transcript_id[ol$subjectHits]
         ol <- ol[ol$from_id == ol$to_id,]
         gtf_transcripts_altered <- gtf_transcripts_altered[-unique(ol$subjectHits)]
 
-    }else{
+        # add together
+        gtf_transcripts_altered <- c(gtf_transcripts_altered, gtf_transcripts_replacement)
+        gtf_transcripts_altered <- gtf_transcripts_altered[order(gtf_transcripts_altered$new_transcript_id,
+                                                                 start(gtf_transcripts_altered))]
+
+        gtf_transcripts_altered$set <- range$set[match(gtf_transcripts_altered$from, range$id)]
+        gtf_transcripts_altered$whippet_id <- junctionPairs$whippet_id[match(gtf_transcripts_altered$from, junctionPairs$id)]
+
+    }else if(type %in% c("AF", "AL")){
+        end(range)[which(range$search=="right")] <- start(range)[which(range$search=="right")]
+        start(range)[which(range$search=="left")] <- end(range)[which(range$search=="left")]
+        ol_firstLast.left <- findOverlaps(range[which(range$search=="left")], gtf.exons, type="start")
+        ol_firstLast.right <- findOverlaps(range[which(range$search=="right")], gtf.exons, type="end")
+
+        ol_firstLast.left <- cbind(as.data.frame(ol_firstLast.left),
+                                   transcript_id=gtf.exons$transcript_id[ol_firstLast.left@to])
+        ol_firstLast.right <- cbind(as.data.frame(ol_firstLast.right),
+                                    transcript_id=gtf.exons$transcript_id[ol_firstLast.right@to])
+
+        ol_firstLast <- rbind(ol_firstLast.left, ol_firstLast.right)
+
+        exons_firstLast <- gtf.exons[ol_firstLast$subjectHits]
+        exons_firstLast$set <- range$set[ol_firstLast$queryHits]
+        exons_firstLast$search <- range$search[ol_firstLast$queryHits]
+
+        exons_firstLast$junction_id <- range$id[ol_firstLast$queryHits]
+        new_id.left <- paste0(seqnames(exons_firstLast),":",
+                              start(junctionPairs)[ol_firstLast$queryHits],"-",
+                              end(junctionPairs)[ol_firstLast$queryHits],"+",
+                              end(exons_firstLast))
+        new_id.right <- paste0(seqnames(exons_firstLast),":",
+                               start(junctionPairs)[ol_firstLast$queryHits],"-",
+                               end(junctionPairs)[ol_firstLast$queryHits],"+",
+                               start(exons_firstLast))
+        exons_firstLast$new_id[which(exons_firstLast$search=="left")] <- new_id.left[which(exons_firstLast$search=="left")]
+        exons_firstLast$new_id[which(exons_firstLast$search=="right")] <- new_id.right[which(exons_firstLast$search=="right")]
+
+        m <- match(exons_firstLast$junction_id, junctionPairs$id)
+        junctionPairs <- junctionPairs[m]
+        range <- junctionPairs
+        range$id <- exons_firstLast$new_id
+        end(range)[which(range$search=="left")] <- start(range)[which(range$search=="left")]
+        start(range)[which(range$search=="right")] <- end(range)[which(range$search=="right")]
+
+        ol_junction <- findOverlaps(range, gtf.exons)
+        ol_junction <- cbind(as.data.frame(ol_junction),
+                             transcript_id=gtf.exons$transcript_id[ol_junction@to])
+
+        ## table of transcripts overlapping the junction
+        # tid: transcript id
+        tid_table <- as.data.frame(table(ol_junction$queryHits, ol_junction$transcript_id))
+        tid_table <- tid_table[tid_table$Freq > 0,]
+        colnames(tid_table)[1:2] <- c("from_index","to_transcript_id")
+        tids <- unique(tid_table$to_transcript_id)
+
+        tid_table$junction_id <- range$id[tid_table$from_index]
+        ## new transcript id -- unique if different junctions are going to be used in same transcript base
+        tid_table$new_transcript_id <- paste0(tid_table$to_transcript_id,"+AS ",tid_table$junction_id)
+        ## all transcripts for structural altercations
+        gtf_transcripts <- gtf.exons[gtf.exons$transcript_id %in% tids]
+        mcols(gtf_transcripts) <- mcols(gtf_transcripts)[,c('gene_id','transcript_id','exon_number')]
+        m <- match(gtf_transcripts$transcript_id, tid_table$to_transcript_id)
+        # add new transcript id
+        gtf_transcripts$new_transcript_id <-
+            paste0(gtf_transcripts$transcript_id,"+AS ",range$id[tid_table$from_index[m]])
+        gtf_transcripts$new_transcript_id_exnum <- paste0(gtf_transcripts$new_transcript_id, "_", as.numeric(gtf_transcripts$exon_number))
+
+        # duplicate core transcripts if needed
+        needs_dup <- which(!(tid_table$new_transcript_id %in% gtf_transcripts$new_transcript_id))
+        if(length(needs_dup) > 0){
+            gtf_transcripts_add <- gtf_transcripts[gtf_transcripts$transcript_id %in% tid_table$to_transcript_id[needs_dup]]
+        }
+        while(length(needs_dup) > 0){
+            gtf_transcripts_add <- gtf_transcripts_add[gtf_transcripts_add$transcript_id %in% tid_table$to_transcript_id[needs_dup]]
+            m <- match(gtf_transcripts_add$transcript_id, tid_table$to_transcript_id[needs_dup])
+            gtf_transcripts_add$new_transcript_id <- paste0(gtf_transcripts_add$transcript_id,"+AS ",tid_table$junction_id[needs_dup][m])
+            gtf_transcripts <- c(gtf_transcripts, gtf_transcripts_add)
+            needs_dup <- which(!(tid_table$new_transcript_id %in% gtf_transcripts$new_transcript_id))
+        }
+
+        gtf_transcripts$from <- unlist(lapply(str_split(gtf_transcripts$new_transcript_id, "AS "),"[[",2))
+        gtf_transcripts <- gtf_transcripts[order(gtf_transcripts$transcript_id, start(gtf_transcripts))]
+
         gtf_transcripts <- gtf_transcripts[gtf_transcripts$transcript_id %in% exons_firstLast$transcript_id]
         gtf_transcripts$new_transcript_id_exnum <- paste0(gtf_transcripts$new_transcript_id, "_", as.numeric(gtf_transcripts$exon_number))
 
@@ -405,7 +445,7 @@ replaceJunction <- function(junctionPairs, exonRanges, gtf.exons, type=NA){
         if(dim(ol)[1] > 0){
             gtf_transcripts_altered <- (gtf_transcripts_altered[-unique(ol$subjectHits)])
         }
-        gtf_transcripts_altered <- c(gtf_transcripts_altered[-unique(ol$subjectHits)],
+        gtf_transcripts_altered <- c(gtf_transcripts_altered,
                                      junctionReplacementExons,
                                      replacementExonsFirstLast)
 
@@ -419,16 +459,20 @@ replaceJunction <- function(junctionPairs, exonRanges, gtf.exons, type=NA){
         gtf_transcripts_altered <- gtf_transcripts_altered[order(gtf_transcripts_altered$new_transcript_id,
                                                                  start(gtf_transcripts_altered))]
 
+        gtf_transcripts_altered <- gtf_transcripts_altered[order(gtf_transcripts_altered$new_transcript_id,
+                                                                 start(gtf_transcripts_altered))]
 
-
-
+        gtf_transcripts_altered$set <- range$set[match(gtf_transcripts_altered$from, range$id)]
+        mcols(gtf_transcripts_altered) <- mcols(gtf_transcripts_altered)[,match(c('gene_id',"transcript_id","exon_number","from","set"),
+                                                                                colnames(mcols(gtf_transcripts_altered)))]
+        colnames(mcols(gtf_transcripts_altered))[4] <- "whippet_id"
     }
 
-    gtf_transcripts_altered$set <- range$set[match(gtf_transcripts_altered$from, range$id)]
-    gtf_transcripts_altered$whippet_id <- junctionPairs$whippet_id[match(gtf_transcripts_altered$from, junctionPairs$id)]
-    gtf_transcripts_altered$transcript_id <- gtf_transcripts_altered$new_transcript_id
 
-    mcols(gtf_transcripts_altered) <- mcols(gtf_transcripts_altered)[,c('gene_id','transcript_id','exon_number','whippet_id','set')]
+    #gtf_transcripts_altered$transcript_id <- gtf_transcripts_altered$new_transcript_id
+    #mcols(gtf_transcripts_altered) <- mcols(gtf_transcripts_altered)[,c('gene_id','transcript_id','exon_number','whippet_id','set')]
 
     return(gtf_transcripts_altered)
 }
+
+
