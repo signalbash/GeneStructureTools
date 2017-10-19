@@ -171,11 +171,50 @@ findJunctionPairs <- function(exonRanges, jncRanges, type=NA){
 #' @author Beth Signal
 replaceJunction <- function(junctionPairs, exonRanges, gtf.exons, type=NA){
 
+    junctionPairs <- findJunctionPairs(ranges.af, jncRanges = jnc_ranges, type="AF")
+
     junctionPairs$type <- type
     range <- junctionPairs
-    ## find exons that use/overlap the junction - at the side where it's alternative
-    end(range)[which(range$seach=="right")] <- start(range)[which(range$seach=="right")]
-    start(range)[which(range$seach=="left")] <- end(range)[which(range$seach=="left")]
+
+    end(range)[which(range$search=="right")] <- start(range)[which(range$search=="right")]
+    start(range)[which(range$search=="left")] <- end(range)[which(range$search=="left")]
+
+    if(type=="AF" | type=="AL"){
+
+        ol_firstLast.left <- findOverlaps(range[which(range$search=="left")], gtf.exons, type="start")
+        ol_firstLast.right <- findOverlaps(range[which(range$search=="right")], gtf.exons, type="end")
+
+        ol_firstLast.left <- cbind(as.data.frame(ol_firstLast.left),
+                                   transcript_id=gtf.exons$transcript_id[ol_firstLast.left@to])
+        ol_firstLast.right <- cbind(as.data.frame(ol_firstLast.right),
+                                    transcript_id=gtf.exons$transcript_id[ol_firstLast.right@to])
+
+        ol_firstLast <- rbind(ol_firstLast.left, ol_firstLast.right)
+
+        exons_firstLast <- gtf.exons[ol_firstLast$subjectHits]
+        exons_firstLast$set <- range$set[ol_firstLast$queryHits]
+        exons_firstLast$search <- range$search[ol_firstLast$queryHits]
+
+        exons_firstLast$junction_id <- range$id[ol_firstLast$queryHits]
+        new_id.left <- paste0(seqnames(exons_firstLast),":",
+                              start(junctionPairs)[ol_firstLast$queryHits],"-",
+                              end(junctionPairs)[ol_firstLast$queryHits],"+",
+                              end(exons_firstLast))
+        new_id.right <- paste0(seqnames(exons_firstLast),":",
+                               start(junctionPairs)[ol_firstLast$queryHits],"-",
+                               end(junctionPairs)[ol_firstLast$queryHits],"+",
+                               start(exons_firstLast))
+        exons_firstLast$new_id[which(exons_firstLast$search=="left")] <- new_id.left[which(exons_firstLast$search=="left")]
+        exons_firstLast$new_id[which(exons_firstLast$search=="right")] <- new_id.right[which(exons_firstLast$search=="right")]
+
+        m <- match(exons_firstLast$junction_id, junctionPairs$id)
+        junctionPairs <- junctionPairs[m]
+        range <- junctionPairs
+        range$id <- exons_firstLast$new_id
+        end(range)[which(range$search=="left")] <- start(range)[which(range$search=="left")]
+        start(range)[which(range$search=="right")] <- end(range)[which(range$search=="right")]
+
+    }
 
     ol_junction <- findOverlaps(range, gtf.exons)
     ol_junction <- cbind(as.data.frame(ol_junction),
@@ -187,10 +226,10 @@ replaceJunction <- function(junctionPairs, exonRanges, gtf.exons, type=NA){
     tid_table <- tid_table[tid_table$Freq > 0,]
     colnames(tid_table)[1:2] <- c("from_index","to_transcript_id")
     tids <- unique(tid_table$to_transcript_id)
+
     tid_table$junction_id <- range$id[tid_table$from_index]
     ## new transcript id -- unique if different junctions are going to be used in same transcript base
     tid_table$new_transcript_id <- paste0(tid_table$to_transcript_id,"+AS ",tid_table$junction_id)
-
     ## all transcripts for structural altercations
     gtf_transcripts <- gtf.exons[gtf.exons$transcript_id %in% tids]
     mcols(gtf_transcripts) <- mcols(gtf_transcripts)[,c('gene_id','transcript_id','exon_number')]
@@ -218,95 +257,178 @@ replaceJunction <- function(junctionPairs, exonRanges, gtf.exons, type=NA){
 
     ## alter exons hitting the junctions so they all break at the same place
     # range is at the alt. points defined in exonRanges
-    range <- junctionPairs
-    end(range) <- start(range)
+    if(type=="AA" | type=="AD"){
+        range <- junctionPairs
+        end(range) <- start(range)
 
-    ol_left <- as.data.frame(findOverlaps(range, gtf_transcripts))
-    ol_left$from_id <- range$id[ol_left$queryHits]
-    ol_left$to_id <- gtf_transcripts$from[ol_left$subjectHits]
-    ol_left <- ol_left[ol_left$from_id == ol_left$to_id,]
+        ol_left <- as.data.frame(findOverlaps(range, gtf_transcripts))
+        ol_left$from_id <- range$id[ol_left$queryHits]
+        ol_left$to_id <- gtf_transcripts$from[ol_left$subjectHits]
+        ol_left <- ol_left[ol_left$from_id == ol_left$to_id,]
 
-    # fix the end of the left transcript exons
-    exons_left <- gtf_transcripts[ol_left$subjectHits]
-    end(exons_left) <- end(range[ol_left$queryHits])
+        # fix the end of the left transcript exons
+        exons_left <- gtf_transcripts[ol_left$subjectHits]
+        end(exons_left) <- end(range[ol_left$queryHits])
 
-    # now the right side
-    range <- junctionPairs
-    start(range) <- end(range)
+        # now the right side
+        range <- junctionPairs
+        start(range) <- end(range)
 
-    ol_right <- as.data.frame(findOverlaps(range, gtf_transcripts))
-    ol_right$from_id <- range$id[ol_right$queryHits]
-    ol_right$to_id <- gtf_transcripts$from[ol_right$subjectHits]
-    ol_right <- ol_right[ol_right$from_id == ol_right$to_id,]
+        ol_right <- as.data.frame(findOverlaps(range, gtf_transcripts))
+        ol_right$from_id <- range$id[ol_right$queryHits]
+        ol_right$to_id <- gtf_transcripts$from[ol_right$subjectHits]
+        ol_right <- ol_right[ol_right$from_id == ol_right$to_id,]
 
-    # fix the start of the right exons
-    exons_right <- gtf_transcripts[ol_right$subjectHits]
-    start(exons_right) <- end(range[ol_right$queryHits])
-
-
-    m <- match(exons_left$new_transcript_id, exons_right$new_transcript_id)
-    exons_left <- exons_left[which(!is.na(m))]
-    exons_right <- exons_right[m[which(!is.na(m))]]
-
-    exons_glued <- exons_left
-    end(exons_glued) <- end(exons_right)
-
-    # replacement exon pairs
-    gtf_transcripts_replacement <- c(exons_left,exons_right)
-
-    # remove replaced exons from gtf
-    gtf_transcripts_altered <- gtf_transcripts[gtf_transcripts$new_transcript_id %in%
-                                                   gtf_transcripts_replacement$new_transcript_id]
+        # fix the start of the right exons
+        exons_right <- gtf_transcripts[ol_right$subjectHits]
+        start(exons_right) <- end(range[ol_right$queryHits])
 
 
+        m <- match(exons_left$new_transcript_id, exons_right$new_transcript_id)
+        exons_left <- exons_left[which(!is.na(m))]
+        exons_right <- exons_right[m[which(!is.na(m))]]
 
-    ol <- as.data.frame(findOverlaps(exons_glued, gtf_transcripts_altered))
-    ol$from_id <- exons_glued$new_transcript_id[ol$queryHits]
-    ol$to_id <- gtf_transcripts_altered$new_transcript_id[ol$subjectHits]
-    ol <- ol[ol$from_id == ol$to_id,]
-    gtf_transcripts_altered <- gtf_transcripts_altered[-unique(ol$subjectHits)]
+        exons_glued <- exons_left
+        end(exons_glued) <- end(exons_right)
 
-    # remove anything after first/last -- in A version only
-    if(type=="AF"){
-        back <- 1
-        n <- which(gtf_transcripts_replacement$from %in% junctionPairs$id[junctionPairs$set=="A"])
-        new_transcript_id_exnum <- paste0(gtf_transcripts_replacement$new_transcript_id[n], "_", as.numeric(gtf_transcripts_replacement$exon_number[n]) -back)
-        m <- match(new_transcript_id_exnum, gtf_transcripts_altered$new_transcript_id_exnum)
-        m <- m[!is.na(m)]
-        while(length(m) > 0){
-            gtf_transcripts_altered <- gtf_transcripts_altered[-m]
-            back <- back + 1
-            new_transcript_id_exnum <- paste0(gtf_transcripts_replacement$new_transcript_id[n], "_", as.numeric(gtf_transcripts_replacement$exon_number[n]) -back)
+        exons_glued <- exons_left
+        end(exons_glued) <- end(exons_right)
+
+        # replacement exon pairs
+        gtf_transcripts_replacement <- c(exons_left,exons_right)
+
+        # remove replaced exons from gtf
+        gtf_transcripts_altered <- gtf_transcripts[gtf_transcripts$new_transcript_id %in%
+                                                       gtf_transcripts_replacement$new_transcript_id]
+
+
+
+        ol <- as.data.frame(findOverlaps(exons_glued, gtf_transcripts_altered))
+        ol$from_id <- exons_glued$new_transcript_id[ol$queryHits]
+        ol$to_id <- gtf_transcripts_altered$new_transcript_id[ol$subjectHits]
+        ol <- ol[ol$from_id == ol$to_id,]
+        gtf_transcripts_altered <- gtf_transcripts_altered[-unique(ol$subjectHits)]
+
+    }else{
+        gtf_transcripts <- gtf_transcripts[gtf_transcripts$transcript_id %in% exons_firstLast$transcript_id]
+        gtf_transcripts$new_transcript_id_exnum <- paste0(gtf_transcripts$new_transcript_id, "_", as.numeric(gtf_transcripts$exon_number))
+
+        range <- junctionPairs
+        range$id <- exons_firstLast$new_id
+
+        ## find exons that use/overlap the junction - at the side where it's alternative
+        end(range)[which(range$search=="left")] <- start(range)[which(range$search=="left")]
+        start(range)[which(range$search=="right")] <- end(range)[which(range$search=="right")]
+
+        ### Same used junction replacement
+        w_left <- which(range$search=="left")
+        ol_left <- as.data.frame(findOverlaps(range[w_left], gtf_transcripts))
+        ol_left$from_id <- range$id[w_left][ol_left$queryHits]
+        ol_left$to_id <- gtf_transcripts$from[ol_left$subjectHits]
+        ol_left <- ol_left[ol_left$from_id == ol_left$to_id,]
+
+        # fix the end of the left transcript exons
+        exons_left <- gtf_transcripts[ol_left$subjectHits]
+        end(exons_left) <- end(range[ol_left$queryHits])
+
+        w_right <- which(range$search=="right")
+        ol_right <- as.data.frame(findOverlaps(range[w_right], gtf_transcripts))
+        ol_right$from_id <- range$id[w_right][ol_right$queryHits]
+        ol_right$to_id <- gtf_transcripts$from[ol_right$subjectHits]
+        ol_right <- ol_right[ol_right$from_id == ol_right$to_id,]
+
+        # fix the end of the right transcript exons
+        exons_right <- gtf_transcripts[ol_right$subjectHits]
+        start(exons_right) <- start(range[ol_right$queryHits])
+
+        junctionReplacementExons <- c(exons_left, exons_right)
+        junctionReplacementExons$set <- range$set[match(junctionReplacementExons$from, range$id)]
+
+        keep <- which(gtf_transcripts$new_transcript_id %in% replacementExonsFirstLast$new_transcript_id)
+        gtf_transcripts_altered <- gtf_transcripts[keep]
+        gtf_transcripts_altered$set <- range$set[match(gtf_transcripts_altered$from, range$id)]
+
+        ### First/last exon replacement
+
+        m <- match(junctionReplacementExons$from, exons_firstLast$new_id)
+        replacementExonsFirstLast <- junctionReplacementExons
+        ranges(replacementExonsFirstLast) <- ranges(exons_firstLast[m])
+
+
+        # remove anything after first/last
+        if(type=="AF"){
+            back <- 0
+            n <- which(gtf_transcripts_altered$new_transcript_id_exnum %in% junctionReplacementExons$new_transcript_id_exnum)
+            ids <- gtf_transcripts_altered$new_transcript_id[n]
+            exon_nums <- as.numeric(gtf_transcripts_altered$exon_number[n])
+            new_transcript_id_exnum <- paste0(ids, "_", exon_nums-back)
             m <- match(new_transcript_id_exnum, gtf_transcripts_altered$new_transcript_id_exnum)
             m <- m[!is.na(m)]
+            while(length(m) > 0){
+                gtf_transcripts_altered <- gtf_transcripts_altered[-m]
+                back <- back + 1
+                new_transcript_id_exnum <- paste0(ids, "_", exon_nums-back)
+                m <- match(new_transcript_id_exnum, gtf_transcripts_altered$new_transcript_id_exnum)
+                m <- m[!is.na(m)]
+            }
         }
-    }
-    if(type=="AL"){
-        fwd <- 1
-        n <- which(gtf_transcripts_replacement$from %in% junctionPairs$id[junctionPairs$set=="A"])
-        new_transcript_id_exnum <- paste0(gtf_transcripts_replacement$new_transcript_id[n], "_", as.numeric(gtf_transcripts_replacement$exon_number[n]) +fwd)
-        m <- match(new_transcript_id_exnum, gtf_transcripts_altered$new_transcript_id_exnum)
-        m <- m[!is.na(m)]
-        while(length(m) > 0){
-            gtf_transcripts_altered <- gtf_transcripts_altered[-m]
-            fwd <- fwd + 1
-            new_transcript_id_exnum <- paste0(gtf_transcripts_replacement$new_transcript_id[n], "_", as.numeric(gtf_transcripts_replacement$exon_number[n]) +fwd)
+        if(type=="AL"){
+            fwd <- 0
+            n <- which(gtf_transcripts_altered$new_transcript_id_exnum %in% junctionReplacementExons$new_transcript_id_exnum)
+            ids <- gtf_transcripts_altered$new_transcript_id[n]
+            exon_nums <- as.numeric(gtf_transcripts_altered$exon_number[n])
+            new_transcript_id_exnum <- paste0(ids, "_", exon_nums+fwd)
             m <- match(new_transcript_id_exnum, gtf_transcripts_altered$new_transcript_id_exnum)
             m <- m[!is.na(m)]
+            while(length(m) > 0){
+                gtf_transcripts_altered <- gtf_transcripts_altered[-m]
+                fwd <- fwd + 1
+                new_transcript_id_exnum <- paste0(ids, "_", exon_nums+fwd)
+                m <- match(new_transcript_id_exnum, gtf_transcripts_altered$new_transcript_id_exnum)
+                m <- m[!is.na(m)]
+            }
         }
 
-    }
+        # remove overlapping exons
+        longRange <- replacementExonsFirstLast
+        range_df <- data.frame(start_1 = start(replacementExonsFirstLast),
+                               start_2 = start(junctionReplacementExons),
+                               end_1 = end(replacementExonsFirstLast),
+                               end_2 = end(junctionReplacementExons))
+        start(longRange) <- apply(range_df[,1:2], 1, min)
+        end(longRange) <- apply(range_df[,3:4], 1, max)
 
-    # add together
-    gtf_transcripts_altered <- c(gtf_transcripts_altered, gtf_transcripts_replacement)
-    gtf_transcripts_altered <- gtf_transcripts_altered[order(gtf_transcripts_altered$new_transcript_id,
-                                                             as.numeric(as.character(gtf_transcripts_altered$exon_number)))]
+        ol <- as.data.frame(findOverlaps(longRange, gtf_transcripts_altered))
+        ol$from_id <- longRange$new_transcript_id[ol$queryHits]
+        ol$to_id <- gtf_transcripts_altered$new_transcript_id[ol$subjectHits]
+        ol <- ol[which(ol$from_id == ol$to_id),]
+        if(dim(ol)[1] > 0){
+            gtf_transcripts_altered <- (gtf_transcripts_altered[-unique(ol$subjectHits)])
+        }
+        gtf_transcripts_altered <- c(gtf_transcripts_altered[-unique(ol$subjectHits)],
+                                     junctionReplacementExons,
+                                     replacementExonsFirstLast)
+
+        #redo exon numbering
+        gtf_transcripts_altered <- gtf_transcripts_altered[order(gtf_transcripts_altered$new_transcript_id,
+                                                                 start(gtf_transcripts_altered))]
+        tab <- as.data.frame(table(gtf_transcripts_altered$new_transcript_id))
+        tab$strand <- as.character(strand(gtf_transcripts_altered[match(tab$Var1,
+                                                                        gtf_transcripts_altered$new_transcript_id)]))
+        gtf_transcripts_altered$exon_number <- unlist(apply(tab, 1, function(x) if(x[3] == "-"){c(x[2]:1)}else{c(1:x[2])}))
+        gtf_transcripts_altered <- gtf_transcripts_altered[order(gtf_transcripts_altered$new_transcript_id,
+                                                                 start(gtf_transcripts_altered))]
+
+
+
+
+    }
 
     gtf_transcripts_altered$set <- range$set[match(gtf_transcripts_altered$from, range$id)]
     gtf_transcripts_altered$whippet_id <- junctionPairs$whippet_id[match(gtf_transcripts_altered$from, junctionPairs$id)]
+    gtf_transcripts_altered$transcript_id <- gtf_transcripts_altered$new_transcript_id
 
     mcols(gtf_transcripts_altered) <- mcols(gtf_transcripts_altered)[,c('gene_id','transcript_id','exon_number','whippet_id','set')]
-
 
     return(gtf_transcripts_altered)
 }
