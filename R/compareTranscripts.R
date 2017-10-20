@@ -12,22 +12,21 @@ orfDiff <- function(orfsX,
                     orfsY,
                     filterNMD = TRUE,
                     geneSimilarity = TRUE,
-                    compareUTR = FALSE){
+                    compareUTR = TRUE){
     if(filterNMD == TRUE){
-        orfChanges <- attrChangeAltSpliced(orfsX[orfsX$nmd_prob < 0.5,],
-                                            orfsY[orfsY$nmd_prob < 0.5,],
+        orfChanges <- attrChangeAltSpliced(orfsX[which(orfsX$nmd_prob < 0.5),],
+                                            orfsY[which(orfsY$nmd_prob < 0.5),],
                                             attribute = "orf_length",
                                             compareBy="gene",useMax = TRUE,
                                            compareUTR = compareUTR)
 
-        orfChanges.filterx <- attrChangeAltSpliced(orfsX[orfsX$nmd_prob < 0.5,],
+        orfChanges.filterx <- attrChangeAltSpliced(orfsX[which(orfsX$nmd_prob < 0.5),],
                                                     orfsY,
                                                     attribute = "orf_length",
                                                     compareBy="gene",useMax = TRUE,
                                                    compareUTR = compareUTR)
-
         orfChanges.filtery <- attrChangeAltSpliced(orfsX,
-                                                    orfsY[orfsY$nmd_prob < 0.5,],
+                                                    orfsY[which(orfsY$nmd_prob < 0.5),],
                                                     attribute = "orf_length",
                                                     compareBy="gene",useMax = TRUE,
                                                    compareUTR = compareUTR)
