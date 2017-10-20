@@ -477,11 +477,11 @@ replaceJunction <- function(junctionPairs, exonRanges, gtf.exons, type=NA){
         tab$strand <- as.character(strand(gtf_transcripts_altered[match(tab$Var1,
                                                                         gtf_transcripts_altered$new_transcript_id)]))
         gtf_transcripts_altered$exon_number <- unlist(apply(tab, 1, function(x) if(x[3] == "-"){c(x[2]:1)}else{c(1:x[2])}))
-        gtf_transcripts_altered <- gtf_transcripts_altered[order(gtf_transcripts_altered$new_transcript_id,
-                                                                 start(gtf_transcripts_altered))]
 
         gtf_transcripts_altered <- gtf_transcripts_altered[order(gtf_transcripts_altered$new_transcript_id,
                                                                  start(gtf_transcripts_altered))]
+
+        gtf_store <- gtf_transcripts_altered
 
         gtf_transcripts_altered$set <- range$set[match(gtf_transcripts_altered$from, range$id)]
         mcols(gtf_transcripts_altered) <- mcols(gtf_transcripts_altered)[,match(c('gene_id',"transcript_id","exon_number","from","set"),
@@ -493,8 +493,26 @@ replaceJunction <- function(junctionPairs, exonRanges, gtf.exons, type=NA){
 
     #gtf_transcripts_altered$transcript_id <- gtf_transcripts_altered$new_transcript_id
     #mcols(gtf_transcripts_altered) <- mcols(gtf_transcripts_altered)[,c('gene_id','transcript_id','exon_number','whippet_id','set')]
+    gtf_transcripts_altered <- removeDuplicateTranscripts(gtf_transcripts_altered)
 
     return(gtf_transcripts_altered)
 }
+#' Remove transcript duplicates
+#'
+#' Removes Structural duplicates of transcripts in a GRanges object
+#' @param transcripts GRanges object with transcript structures in exon form
+#' @return GRanges object with unique transcript structures in exon form
+#' @export
+#' @import GenomicRanges
+#' @examples
+#' @author Beth Signal
+removeDuplicateTranscripts <- function(transcripts){
+    transcript_df <- as.data.frame(transcripts)
 
+    transcript_df$startend <- with(transcript_df, paste0(start,"-",end))
+    transcript_rangePaste <- aggregate(startend ~ transcript_id, transcript_df, function(x) paste0(x, collapse="+"))
 
+    keep <- transcript_rangePaste$transcript_id[which(!duplicated(transcript_rangePaste$startend))]
+    transcripts_filtered <- transcripts[transcripts$transcript_id %in% keep]
+    return(transcripts_filtered)
+}
