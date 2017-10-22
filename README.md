@@ -28,7 +28,7 @@ We also have functions for re-annotation of .GTF features, such as annotating UT
 
 ## Usage
 
-Please check the [vignette](http://htmlpreview.github.io/?https://github.com/betsig/GeneStructureTools/blob/master/vignette.html) for usage details.
+Please check the [vignette](https://rawgit.com/betsig/GeneStructureTools/master/Vignette.html) for usage details.
 
 ## Development
 
