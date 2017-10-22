@@ -1,12 +1,11 @@
 Package: GeneStructureTools
 Type: Package
-Title: Tools for gene structure manipulation and information
-Version: 0.1.0
+Title: Tools for spliced gene structure manipulation and analysis.
+Version: 0.3.0
 Author: Beth Signal
 Maintainer: Beth Signal <b.signal@garvan.org.au>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: MIT
+Description: GeneStructureTools can be used to create in silico alternative splicing events, and analyse potential effects this has on functional gene products. 
+License: BSD_3_clause + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
