@@ -100,11 +100,6 @@ transcriptChangeSummary <- function(transcriptsX,
 
     orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD)
 
-
-
-
-
-
     if(NMD == TRUE){
         nmdChange <- attrChangeAltSpliced(orfsX,
                                            orfsY,
@@ -222,8 +217,8 @@ whippetTranscriptChangeSummary <- function(significantEvents,
             altTranscripts$transcript_id <- paste0(altTranscripts$transcript_id,"+AS ",
                                                    altTranscripts$whippet_id)
 
-            orfChanges.jnc <- transcriptChangeSummary(altTranscripts[altTranscripts$set=="X"],
-                                                     altTranscripts[altTranscripts$set=="Y"],
+            orfChanges.jnc <- transcriptChangeSummary(transcriptsX = altTranscripts[altTranscripts$set=="X"],
+                                                    transcriptsY = altTranscripts[altTranscripts$set=="Y"],
                                                      g = g,NMD = NMD)
 
             # add to significantEvents
