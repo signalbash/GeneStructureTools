@@ -1,6 +1,7 @@
 # GeneStructureTools
 
 *R package for manipulation and analysis of spliced gene structures*
+![](https://github.com/betsig/GeneStructureTools/blob/master/HexLogoGeneStructureTools.png)
 
 ## Installation
 GeneStructureTools can be installed:
