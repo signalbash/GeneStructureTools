@@ -93,6 +93,7 @@ getOrfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, all_frame
     )
 
     orf_df$seq_length <- nchar(orf_df$aa_sequence)
+    orf_df$seq_length_nt <- nchar(seq_cat) + orf_df$frame -1
 
     start_sites <-
         stringr::str_locate_all(orf_df$aa_sequence, "M")
@@ -150,8 +151,8 @@ getOrfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, all_frame
     orf_df$orf_length <- nchar(orf_df$orf_sequence)
 
     orf_df$start_site_nt <-
-        orf_df$start_site * 3 - 3 + orf_df$frame
-    orf_df$stop_site_nt <- orf_df$stop_site * 3 - 1 + orf_df$frame
+        (orf_df$start_site * 3)- 3 + orf_df$frame
+    orf_df$stop_site_nt <- (orf_df$orf_length * 3) + orf_df$start_site_nt + 3
     widths <- data.frame(w = width(transcripts),
                          id = transcripts$transcript_id)
     pad <- max(table(widths$id))
@@ -207,7 +208,7 @@ getOrfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, all_frame
         orf_df$exon_b_from_final <- NA
     }
     orf_df$utr3_length <-
-        orf_df$seq_length * 3 - orf_df$stop_site_nt
+        (orf_df$seq_length_nt - orf_df$stop_site_nt) + 1
 
     orf_df$aa_sequence <- NULL
 
