@@ -156,6 +156,9 @@ getOrfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, all_frame
     orf_df$start_site_nt <-
         (orf_df$start_site * 3)- 3 + orf_df$frame
     orf_df$stop_site_nt <- (orf_df$orf_length * 3) + orf_df$start_site_nt + 3
+    orf_df$utr3_length <-
+        (orf_df$seq_length_nt - orf_df$stop_site_nt) + 1
+
     widths <- data.frame(w = width(transcripts),
                          id = transcripts$transcript_id)
     pad <- max(table(widths$id))
@@ -184,7 +187,7 @@ getOrfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, all_frame
             suppressWarnings(apply(diffs, 2, function(x)
                 min(x[x > 0 & !is.na(x)])))
         orf_df$min_dist_to_junction_a[which(is.infinite(orf_df$min_dist_to_junction_a))] <-
-            NA
+            orf_df$start_site_nt[which(is.infinite(orf_df$min_dist_to_junction_a))]
         orf_df$exon_a_from_start <-
             (apply(diffs, 2, function(x)
                 length(x[x > 0 & !is.na(x)]))) - 1
@@ -193,7 +196,7 @@ getOrfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, all_frame
             suppressWarnings((apply(diffs, 2, function(x)
                 max(x[x <= 0 & !is.na(x)])) * -1) + 1)
         orf_df$min_dist_to_junction_b[which(is.infinite(orf_df$min_dist_to_junction_b))] <-
-            NA
+            orf_df$utr3_length[which(is.infinite(orf_df$min_dist_to_junction_b))]
         orf_df$exon_b_from_final <-
             (apply(diffs, 2, function(x)
                 length(x[x <= 0 & !is.na(x)]))) - 1
@@ -201,17 +204,15 @@ getOrfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, all_frame
         exon_num <-
             apply(diffs, 2, function(x)
                 length(which(!is.na(x))))
-        orf_df$exon_a_from_start[exon_num == 1] <- NA
-        orf_df$exon_b_from_final[exon_num == 1] <- NA
+        orf_df$exon_a_from_start[exon_num == 1] <- 0
+        orf_df$exon_b_from_final[exon_num == 1] <- 0
     } else{
         # all single exon transcripts -- therefore no junctions
-        orf_df$min_dist_to_junction_a <- NA
-        orf_df$exon_a_from_start <- NA
-        orf_df$min_dist_to_junction_b <- NA
-        orf_df$exon_b_from_final <- NA
+        orf_df$min_dist_to_junction_a <- orf_df$start_site_nt
+        orf_df$exon_a_from_start <- 0
+        orf_df$min_dist_to_junction_b <- orf_df$utr3_length
+        orf_df$exon_b_from_final <- 0
     }
-    orf_df$utr3_length <-
-        (orf_df$seq_length_nt - orf_df$stop_site_nt) + 1
 
     orf_df$aa_sequence <- NULL
 
