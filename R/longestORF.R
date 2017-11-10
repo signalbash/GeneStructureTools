@@ -97,9 +97,12 @@ getOrfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, all_frame
 
     start_sites <-
         stringr::str_locate_all(orf_df$aa_sequence, "M")
+    # add first site as potential start (if no M)
     start_sites <-
         lapply(start_sites, function(x)
-            as.numeric(x[, 2]))
+            if(length(x) == 0){1}else{
+                as.numeric(x[, 2])})
+
     stop_sites <- str_locate_all(orf_df$aa_sequence, "[*]")
     stop_sites <-
         mapply(function(x, y)
