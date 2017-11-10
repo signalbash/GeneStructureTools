@@ -89,27 +89,56 @@ transcriptChangeSummary <- function(transcriptsX,
         #orfsX <- orfsX[which(!duplicated(orfsX$id)),]
     }
 
-    if(NMD == TRUE){
-        orfsX$nmd_prob <- notNMD::predictNMD(orfsX, "prob")
-        orfsX$nmd_class <- notNMD::predictNMD(orfsX)
-        orfsY$nmd_prob <- notNMD::predictNMD(orfsY, "prob")
-        orfsY$nmd_class <- notNMD::predictNMD(orfsY)
-    }
-    orfsX <- orfsX[which(!is.na(orfsX$orf_length)),]
-    orfsY <- orfsY[which(!is.na(orfsY$orf_length)),]
+    # manual NMD
 
-    orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD)
+  if(NMD == TRUE){
+      orfsX$nmd_prob <- notNMD::predictNMD(orfsX, "prob")
+      orfsX$nmd_class <- notNMD::predictNMD(orfsX)
+      orfsY$nmd_prob <- notNMD::predictNMD(orfsY, "prob")
+      orfsY$nmd_class <- notNMD::predictNMD(orfsY)
+  }
+
+  orfsX <- orfsX[which(!is.na(orfsX$orf_length)),]
+  orfsY <- orfsY[which(!is.na(orfsY$orf_length)),]
+  orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "transcript")
 
     if(NMD == TRUE){
-        nmdChange <- attrChangeAltSpliced(orfsX,
-                                           orfsY,
-                                           attribute="nmd_prob",
-                                           compareBy="gene",
-                                           useMax=FALSE)
-        m <- match(orfChange$id, nmdChange$id)
-        orfChange <- cbind(orfChange, nmdChange[m,-1])
+        orfsX$nmd_class_manual <- "nonsense_mediated_decay"
+        orfsX$nmd_class_manual[orfsX$orf_length > 50 &
+                                   (orfsX$min_dist_to_junction_b < 50 | orfsX$exon_b_from_final == 0)] <- "not_nmd"
+
+        orfsX$nmd_prob_manual <- 1
+        orfsX$nmd_prob_manual[orfsX$nmd_class_manual == "not_nmd"] <- 0
+
+        orfsY$nmd_class_manual <- "nonsense_mediated_decay"
+        orfsY$nmd_class_manual[orfsY$orf_length > 50 &
+                                   (orfsY$min_dist_to_junction_b < 50 | orfsY$exon_b_from_final == 0)] <- "not_nmd"
+
+        orfsY$nmd_prob_manual <- 1
+        orfsY$nmd_prob_manual[orfsY$nmd_class_manual == "not_nmd"] <- 0
+
     }
-    return(orfChange)
+if(NMD == TRUE){
+  nmdChange <- attrChangeAltSpliced(orfsX,
+                                    orfsY,
+                                    attribute="nmd_prob",
+                                    compareBy="gene",
+                                    useMax=FALSE)
+  m <- match(orfChange$id, nmdChange$id)
+  orfChange <- cbind(orfChange, nmdChange[m,-1])
+
+  nmdChangeMan <- attrChangeAltSpliced(orfsX,
+                                    orfsY,
+                                    attribute="nmd_prob_manual",
+                                    compareBy="gene",
+                                    useMax=FALSE)
+  m <- match(orfChange$id, nmdChangeMan$id)
+  orfChange <- cbind(orfChange, nmdChangeMan[m,-1])
+
+
+}
+  return(orfChange)
+
 }
 
 #' Compare open reading frames for whippet differentially spliced events
@@ -212,24 +241,34 @@ whippetTranscriptChangeSummary <- function(significantEvents,
 
             junctionPairs <- findJunctionPairs(ranges.jnc, jncRanges, type=event)
 
-            # make transcripts with alternative junction usage
-            altTranscripts <- replaceJunction(junctionPairs, ranges.jnc, gtf.exons, type=event)
-            altTranscripts$transcript_id <- paste0(altTranscripts$transcript_id,"+AS ",
-                                                   altTranscripts$whippet_id)
+            # check for pairs
+            ids_x <- unique(junctionPairs$whippet_id[junctionPairs$set=="X"])
+            ids_x <- ids_x[ids_x %in% unique(junctionPairs$whippet_id[junctionPairs$set=="Y"])]
 
-            orfChanges.jnc <- transcriptChangeSummary(transcriptsX = altTranscripts[altTranscripts$set=="X"],
-                                                    transcriptsY = altTranscripts[altTranscripts$set=="Y"],
-                                                     g = g,NMD = NMD)
+            significantEvents.jnc <-significantEvents.jnc[which(significantEvents.jnc$coord %in% ids_x),]
+            ranges.jnc <- ranges.jnc[which(ranges.jnc$id %in% ids_x),]
+            junctionPairs <- junctionPairs[which(junctionPairs$whippet_id %in% ids_x),]
 
-            # add to significantEvents
-            m <- match(significantEvents.jnc$coord, orfChanges.jnc$id)
-            significantEvents.jnc <- cbind(significantEvents.jnc, orfChanges.jnc[m,-1])
+            if(nrow(significantEvents.jnc) > 0){
+              # make transcripts with alternative junction usage
+              altTranscripts <- replaceJunction(junctionPairs, ranges.jnc, gtf.exons, type=event)
+              altTranscripts$transcript_id <- paste0(altTranscripts$transcript_id,"+AS ",
+                                                     altTranscripts$whippet_id)
 
-            if(exists("SignificantEvents.withORF")){
-                SignificantEvents.withORF <- rbind(SignificantEvents.withORF,
-                                                   significantEvents.jnc)
-            }else{
-                SignificantEvents.withORF <- significantEvents.jnc
+              orfChanges.jnc <- transcriptChangeSummary(transcriptsX = altTranscripts[altTranscripts$set=="X"],
+                                                      transcriptsY = altTranscripts[altTranscripts$set=="Y"],
+                                                       g = g,NMD = NMD)
+
+              # add to significantEvents
+              m <- match(significantEvents.jnc$coord, orfChanges.jnc$id)
+              significantEvents.jnc <- cbind(significantEvents.jnc, orfChanges.jnc[m,-1])
+
+              if(exists("SignificantEvents.withORF")){
+                  SignificantEvents.withORF <- rbind(SignificantEvents.withORF,
+                                                     significantEvents.jnc)
+              }else{
+                  SignificantEvents.withORF <- significantEvents.jnc
+              }
             }
         }
 
