@@ -1,25 +1,36 @@
 #' Find the largest distance between two vectors of numbers
 #' Helper function for get_orfs
-#' @param start_site vector of start sites - i.e Met amino acid positions
-#' @param stop_site vector of stop sites - i.e Stop (*) amino acid positions
-#' @param longest how many pairs to return
+#' @param startSite vector of start sites - i.e Met amino acid positions
+#' @param stopSite vector of stop sites - i.e Stop (*) amino acid positions
+#' @param longest which pair to return (1 = longest pair, 2= 2nd longest pair etc.)
 #' @return sequential start site and end site with the greatest difference
 #' @export
 #' @import plyr
 #' @examples
 #' @author Beth Signal
-maxLocation <- function(start_site, stop_site, longest = 1){
-    if(length(start_site) > 0){
-        #diffs <- unlist(lapply(start_site, function(x) stop_site[which(stop_site > x)[1]] - x))
+#' @examples
+#' starts <- c(1,10,15,25)
+#' stops <- c(4,16,50,55)
+#' # longest start site = 25, longest stop site = 50
+#' maxLocation(starts, stops, longest = 1)
+#' starts <- c(1,10,15,25)
+#' stops <- c(4,14,50,55)
+#' # longest start site = 15, longest stop site = 50
+#' maxLocation(starts, stops, longest = 1)
+#' # 2nd longest start site = 10, 2nd longest stop site = 14
+#' maxLocation(starts, stops, longest = 2)
+maxLocation <- function(startSite, stopSite, longest = 1){
+    if(length(startSite) > 0){
+        #diffs <- unlist(lapply(startSite, function(x) stopSite[which(stopSite > x)[1]] - x))
         #order <- order(diffs, decreasing=TRUE)
         #max_loc <- order[longest]
-        #start <- start_site[max_loc]
-        #stop <- stop_site[which(stop_site > start)[1]]
+        #start <- startSite[max_loc]
+        #stop <- stopSite[which(stopSite > start)[1]]
         #return(c(start,stop))
 
         # make start / stop pairs
-        stop_pair_index <- unlist(lapply(start_site, function(x) which.max(1/(stop_site - x))))
-        pairs <- data.frame(start=start_site, stop=stop_site[stop_pair_index])
+        stop_pair_index <- unlist(lapply(startSite, function(x) which.max(1/(stopSite - x))))
+        pairs <- data.frame(start=startSite, stop=stopSite[stop_pair_index])
         pairs$len <- pairs$stop - pairs$start
         pairs <- plyr::arrange(pairs, plyr::desc(len))
         pairs <- pairs[!duplicated(pairs$stop),]
@@ -32,7 +43,7 @@ maxLocation <- function(start_site, stop_site, longest = 1){
 #' @param transcripts GRanges object with ONLY exon annotations (no gene, transcript, CDS etc.) with all transcripts for orf retrevial
 #' @param BSgenome BSgenome object
 #' @param returnLongestOnly only return longest ORF?
-#' @param all_frames return longest ORF for all 3 frames?
+#' @param allFrames return longest ORF for all 3 frames?
 #' @param longest return x longest ORFs (regardless of frames)
 #' @return data.frame with longest orf details
 #' @export
@@ -41,9 +52,19 @@ maxLocation <- function(start_site, stop_site, longest = 1){
 #' @import stringr
 #' @examples
 #' @author Beth Signal
-getOrfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, all_frames=FALSE, longest=1){
+#' @examples
+#' gtf <- rtracklayer::import(system.file("extdata", "gencode.vM14.neurl1a.gtf", package="GeneStructureTools"))
+#' transcript <- gtf[gtf$type=="exon"]
+#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+#' # longest ORF for each transcripts
+#' orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = TRUE)
+#' # longest ORF in all 3 frames for each transcript
+#' orfs <- getOrfs(transcript, BSgenome = g, allFrames = TRUE)
+#' # longest 3 ORFS in eacht transcript
+#' orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = FALSE, longest=3)
+getOrfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, allFrames=FALSE, longest=1){
 
-    if (all_frames == TRUE) {
+    if (allFrames == TRUE) {
         returnLongestOnly = FALSE
         longest = 1
     }
@@ -174,7 +195,7 @@ getOrfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, all_frame
             #widths_w <- aggregate(w ~ id, widths, function(x) cumsum(c(1,x))[-1])
             widths_w2 <-
                 aggregate(w ~ id, widths, function(x)
-                    cumsumANDpad(x, pad_length = pad))
+                    cumsumANDpad(x, pad))
             m <- match(orf_df$id, widths_w2$id)
             widths_w2 <- widths_w2[m, -1]
             widths_w2  <- split(widths_w2, seq(nrow(widths_w2)))
@@ -231,15 +252,18 @@ getOrfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, all_frame
 
 #' Cumulative sum of a sequence of numbers, padded with NA
 #' @param x input numeric vector
-#' @param pad_length length to pad output to
+#' @param padLength length to pad output to
 #' @return vector with cumulative sum, padded with NA
 #' @export
 #' @examples
 #' @author Beth Signal
-cumsumANDpad <- function(x, pad_length){
+#' @examples
+#' x <- c(1,4,7,2,5)
+#' cumsumANDpad(x, 10)
+cumsumANDpad <- function(x, padLength){
     y <- cumsum(c(1,x))[-1]
-    if(length(y) < pad_length){
-        y <- c(y, rep(NA, pad_length - length(y)))
+    if(length(y) < padLength){
+        y <- c(y, rep(NA, padLength - length(y)))
     }
     return(y)
 }
