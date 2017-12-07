@@ -103,8 +103,8 @@ orfDiff <- function(orfsX,
     mx <- match(orfChanges$id_orf_length_x, orfsX$id_with_len)
 
     x <- as.numeric(mapply(function(x,y) orfSimilarity(x,y),
-                           orfsX$orf_sequence[mx][run],
-                           orfsY$orf_sequence[my][run]))
+                           orfsX$orf_sequence[mx],
+                           orfsY$orf_sequence[my]))
 
     orfChanges$percent_orf_shared <- x
 

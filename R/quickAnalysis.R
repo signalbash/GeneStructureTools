@@ -59,8 +59,10 @@ filterSignificantWhippetEvents <- function(whippetDiff,
 transcriptChangeSummary <- function(transcriptsX,
                                     transcriptsY,
                                     g,
+                                    gtf.exons,
                                     NMD = FALSE,
-                                    orfPrediction = "all_frames"){
+                                    orfPrediction = "all_frames",
+                                    compareToGene = FALSE){
 
 
 
@@ -100,7 +102,30 @@ transcriptChangeSummary <- function(transcriptsX,
 
   orfsX <- orfsX[which(!is.na(orfsX$orf_length)),]
   orfsY <- orfsY[which(!is.na(orfsY$orf_length)),]
-  orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "transcript")
+
+  if(compareToGene == TRUE){
+
+      if(NMD == TRUE){
+          ORF_db <- getOrfs(gtf.exons[gtf.exons$gene_id %in% unique(c(transcriptsX$gene_id, transcriptsY$gene_id))],
+                            g,returnLongestOnly = TRUE)
+          ORF_db$nmd_prob <- notNMD::predictNMD(ORF_db, "prob")
+          ORF_db$nmd_class <- notNMD::predictNMD(ORF_db)
+          ORF_db <- ORF_db[ORF_db$nmd_prob]
+
+      }else{
+          ORF_db <- getOrfs(gtf.exons[gtf.exons$gene_id %in% unique(c(transcriptsX$gene_id, transcriptsY$gene_id)) &
+                                          gtf.exons$transcript_type=="protein_coding"],
+                            g,returnLongestOnly = TRUE)
+      }
+
+      orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "transcript",
+                           geneSimilarity = TRUE,ORF_db = ORF_db,compareUTR = TRUE)
+}else{
+      orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "transcript",
+                           compareUTR = TRUE)
+  }
+
+
 
     if(NMD == TRUE){
         orfsX$nmd_class_manual <- "nonsense_mediated_decay"
@@ -122,7 +147,7 @@ if(NMD == TRUE){
   nmdChange <- attrChangeAltSpliced(orfsX,
                                     orfsY,
                                     attribute="nmd_prob",
-                                    compareBy="gene",
+                                    compareBy="transcript",
                                     useMax=FALSE)
   m <- match(orfChange$id, nmdChange$id)
   orfChange <- cbind(orfChange, nmdChange[m,-1])
@@ -130,7 +155,7 @@ if(NMD == TRUE){
   nmdChangeMan <- attrChangeAltSpliced(orfsX,
                                     orfsY,
                                     attribute="nmd_prob_manual",
-                                    compareBy="gene",
+                                    compareBy="transcript",
                                     useMax=FALSE)
   m <- match(orfChange$id, nmdChangeMan$id)
   orfChange <- cbind(orfChange, nmdChangeMan[m,-1])
