@@ -5,6 +5,10 @@
 #' @import data.table
 #' @examples
 #' @author Beth Signal
+#' @example
+#' whippetFiles <- list.files(system.file("extdata","whippet/", package = "GeneStructureTools"), full.names = TRUE)
+#' jncFiles <- whippetFiles[grep(".jnc", whippetFiles)]
+#' whippetJNC <- readWhippetJNCfiles(jncFiles)
 readWhippetJNCfiles <- function(files){
 
     for(f in seq_along(files)){
@@ -15,11 +19,11 @@ readWhippetJNCfiles <- function(files){
             m <- match(whip$id, whip.all$id)
             n <- match(whip.all$id, whip$id)
             whip.all <- cbind(whip.all, new_count=whip[n,5])
-            add_cols <- ncol(whip.all) - 6
+            addCols <- ncol(whip.all) - 6
 
             if(any(is.na(m))){
                 whip.add <- whip[which(is.na(m)),c(1:4,6)]
-                for(c in 1:(add_cols)){
+                for(c in 1:(addCols)){
                     whip.add <- cbind(whip.add, count=NA)
                 }
                 whip.add <- cbind(whip.add, count=whip$count[which(is.na(m))])
@@ -42,16 +46,19 @@ readWhippetJNCfiles <- function(files){
 #' @import data.table
 #' @examples
 #' @author Beth Signal
+#' whippetFiles <- list.files(system.file("extdata","whippet/", package = "GeneStructureTools"), full.names = TRUE)
+#' psiFiles <- whippetFiles[grep(".psi", whippetFiles)]
+#' whippetPSI <- readWhippetPSIfiles(psiFiles)
 readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
 
     for(f in seq_along(files)){
         whip <- data.table::fread(paste0("zcat < ", files[f]), data.table=F)
-        wanted_col <- which(colnames(whip) == attribute)
+        wantedCol <- which(colnames(whip) == attribute)
 
         if(exists("whip.all")){
-            whip.all <- cbind(whip.all, whip[,wanted_col])
+            whip.all <- cbind(whip.all, whip[,wantedCol])
         } else{
-            whip.all <- whip[,c(1:5,wanted_col)]
+            whip.all <- whip[,c(1:5,wantedCol)]
         }
     }
 
@@ -72,6 +79,10 @@ readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
 #' @import data.table
 #' @examples
 #' @author Beth Signal
+#' @examples
+#' whippetFiles <- list.files(system.file("extdata","whippet/", package = "GeneStructureTools"), full.names = TRUE)
+#' diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
+#' whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
 readWhippetDIFFfiles <- function(files){
 
     for(f in seq_along(files)){
@@ -105,19 +116,23 @@ readWhippetDIFFfiles <- function(files){
 #' @import stringr
 #' @examples
 #' @author Beth Signal
+#' whippetFiles <- list.files(system.file("extdata","whippet/", package = "GeneStructureTools"), full.names = TRUE)
+#' diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
+#' whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
+#' whippetCoords <- formatWhippetEvents(whippetDiffSplice)
 formatWhippetEvents <- function(whippet){
 
     whippet <- whippet[!duplicated(whippet$coord),]
 
-    chromosome <- unlist(lapply(str_split(whippet$coord,":"), "[[",1))
-    range <- unlist(lapply(str_split(whippet$coord,":"), "[[",2))
-    start <- unlist(lapply(str_split(range,"-"), "[[",1))
-    end <- unlist(lapply(str_split(range,"-"), "[[",2))
+    chromosome <- unlist(lapply(stringr::str_split(whippet$coord,":"), "[[",1))
+    range <- unlist(lapply(stringr::str_split(whippet$coord,":"), "[[",2))
+    start <- unlist(lapply(stringr::str_split(range,"-"), "[[",1))
+    end <- unlist(lapply(stringr::str_split(range,"-"), "[[",2))
 
-    event_ranges <- GRanges(seqnames=Rle(chromosome),
+    eventCoords <- GRanges(seqnames=Rle(chromosome),
                           ranges=IRanges(start=as.numeric(start),
                                          end=as.numeric(end)),
                           strand=whippet$strand, id=whippet$coord)
-    return(event_ranges)
+    return(eventCoords)
 }
 
