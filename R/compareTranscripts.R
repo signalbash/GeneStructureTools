@@ -74,7 +74,7 @@ orfDiff <- function(orfsX,
 
     orfsY$transcript_id <- unlist(lapply(str_split(orfsY$id, "[+]"),"[[", 1))
     if(compareBy == "gene"){
-        orfsY$spliced_id <- unlist(lapply(str_split(orfsY$id, "AS "),"[[", 2))
+        orfsY$spliced_id <- unlist(lapply(str_split(orfsY$id, " "),"[[", 2))
     }else{
         orfsY$spliced_id <- orfsY$id
     }
@@ -87,12 +87,12 @@ orfDiff <- function(orfsX,
 
     my <- match(orfChanges$id_orf_length_y, orfsY$id_with_len)
 
-    if(all(!grepl("AS ", orfsX$id))){
+    if(all(!grepl("AS", orfsX$id))){
         orfsX$id_with_len <- paste0(orfsX$gene_id, "_", orfsX$orf_length)
         orfChanges$id_orf_length_x <- paste0(orfChanges$gene_id, "_",orfChanges$orf_length_bygroup_x)
     }else{
         if(compareBy == "gene"){
-            orfsX$spliced_id <- unlist(lapply(str_split(orfsX$id, "AS "),"[[", 2))
+            orfsX$spliced_id <- unlist(lapply(str_split(orfsX$id, " "),"[[", 2))
         }else{
             orfsX$spliced_id <- orfsX$id
         }
@@ -201,6 +201,18 @@ attrChangeAltSpliced <- function(orfsX,
             aggFun <- max
         }else{
             aggFun <- min
+        }
+
+        # fix ids so spliced isoforms have same id
+        asTypes <- unique(unlist(lapply(str_split(
+            lapply(stringr::str_split(
+                c(orfsX$id, orfsY$id), "[+]"
+            ), "[[",2), " "),
+            "[[",1)))
+
+        for(asT in asTypes){
+            orfsX$id <- gsub(asT, "AS", orfsX$id)
+            orfsY$id <- gsub(asT, "AS", orfsY$id)
         }
 
         m <- match(c('id','gene_id', attribute), colnames(orfsX))
