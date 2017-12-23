@@ -1,7 +1,7 @@
 #' Given the location of a whole retained intron, find transcripts which splice out this intron
 #' @param intronRanges GRanges object with ranges for introns
 #' @param gtf.exons GRanges object made from a GTF with ONLY exon annotations (no gene, transcript, CDS etc.)
-#' @param match what type of matching to perform? perfect = only exons which bound the intron exactly,
+#' @param match what type of matching to perform? exact = only exons which bound the intron exactly,
 #' introns = any exon pairs which overlap the intron,
 #' all = any exon pairs AND single exons which overlap the intron
 #' @return data.frame with all flanking exon pairs
@@ -9,9 +9,10 @@
 #' @import GenomicRanges
 #' @examples
 #' @author Beth Signal
-findIntronContainingTranscripts <- function(intronRanges, gtf.exons, match="perfect"){
+findIntronContainingTranscripts <- function(intronRanges, gtf.exons, match="exact"){
 
-    #intronRanges = ranges.ri
+    moved <- FALSE
+    intronRanges = ranges.ri
     # remove any duplicates
     overlaps <- GenomicRanges::findOverlaps(intronRanges, type="equal")
     overlaps <- overlaps[which(overlaps@from != overlaps@to)]
@@ -28,6 +29,18 @@ findIntronContainingTranscripts <- function(intronRanges, gtf.exons, match="perf
     end(IR_range_start) <- start(IR_range_start)
 
     overlaps <- GenomicRanges::findOverlaps(IR_range_start, gtf.exons, type="end")
+
+    # catch if intron coords dont overlap the 1nt exon start/end
+    if(length(overlaps) == 0){
+        start(IR_range_start) <- start(IR_range_start) -1
+        end(IR_range_start) <- start(IR_range_start)
+        overlaps <- GenomicRanges::findOverlaps(IR_range_start, gtf.exons, type="end")
+        # fix original
+        start(intronRanges) <- start(intronRanges) -1
+        end(intronRanges) <- end(intronRanges) +1
+        moved <- TRUE
+    }
+
     gtf_from_a <- gtf.exons[overlaps@to]
     gtf_from_a$from <- overlaps@from
     gtf_from_a$new_id <- with(as.data.frame(GenomicRanges::mcols(gtf_from_a)), paste0(transcript_id, "_",from))
@@ -37,6 +50,13 @@ findIntronContainingTranscripts <- function(intronRanges, gtf.exons, match="perf
     start(IR_range_end) <- end(IR_range_end)
 
     overlaps <- GenomicRanges::findOverlaps(IR_range_end, gtf.exons, type="start")
+    if(length(overlaps) == 0){
+        end(IR_range_end) <- end(IR_range_end) +1
+        start(IR_range_end) <- end(IR_range_end)
+        overlaps <- GenomicRanges::findOverlaps(IR_range_end, gtf.exons, type="start")
+        moved <- TRUE
+    }
+
     gtf_to_a <- gtf.exons[overlaps@to]
     gtf_to_a$from <- overlaps@from
     gtf_to_a$new_id <- with(as.data.frame(GenomicRanges::mcols(gtf_to_a)), paste0(transcript_id, "_",from))
@@ -51,8 +71,11 @@ findIntronContainingTranscripts <- function(intronRanges, gtf.exons, match="perf
     mcols(gtf_to_a)$to_exon_number <- as.numeric(gtf_to_a$exon_number)
 
     mcols(gtf_to_a)$intron_exon_number <- apply(GenomicRanges::mcols(gtf_to_a)[,c('to_exon_number','from_exon_number')], 1, mean)
-    mcols(gtf_to_a)$match <- "perfect"
-
+    if(length(gtf_to_a) > 0){
+        mcols(gtf_to_a)$overlaps <- "intron"
+    }else{
+        mcols(gtf_to_a) <- cbind(mcols(gtf_to_a), DataFrame(overlaps=character()))
+    }
     if(match == "introns" | match=="all"){
         # non-exact overlaps
         ol <- findOverlaps(intronRanges, gtf.exons)
@@ -76,7 +99,7 @@ findIntronContainingTranscripts <- function(intronRanges, gtf.exons, match="perf
             gtf_over_pairs <- gtf_over_pairs[!duplicated(gtf_over_pairs$new_id)]
             gtf_over_pairs$from_exon_number <- gtf_over_pairs$intron_exon_number - 0.5
             gtf_over_pairs$to_exon_number <- gtf_over_pairs$intron_exon_number + 0.5
-            gtf_over_pairs$match <- "intron"
+            gtf_over_pairs$overlaps <- "nonexact"
             mcols(gtf_over_pairs) <-  mcols(gtf_over_pairs[,match(colnames(mcols(gtf_to_a)),colnames(mcols(gtf_over_pairs)))])
 
             gtf_to_a <- c(gtf_to_a, gtf_over_pairs)
@@ -92,19 +115,23 @@ findIntronContainingTranscripts <- function(intronRanges, gtf.exons, match="perf
             gtf_over$intron_exon_number <- gtf_over$exon_number
             gtf_over$from_exon_number <- gtf_over$exon_number
             gtf_over$to_exon_number <- gtf_over$exon_number
-            gtf_over$match <- "exon"
+            gtf_over$overlaps <- "exon"
             mcols(gtf_over) <-  mcols(gtf_over[,match(colnames(mcols(gtf_to_a)),colnames(mcols(gtf_over)))])
             gtf_to_a <- c(gtf_to_a, gtf_over)
         }
     }
 
-    flanking_exons <- as.data.frame(GenomicRanges::mcols(gtf_to_a)[,c('gene_id','transcript_id','transcript_type',
-                                                       'from','from_exon_number',
-                                                       'intron_exon_number','to_exon_number','match')])
+    if(length(gtf_to_a) > 0){
+        flanking_exons <- as.data.frame(GenomicRanges::mcols(gtf_to_a)[,c('gene_id','transcript_id','transcript_type',
+                                                           'from','from_exon_number',
+                                                           'intron_exon_number','to_exon_number','overlaps')])
 
-    flanking_exons$from <- intronRanges$id[flanking_exons$from]
-
-    return(flanking_exons)
+        flanking_exons$from <- intronRanges$id[flanking_exons$from]
+        flanking_exons$moved <- moved
+        return(flanking_exons)
+    }else{
+        return(NULL)
+    }
 }
 
 #' Add a retained intron to the transcripts it is skipped by
@@ -112,15 +139,33 @@ findIntronContainingTranscripts <- function(intronRanges, gtf.exons, match="perf
 #' @param flanking_exons data.frame generataed by findIntronContainingTranscripts()
 #' @param gtf.exons GRanges object made from a GTF with ONLY exon annotations (no gene, transcript, CDS etc.)
 #' @param glueExons Join together exons that are not seperated by introns?
+#' @param match what type of match replacement should be done?
+#' exact: exact matches to the intron only
+#' retain: keep non-exact intron match coordinates in spliced sets, and retain them in retained sets
+#' replace: replace non-exact intron match coordinates with event coordinates in spliced sets, and retain in retained sets
 #' @return GRanges with transcripts containing retained introns
 #' @export
 #' @import GenomicRanges
 #' @examples
 #' @author Beth Signal
-addIntronInTranscript <- function(intronRanges, flanking_exons, gtf.exons, glueExons=TRUE){
+addIntronInTranscript <- function(intronRanges, flanking_exons, gtf.exons, glueExons=TRUE, match="exact"){
 
-    #intronRanges <- ranges.ri
-    #flanking_exons <- exons.ri
+    move <- which(flanking_exons$moved == TRUE)
+    move_ir_index <- which(intronRanges$id %in% flanking_exons$from[move])
+    start(intronRanges)[move_ir_index] <- start(intronRanges)[move_ir_index] -1
+    end(intronRanges)[move_ir_index] <- end(intronRanges)[move_ir_index] +1
+
+    if(!(match %in% c("exact","retain","replace"))){
+        message("match must be 'exact', 'retain', or 'replace'")
+        message("using default match = 'exact'")
+        match <- "exact"
+    }
+
+    if(match == "exact"){
+        keep <- which(flanking_exons$overlaps == "intron")
+        flanking_exons <- flanking_exons[keep,]
+        intronRanges <- intronRanges[intronRanges$id %in% flanking_exons$from]
+    }
 
     intronRanges <- intronRanges[match(flanking_exons$from, intronRanges$id)]
     intronRanges$exon_number <- flanking_exons$intron_exon_number
@@ -161,32 +206,35 @@ addIntronInTranscript <- function(intronRanges, flanking_exons, gtf.exons, glueE
     flanking_exons$from_ex <- with(flanking_exons, paste0(new_transcript_id, "_", from_exon_number))
     flanking_exons$to_ex <- with(flanking_exons, paste0(new_transcript_id, "_", to_exon_number))
 
-    wi <- which(flanking_exons$match == "intron")
-    wi_p <- wi[as.character(strand(gtf_transcripts[match(flanking_exons$from_ex[wi], gtf_transcripts$new_id_ex)])) == "+"]
-    wi_n <- wi[as.character(strand(gtf_transcripts[match(flanking_exons$from_ex[wi], gtf_transcripts$new_id_ex)])) == "-"]
+    if(match == "replace"){
+        wi <- which(flanking_exons$overlaps == "nonexact")
+        wi_p <- wi[as.character(strand(gtf_transcripts[match(flanking_exons$from_ex[wi], gtf_transcripts$new_id_ex)])) == "+"]
+        wi_n <- wi[as.character(strand(gtf_transcripts[match(flanking_exons$from_ex[wi], gtf_transcripts$new_id_ex)])) == "-"]
 
-    if(length(wi_p) > 0){
-        end(gtf_transcripts)[match(flanking_exons$from_ex[wi_p], gtf_transcripts$new_id_ex)] <-
-            start(intronRanges)[match(flanking_exons$new_transcript_id[wi_p], intronRanges$new_transcript_id)]
-        start(gtf_transcripts)[match(flanking_exons$to_ex[wi_p], gtf_transcripts$new_id_ex)] <-
-            end(intronRanges)[match(flanking_exons$new_transcript_id[wi_p], intronRanges$new_transcript_id)]
+        if(length(wi_p) > 0){
+            end(gtf_transcripts)[match(flanking_exons$from_ex[wi_p], gtf_transcripts$new_id_ex)] <-
+                start(intronRanges)[match(flanking_exons$new_transcript_id[wi_p], intronRanges$new_transcript_id)]
+            start(gtf_transcripts)[match(flanking_exons$to_ex[wi_p], gtf_transcripts$new_id_ex)] <-
+                end(intronRanges)[match(flanking_exons$new_transcript_id[wi_p], intronRanges$new_transcript_id)]
+        }
+        if(length(wi_n) > 0){
+            end(gtf_transcripts)[match(flanking_exons$to_ex[wi_n], gtf_transcripts$new_id_ex)] <-
+                start(intronRanges)[match(flanking_exons$new_transcript_id[wi_n], intronRanges$new_transcript_id)]
+            start(gtf_transcripts)[match(flanking_exons$from_ex[wi_n], gtf_transcripts$new_id_ex)] <-
+                end(intronRanges)[match(flanking_exons$new_transcript_id[wi_n], intronRanges$new_transcript_id)]
+        }
     }
-    if(length(wi_n) > 0){
-        end(gtf_transcripts)[match(flanking_exons$to_ex[wi_n], gtf_transcripts$new_id_ex)] <-
-            start(intronRanges)[match(flanking_exons$new_transcript_id[wi_n], intronRanges$new_transcript_id)]
-        start(gtf_transcripts)[match(flanking_exons$from_ex[wi_n], gtf_transcripts$new_id_ex)] <-
-            end(intronRanges)[match(flanking_exons$new_transcript_id[wi_n], intronRanges$new_transcript_id)]
-    }
+
     # create an intron in 'exons'
-
-    we <- which(flanking_exons$match == "exon")
-    replace <- match(flanking_exons$from_ex[we],gtf_transcripts$new_id_ex)
-    replacement_start <- gtf_transcripts[replace]
-    end(replacement_start) <- start(intronRanges)[match(flanking_exons$new_transcript_id[we], intronRanges$new_transcript_id)]
-    replacement_end <- gtf_transcripts[replace]
-    start(replacement_end) <- end(intronRanges)[match(flanking_exons$new_transcript_id[we], intronRanges$new_transcript_id)]
-    gtf_transcripts <- c(gtf_transcripts[-replace], replacement_start, replacement_end)
-
+    we <- which(flanking_exons$overlaps == "exon")
+    if(length(we) > 0){
+        replace <- match(flanking_exons$from_ex[we],gtf_transcripts$new_id_ex)
+        replacement_start <- gtf_transcripts[replace]
+        end(replacement_start) <- start(intronRanges)[match(flanking_exons$new_transcript_id[we], intronRanges$new_transcript_id)]
+        replacement_end <- gtf_transcripts[replace]
+        start(replacement_end) <- end(intronRanges)[match(flanking_exons$new_transcript_id[we], intronRanges$new_transcript_id)]
+        gtf_transcripts <- c(gtf_transcripts[-replace], replacement_start, replacement_end)
+    }
     gtf_transcripts <- reorderExonNumbers(gtf_transcripts, by="new_transcript_id")
     gtf_transcripts$new_id_ex <- NULL
 
@@ -202,6 +250,17 @@ addIntronInTranscript <- function(intronRanges, flanking_exons, gtf.exons, glueE
     gtf_transcripts_withIntron$exon_number <- as.numeric(gtf_transcripts_withIntron$exon_number)
     order <- order(gtf_transcripts_withIntron$transcript_id, gtf_transcripts_withIntron$exon_number)
     gtf_transcripts_withIntron <- gtf_transcripts_withIntron[order]
+
+    gtf_transcripts$set <- "spliced_intron"
+    gtf_transcripts_withIntron$set <- "retained_intron"
+
+    gtf_transcripts_withIntron <- c(gtf_transcripts_withIntron, gtf_transcripts)
+
+    # rename retained/spliced isoforms
+    gtf_transcripts_withIntron$transcript_id[which(gtf_transcripts_withIntron$set=="spliced_intron")] <-
+        gsub("AS", "ASSI", gtf_transcripts_withIntron$transcript_id[which(gtf_transcripts_withIntron$set=="spliced_intron")])
+    gtf_transcripts_withIntron$transcript_id[which(gtf_transcripts_withIntron$set=="retained_intron")] <-
+        gsub("AS", "ASRI", gtf_transcripts_withIntron$transcript_id[which(gtf_transcripts_withIntron$set=="retained_intron")])
 
     #join together exons that are not seperated by an intron
     if(glueExons==TRUE){
@@ -251,9 +310,10 @@ addIntronInTranscript <- function(intronRanges, flanking_exons, gtf.exons, glueE
         #gtf_transcripts_withIntron <- gtf_transcripts_withIntron[order]
 
     }
-    gtf_transcripts$set <- "spliced_intron"
-    gtf_transcripts_withIntron$set <- "retained_intron"
 
-    return(c(gtf_transcripts_withIntron, gtf_transcripts))
+    gtf_transcripts_withIntron$whippet_id <- unlist(lapply(stringr::str_split(gtf_transcripts_withIntron$transcript_id, " "),"[[",2))
+    gtf_transcripts_withIntron$overlaps <- NULL
+
+    return(gtf_transcripts_withIntron)
 }
 
