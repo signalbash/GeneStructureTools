@@ -51,7 +51,7 @@ filterSignificantWhippetEvents <- function(whippetDiff,
 #' @param transcriptsY GRanges object with exon annotations for all transcripts to be compared for the 'alternative' condition
 #' @param g BSGenome object containing the genome for the species analysed
 #' @param NMD Use NMD predictions? (Note: notNMD must be installed to use this feature)
-#' @param orfPrediction What type of orf predictions to return. default: "all_frames"
+#' @param orfPrediction What type of orf predictions to return. default: "allFrames"
 #' @return Summarised ORF changes data.frame
 #' @export
 #' @examples
@@ -61,16 +61,40 @@ transcriptChangeSummary <- function(transcriptsX,
                                     g,
                                     gtf.exons,
                                     NMD = FALSE,
-                                    orfPrediction = "all_frames",
-                                    compareToGene = FALSE){
+                                    compareBy="gene",
+                                    orfPrediction = "allFrames",
+                                    compareToGene = FALSE,
+                                    whippetEvents = NULL){
 
 
+    if(!is.null(whippetEvents)){
+        allTranscripts <- c(transcriptsX, transcriptsY)
+        type <- gsub("_X","",gsub("_Y","", allTranscripts$set))
+        type <- gsub("skipped_exon", "CE", gsub("included_exon","CE", type))
+        type <- gsub("retained_intron", "CE", gsub("spliced_intron","RI", type))
 
+        m <- match(paste0(allTranscripts$whippet_id,"_",type), paste0(whippetEvents$coord,"_",whippetEvents$type))
+        # A -- psi in condition 1 (A) is higher (i.e. included -- > skipped)
+        norm_A <- which(whippetEvents$psi_a > whippetEvents$psi_b)
+        # B -- psi in condition 2 (B) is higher (i.e. skipped -- > included)
+        norm_B <- which(whippetEvents$psi_a < whippetEvents$psi_b)
 
+        #sets for X (+A)
+        sets_X <- c(paste0(unique(type), "_Y"), "included_exon","retained_intron")
+        #sets for Y (+B)
+        sets_Y <- c(paste0(unique(type), "_X"), "skipped_exon","spliced_intron")
 
-    if(orfPrediction == "all_frames"){
-        orfsX <- getOrfs(transcriptsX, g,returnLongestOnly = FALSE, all_frames = TRUE)
-        orfsY <- getOrfs(transcriptsY, g,returnLongestOnly = FALSE, all_frames = TRUE)
+        transcriptsX <- allTranscripts[which((m %in% norm_A & allTranscripts$set %in% sets_X) |
+                                                 (m %in% norm_B & allTranscripts$set %in% sets_Y))]
+
+        transcriptsY <- allTranscripts[which((m %in% norm_A & allTranscripts$set %in% sets_Y) |
+                                                 (m %in% norm_B & allTranscripts$set %in% sets_X))]
+
+    }
+
+    if(orfPrediction == "allFrames"){
+        orfsX <- getOrfs(transcriptsX, g,returnLongestOnly = FALSE, allFrames = TRUE)
+        orfsY <- getOrfs(transcriptsY, g,returnLongestOnly = FALSE, allFrames = TRUE)
     }else{
         orfsX <- getOrfs(transcriptsX, g,returnLongestOnly = TRUE)
         orfsY <- getOrfs(transcriptsY, g,returnLongestOnly = TRUE)
@@ -78,7 +102,7 @@ transcriptChangeSummary <- function(transcriptsX,
 
     if(all(!grepl("[+]", orfsX$id))){
 
-        if(orfPrediction == "all_frames"){
+        if(orfPrediction == "allFrames"){
             Yid.withFrame <- paste0(unlist(lapply(str_split(orfsY$id, "[+]"),"[[",1)),"_", orfsY$frame)
             Xid.withFrame <- paste0(orfsX$id,"_", orfsX$frame)
             m <- match(Yid.withFrame, Xid.withFrame)
@@ -118,12 +142,12 @@ transcriptChangeSummary <- function(transcriptsX,
                             g,returnLongestOnly = TRUE)
       }
 
-      orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "transcript",
+      orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "gene",
                            geneSimilarity = TRUE,ORF_db = ORF_db,compareUTR = TRUE)
-}else{
-      orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "transcript",
+    }else{
+        orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "gene",
                            compareUTR = TRUE)
-  }
+    }
 
 
 
@@ -147,7 +171,7 @@ if(NMD == TRUE){
   nmdChange <- attrChangeAltSpliced(orfsX,
                                     orfsY,
                                     attribute="nmd_prob",
-                                    compareBy="transcript",
+                                    compareBy="gene",
                                     useMax=FALSE)
   m <- match(orfChange$id, nmdChange$id)
   orfChange <- cbind(orfChange, nmdChange[m,-1])
@@ -155,13 +179,17 @@ if(NMD == TRUE){
   nmdChangeMan <- attrChangeAltSpliced(orfsX,
                                     orfsY,
                                     attribute="nmd_prob_manual",
-                                    compareBy="transcript",
+                                    compareBy="gene",
                                     useMax=FALSE)
   m <- match(orfChange$id, nmdChangeMan$id)
   orfChange <- cbind(orfChange, nmdChangeMan[m,-1])
 
 
 }
+  if(!is.null(whippetEvents)){
+      m <- match(orfChange$id, whippetEvents$coord)
+      orfChange <- cbind(whippetEvents[m,], orfChange)
+  }
   return(orfChange)
 
 }
@@ -197,14 +225,12 @@ whippetTranscriptChangeSummary <- function(significantEvents,
         # find exons in the gtf that overlap whippet exons
         exons.ce <- findExonContainingTranscripts(ranges.ce, gtf.exons)
         # make skipped exon transcripts
-        skippedExonTranscripts <- removeExonInTranscript(ranges.ce, exons.ce,
+        skippedExonTranscripts <- skipExonInTranscript(ranges.ce, exons.ce,
                                                          gtf.exons, glueExons = TRUE)
-        # make non-skipped exon transcripts
-        normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% exons.ce$transcript_id]
 
-        orfChanges.ce <- transcriptChangeSummary(normalTranscripts,
-                                                 skippedExonTranscripts,
-                                                 g = g,NMD = NMD)
+        orfChanges.ce <- transcriptChangeSummary(skippedExonTranscripts[skippedExonTranscripts$set=="included_exon"],
+                                                 skippedExonTranscripts[skippedExonTranscripts$set=="skipped_exon"],
+                                                 g = g,NMD = NMD, whippetEvents=significantEvents.ce)
         # add to significantEvents.ce
         m <- match(significantEvents.ce$coord, orfChanges.ce$id)
         significantEvents.ce <- cbind(significantEvents.ce, orfChanges.ce[m,-1])
@@ -229,12 +255,10 @@ whippetTranscriptChangeSummary <- function(significantEvents,
         # add the intron into transcripts
         retainedIntronTranscripts <- addIntronInTranscript(ranges.ri, exons.ri,
                                                            gtf.exons, glueExons = TRUE)
-        # make non-retained intron transcripts
-        normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% exons.ri$transcript_id]
 
-        orfChanges.ri <- transcriptChangeSummary(normalTranscripts,
-                                                 retainedIntronTranscripts,
-                                                 g = g,NMD = NMD)
+        orfChanges.ri <- transcriptChangeSummary(retainedIntronTranscripts[retainedIntronTranscripts$set=="spliced_intron"],
+                                                 retainedIntronTranscripts[retainedIntronTranscripts$set=="retained_intron"],
+                                                 g = g,NMD = NMD, whippetEvents=significantEvents.ri)
         # add to significantEvents.ce
         m <- match(significantEvents.ri$coord, orfChanges.ri$id)
         significantEvents.ri <- cbind(significantEvents.ri, orfChanges.ri[m,-1])
@@ -254,7 +278,7 @@ whippetTranscriptChangeSummary <- function(significantEvents,
         events.significant <- unique(significantEvents$type)
         events.significant <- events.significant[events.significant %in% events.junctions]
 
-        jncRanges <- formatJunctions(whippetJnc)
+            jncRanges <- formatJunctions(whippetJnc)
 
         for(e in seq_along(events.significant)){
 
@@ -277,12 +301,9 @@ whippetTranscriptChangeSummary <- function(significantEvents,
             if(nrow(significantEvents.jnc) > 0){
               # make transcripts with alternative junction usage
               altTranscripts <- replaceJunction(junctionPairs, ranges.jnc, gtf.exons, type=event)
-              altTranscripts$transcript_id <- paste0(altTranscripts$transcript_id,"+AS ",
-                                                     altTranscripts$whippet_id)
-
-              orfChanges.jnc <- transcriptChangeSummary(transcriptsX = altTranscripts[altTranscripts$set=="X"],
-                                                      transcriptsY = altTranscripts[altTranscripts$set=="Y"],
-                                                       g = g,NMD = NMD)
+              orfChanges.jnc <- transcriptChangeSummary(transcriptsX = altTranscripts[altTranscripts$set==paste0(event, "_X")],
+                                                      transcriptsY = altTranscripts[altTranscripts$set==paste0(event, "_Y")],
+                                                       g = g,NMD = NMD, whippetEvents=significantEvents.jnc)
 
               # add to significantEvents
               m <- match(significantEvents.jnc$coord, orfChanges.jnc$id)
