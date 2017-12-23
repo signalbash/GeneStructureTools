@@ -18,7 +18,7 @@
 #' package = "GeneStructureTools"))
 #' gtf.exons <- gtf[gtf$type=="exon"]
 #' gtf.transcripts <- gtf[gtf$type=="transcript"]
-#' event.exonSkip <- whippetDiffSplice[which(whippet_diff$type=="CE")[1],]
+#' event.exonSkip <- whippetDiffSplice[which(whippetDiffSplice$type=="CE")[1],]
 #' coords.exonSkip <- whippetCoords[whippetCoords$id %in% event.exonSkip$coord]
 #' exons.exonSkip <- findExonContainingTranscripts(coords.exonSkip, gtf.exons, gtf.transcripts)
 findExonContainingTranscripts <- function(eventCoords, gtf.exons, variableWidth=0, findIntrons=FALSE, gtf.transcripts){
@@ -168,7 +168,7 @@ findExonContainingTranscripts <- function(eventCoords, gtf.exons, variableWidth=
 #' package = "GeneStructureTools"))
 #' gtf.exons <- gtf[gtf$type=="exon"]
 #' gtf.transcripts <- gtf[gtf$type=="transcript"]
-#' event.exonSkip <- whippetDiffSplice[which(whippet_diff$type=="CE")[1],]
+#' event.exonSkip <- whippetDiffSplice[which(whippetDiffSplice$type=="CE")[1],]
 #' coords.exonSkip <- whippetCoords[whippetCoords$id %in% event.exonSkip$coord]
 #' exons.exonSkip <- findExonContainingTranscripts(coords.exonSkip, gtf.exons, gtf.transcripts)
 #' ExonSkippingTranscripts <- skipExonInTranscript(coords.exonSkip, exons.exonSkip, gtf.exons)
@@ -349,6 +349,11 @@ skipExonInTranscript <- function(eventCoords, skippedExons, gtf.exons, glueExons
 #' @import GenomicRanges
 #' @examples
 #' @author Beth Signal
+#' @examples
+#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
+#' package = "GeneStructureTools"))
+#' gtf.exons <- gtf[gtf$type=="exon"]
+#' gtf.exons <- reorderExonNumbers(gtf.exons)
 reorderExonNumbers <- function(gtf.exons, by="transcript_id"){
     n <- which(colnames(mcols(gtf.exons)) == by)
 
