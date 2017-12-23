@@ -197,11 +197,11 @@ replaceJunction <- function(junctionPairs, exonRanges, gtf.exons, type=NA){
 
         tid_table$junction_id <- range$id[tid_table$from_index]
         ## new transcript id -- unique if different junctions are going to be used in same transcript base
-        tid_table$new_transcript_id <- paste0(tid_table$to_transcript_id,"+AS ",tid_table$junction_id)
+        tid_table$new_transcript_id <- paste0(tid_table$to_transcript_id,"+AS"," ",tid_table$junction_id)
 
         ## all transcripts for structural altercations
         gtf_transcripts <- gtf.exons[gtf.exons$transcript_id %in% tids]
-        mcols(gtf_transcripts) <- mcols(gtf_transcripts)[,c('gene_id','transcript_id','exon_number')]
+        mcols(gtf_transcripts) <- mcols(gtf_transcripts)[,c('gene_id','transcript_id','transcript_type','exon_id','exon_number')]
         m <- match(gtf_transcripts$transcript_id, tid_table$to_transcript_id)
         # add new transcript id
         gtf_transcripts$new_transcript_id <-
@@ -288,6 +288,11 @@ replaceJunction <- function(junctionPairs, exonRanges, gtf.exons, type=NA){
 
         gtf_transcripts_altered$set <- range$set[match(gtf_transcripts_altered$from, range$id)]
         gtf_transcripts_altered$whippet_id <- junctionPairs$whippet_id[match(gtf_transcripts_altered$from, junctionPairs$id)]
+        gtf_transcripts_altered$transcript_id <- paste0(gtf_transcripts_altered$transcript_id,
+                                                            "+AS",type,gtf_transcripts_altered$set," ",
+                                                            gtf_transcripts_altered$whippet_id)
+        gtf_transcripts_altered$set <- paste0(type, "_",gtf_transcripts_altered$set)
+
 
     }else if(type %in% c("AF", "AL")){
         end(range)[which(range$search=="right")] <- start(range)[which(range$search=="right")]
@@ -348,7 +353,7 @@ replaceJunction <- function(junctionPairs, exonRanges, gtf.exons, type=NA){
         tid_table$new_transcript_id <- paste0(tid_table$to_transcript_id,"+AS ",tid_table$junction_id)
         ## all transcripts for structural altercations
         gtf_transcripts <- gtf.exons[gtf.exons$transcript_id %in% tids]
-        mcols(gtf_transcripts) <- mcols(gtf_transcripts)[,c('gene_id','transcript_id','exon_number')]
+        mcols(gtf_transcripts) <- mcols(gtf_transcripts)[,c('gene_id','transcript_id','transcript_type','exon_id','exon_number')]
         m <- match(gtf_transcripts$transcript_id, tid_table$to_transcript_id)
         # add new transcript id
         gtf_transcripts$new_transcript_id <-
@@ -484,15 +489,20 @@ replaceJunction <- function(junctionPairs, exonRanges, gtf.exons, type=NA){
         gtf_store <- gtf_transcripts_altered
 
         gtf_transcripts_altered$set <- range$set[match(gtf_transcripts_altered$from, range$id)]
-        mcols(gtf_transcripts_altered) <- mcols(gtf_transcripts_altered)[,match(c('gene_id',"transcript_id","exon_number","from","set"),
+        mcols(gtf_transcripts_altered) <- mcols(gtf_transcripts_altered)[,match(c('gene_id','transcript_id','transcript_type','exon_id','exon_number','from','set'),
                                                                                 colnames(mcols(gtf_transcripts_altered)))]
-        colnames(mcols(gtf_transcripts_altered))[4] <- "new_event_id"
+        colnames(mcols(gtf_transcripts_altered))[6] <- "new_event_id"
         gtf_transcripts_altered$whippet_id <- range$whippet_id[match(gtf_transcripts_altered$new_event_id, range$id)]
+        gtf_transcripts_altered$transcript_id <- paste0(gtf_transcripts_altered$transcript_id,
+                                                            "+AS",type,gtf_transcripts_altered$set," ",
+                                                            gtf_transcripts_altered$whippet_id)
+        gtf_transcripts_altered$set <- paste0(type, "_",gtf_transcripts_altered$set)
 
     }
 
     #gtf_transcripts_altered$transcript_id <- gtf_transcripts_altered$new_transcript_id
-    #mcols(gtf_transcripts_altered) <- mcols(gtf_transcripts_altered)[,c('gene_id','transcript_id','exon_number','whippet_id','set')]
+    mcols(gtf_transcripts_altered) <- mcols(gtf_transcripts_altered)[,c('gene_id','transcript_id','transcript_type','exon_id','exon_number',
+                                                                        'set','whippet_id')]
     gtf_transcripts_altered <- removeDuplicateTranscripts(gtf_transcripts_altered)
 
     return(gtf_transcripts_altered)
