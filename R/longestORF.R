@@ -23,14 +23,14 @@ maxLocation <- function(startSite, stopSite, longest = 1){
     if(length(startSite) > 0){
         #diffs <- unlist(lapply(startSite, function(x) stopSite[which(stopSite > x)[1]] - x))
         #order <- order(diffs, decreasing=TRUE)
-        #max_loc <- order[longest]
-        #start <- startSite[max_loc]
+        #maxLoc <- order[longest]
+        #start <- startSite[maxLoc]
         #stop <- stopSite[which(stopSite > start)[1]]
         #return(c(start,stop))
 
         # make start / stop pairs
-        stop_pair_index <- unlist(lapply(startSite, function(x) which.max(1/(stopSite - x))))
-        pairs <- data.frame(start=startSite, stop=stopSite[stop_pair_index])
+        stopPairIndex <- unlist(lapply(startSite, function(x) which.max(1/(stopSite - x))))
+        pairs <- data.frame(start=startSite, stop=stopSite[stopPairIndex])
         pairs$len <- pairs$stop - pairs$start
         pairs <- plyr::arrange(pairs, plyr::desc(len))
         pairs <- pairs[!duplicated(pairs$stop),]
@@ -62,7 +62,7 @@ maxLocation <- function(startSite, stopSite, longest = 1){
 #' orfs <- getOrfs(transcript, BSgenome = g, allFrames = TRUE)
 #' # longest 3 ORFS in eacht transcript
 #' orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = FALSE, longest=3)
-getOrfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, allFrames=FALSE, longest=1){
+getOrfs <- function(transcripts, BSgenome = NULL, returnLongestOnly=TRUE, allFrames=FALSE, longest=1){
 
     if (allFrames == TRUE) {
         returnLongestOnly = FALSE
@@ -79,106 +79,106 @@ getOrfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, allFrames
         order(transcripts$transcript_id, transcripts$exon_number)
     transcripts <- transcripts[order]
     transcripts$seq <-
-        as.character(Biostrings::getSeq(g, transcripts))
+        as.character(Biostrings::getSeq(BSgenome, transcripts))
 
-    seq_cat <-
+    seqCat <-
         aggregate(seq ~ transcript_id, mcols(transcripts), function(x)
             (paste(x, collapse = "")))
-    ids <- as.character(seq_cat$transcript_id)
-    seq_cat <- seq_cat$seq
-    rm <- which(grepl("N", seq_cat))
+    ids <- as.character(seqCat$transcript_id)
+    seqCat <- seqCat$seq
+    rm <- which(grepl("N", seqCat))
 
     if (length(rm) > 0) {
-        seq_cat <- seq_cat[-rm]
-        remove_id <- ids[rm]
+        seqCat <- seqCat[-rm]
+        removeId <- ids[rm]
         ids <- ids[-rm]
         transcripts <-
-            transcripts[-which(transcripts$transcript_id %in% remove_id)]
+            transcripts[-which(transcripts$transcript_id %in% removeId)]
     }
 
     # 3 frames
-    seq_cat <-
-        c(seq_cat, str_sub(seq_cat, 2), str_sub(seq_cat, 3))
+    seqCat <-
+        c(seqCat, stringr::str_sub(seqCat, 2), stringr::str_sub(seqCat, 3))
     frames <- rep(c(1, 2, 3), each = length(ids))
     ids <- c(ids, ids, ids)
 
     orf <-
-        suppressWarnings(unlist(lapply(seq_cat, function(x)
+        suppressWarnings(unlist(lapply(seqCat, function(x)
             as.character(Biostrings::translate(Biostrings::DNAString(x))))))
 
-    orf_df <- data.frame(
+    orfDF <- data.frame(
         id = ids,
         aa_sequence = orf,
         frame = frames,
         stringsAsFactors = FALSE
     )
 
-    orf_df$seq_length <- nchar(orf_df$aa_sequence)
-    orf_df$seq_length_nt <- nchar(seq_cat) + orf_df$frame -1
+    orfDF$seq_length <- nchar(orfDF$aa_sequence)
+    orfDF$seq_length_nt <- nchar(seqCat) + orfDF$frame -1
 
-    start_sites <-
-        stringr::str_locate_all(orf_df$aa_sequence, "M")
+    startSites <-
+        stringr::str_locate_all(orfDF$aa_sequence, "M")
     # add first site as potential start (if no M)
-    start_sites <-
-        lapply(start_sites, function(x)
+    startSites <-
+        lapply(startSites, function(x)
             if(length(x) == 0){1}else{
                 as.numeric(x[, 2])})
 
-    stop_sites <- str_locate_all(orf_df$aa_sequence, "[*]")
-    stop_sites <-
+    stopSites <- str_locate_all(orfDF$aa_sequence, "[*]")
+    stopSites <-
         mapply(function(x, y)
             c(as.numeric(x[, 2]), nchar(y)),
-            stop_sites,
-            orf_df$aa_sequence)
+            stopSites,
+            orfDF$aa_sequence)
 
-    max_loc <-
+    maxLoc <-
         mapply(function(x, y)
-            maxLocation(x, y), start_sites, stop_sites)
+            maxLocation(x, y), startSites, stopSites)
 
     if (longest >= 2 & returnLongestOnly == FALSE) {
-        orf_df_longest <- orf_df
+        orfDF.longest <- orfDF
 
         for (i in 2:longest) {
-            max_loc <- cbind(max_loc,
+            maxLoc <- cbind(maxLoc,
                              mapply(
                                  function(x, y)
                                      maxLocation(x, y, longest = i),
-                                 start_sites,
-                                 stop_sites
+                                 startSites,
+                                 stopSites
                              ))
-            orf_df_longest <- rbind(orf_df_longest, orf_df)
+            orfDF.longest <- rbind(orfDF.longest, orfDF)
         }
 
-        o <- order(max_loc[2, ] - max_loc[1, ], decreasing = TRUE)
+        o <- order(maxLoc[2, ] - maxLoc[1, ], decreasing = TRUE)
 
-        orf_df_longest$start_site <- max_loc[1, ]
-        orf_df_longest$stop_site <- max_loc[2, ]
+        orfDF.longest$start_site <- maxLoc[1, ]
+        orfDF.longest$stop_site <- maxLoc[2, ]
 
-        orf_df_longest <- orf_df_longest[o, ]
-        keep <- which(!duplicated(orf_df_longest$id))
-        orf_df <- orf_df_longest[keep, ]
-        orf_df_longest <- orf_df_longest[-keep, ]
+        orfDF.longest <- orfDF.longest[o, ]
+        keep <- which(!duplicated(orfDF.longest$id))
+        orfDF <- orfDF.longest[keep, ]
+        orfDF.longest <- orfDF.longest[-keep, ]
 
         for (i in 2:longest) {
-            keep <- which(!duplicated(orf_df_longest$id))
-            orf_df <- rbind(orf_df, orf_df_longest[keep, ])
-            orf_df_longest <- orf_df_longest[-keep, ]
+            keep <- which(!duplicated(orfDF.longest$id))
+            orfDF <- rbind(orfDF, orfDF.longest[keep, ])
+            orfDF.longest <- orfDF.longest[-keep, ]
         }
 
     } else{
-        orf_df$start_site <- max_loc[1, ]
-        orf_df$stop_site <- max_loc[2, ]
+        orfDF$start_site <- maxLoc[1, ]
+        orfDF$stop_site <- maxLoc[2, ]
     }
 
-    orf_df$orf_sequence <-
-        stringr::str_sub(orf_df$aa_sequence, orf_df$start_site, orf_df$stop_site - 1)
-    orf_df$orf_length <- nchar(orf_df$orf_sequence)
+    orfDF$orf_sequence <-
+        stringr::str_sub(orfDF$aa_sequence, orfDF$start_site, orfDF$stop_site - 1)
+    orfDF$orf_length <- nchar(orfDF$orf_sequence)
 
-    orf_df$start_site_nt <-
-        (orf_df$start_site * 3)- 3 + orf_df$frame
-    orf_df$stop_site_nt <- (orf_df$orf_length * 3) + orf_df$start_site_nt + 3
-    orf_df$utr3_length <-
-        (orf_df$seq_length_nt - orf_df$stop_site_nt) + 1
+    orfDF$start_site_nt <-
+        (orfDF$start_site * 3)- 3 + orfDF$frame
+    orfDF$stop_site_nt <- (orfDF$orf_length * 3) + orfDF$start_site_nt + 3
+    orfDF$utr3_length <-
+        (orfDF$seq_length_nt - orfDF$stop_site_nt) + 1
 
     widths <- data.frame(w = width(transcripts),
                          id = transcripts$transcript_id)
@@ -187,67 +187,67 @@ getOrfs <- function(transcripts, BSgenome = g, returnLongestOnly=TRUE, allFrames
         if (length(unique(transcripts$transcript_id)) == 1) {
             w <- cumsumANDpad(widths$w, pad)
             diffs <-
-                lapply(orf_df$stop_site_nt, function(x)
+                lapply(orfDF$stop_site_nt, function(x)
                     x - w)
             diffs <-
-                matrix(unlist(diffs), ncol = length(orf_df$id))
+                matrix(unlist(diffs), ncol = length(orfDF$id))
         } else{
             #widths_w <- aggregate(w ~ id, widths, function(x) cumsum(c(1,x))[-1])
-            widths_w2 <-
+            w2 <-
                 aggregate(w ~ id, widths, function(x)
                     cumsumANDpad(x, pad))
-            m <- match(orf_df$id, widths_w2$id)
-            widths_w2 <- widths_w2[m, -1]
-            widths_w2  <- split(widths_w2, seq(nrow(widths_w2)))
+            m <- match(orfDF$id, w2$id)
+            w2 <- w2[m, -1]
+            w2  <- split(w2, seq(nrow(w2)))
             diffs <-
                 mapply(function(x , y)
-                    x - y, orf_df$stop_site_nt, widths_w2)
+                    x - y, orfDF$stop_site_nt, w2)
         }
 
-        orf_df$min_dist_to_junction_a <-
+        orfDF$min_dist_to_junction_a <-
             suppressWarnings(apply(diffs, 2, function(x)
                 min(x[x > 0 & !is.na(x)])))
-        orf_df$min_dist_to_junction_a[which(is.infinite(orf_df$min_dist_to_junction_a))] <-
-            orf_df$start_site_nt[which(is.infinite(orf_df$min_dist_to_junction_a))]
-        orf_df$exon_a_from_start <-
+        orfDF$min_dist_to_junction_a[which(is.infinite(orfDF$min_dist_to_junction_a))] <-
+            orfDF$start_site_nt[which(is.infinite(orfDF$min_dist_to_junction_a))]
+        orfDF$exon_a_from_start <-
             (apply(diffs, 2, function(x)
                 length(x[x > 0 & !is.na(x)]))) - 1
 
-        orf_df$min_dist_to_junction_b <-
+        orfDF$min_dist_to_junction_b <-
             suppressWarnings((apply(diffs, 2, function(x)
                 max(x[x <= 0 & !is.na(x)])) * -1) + 1)
-        orf_df$min_dist_to_junction_b[which(is.infinite(orf_df$min_dist_to_junction_b))] <-
-            orf_df$utr3_length[which(is.infinite(orf_df$min_dist_to_junction_b))]
-        orf_df$exon_b_from_final <-
+        orfDF$min_dist_to_junction_b[which(is.infinite(orfDF$min_dist_to_junction_b))] <-
+            orfDF$utr3_length[which(is.infinite(orfDF$min_dist_to_junction_b))]
+        orfDF$exon_b_from_final <-
             (apply(diffs, 2, function(x)
                 length(x[x <= 0 & !is.na(x)]))) - 1
 
-        exon_num <-
+        exonNumber <-
             apply(diffs, 2, function(x)
                 length(which(!is.na(x))))
-        orf_df$exon_a_from_start[exon_num == 1] <- 0
-        orf_df$exon_b_from_final[exon_num == 1] <- 0
+        orfDF$exon_a_from_start[exonNumber == 1] <- 0
+        orfDF$exon_b_from_final[exonNumber == 1] <- 0
     } else{
         # all single exon transcripts -- therefore no junctions
-        orf_df$min_dist_to_junction_a <- orf_df$start_site_nt
-        orf_df$exon_a_from_start <- 0
-        orf_df$min_dist_to_junction_b <- orf_df$utr3_length
-        orf_df$exon_b_from_final <- 0
+        orfDF$min_dist_to_junction_a <- orfDF$start_site_nt
+        orfDF$exon_a_from_start <- 0
+        orfDF$min_dist_to_junction_b <- orfDF$utr3_length
+        orfDF$exon_b_from_final <- 0
     }
 
-    orf_df$aa_sequence <- NULL
+    orfDF$aa_sequence <- NULL
 
     if (returnLongestOnly == TRUE) {
-        orf_df <- plyr::arrange(orf_df, plyr::desc(orf_length))
-        orf_df <- orf_df[!duplicated(orf_df$id), ]
+        orfDF <- plyr::arrange(orfDF, plyr::desc(orf_length))
+        orfDF <- orfDF[!duplicated(orfDF$id), ]
     }
 
-    orf_df <- plyr::arrange(orf_df, id)
-    m <- match(orf_df$id, transcripts$transcript_id)
-    orf_df$gene_id <- transcripts$gene_id[m]
-    orf_df <- orf_df[,c(1, ncol(orf_df), 2:(ncol(orf_df)-1))]
+    orfDF <- plyr::arrange(orfDF, id)
+    m <- match(orfDF$id, transcripts$transcript_id)
+    orfDF$gene_id <- transcripts$gene_id[m]
+    orfDF <- orfDF[,c(1, ncol(orfDF), 2:(ncol(orfDF)-1))]
 
-    return(orf_df)
+    return(orfDF)
 }
 
 #' Cumulative sum of a sequence of numbers, padded with NA
