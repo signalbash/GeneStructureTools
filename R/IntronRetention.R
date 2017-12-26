@@ -22,9 +22,7 @@
 #' coords.intronRetention <- whippetCoords[whippetCoords$id %in% event.intronRetention$coord]
 #' exons.intronRetention <- findIntronContainingTranscripts(coords.intronRetention, gtf.exons)
 findIntronContainingTranscripts <- function(eventCoords, gtf.exons, match="exact"){
-
     moved <- FALSE
-    eventCoords = ranges.ri
     # remove any duplicates
     overlaps <- GenomicRanges::findOverlaps(eventCoords, type="equal")
     overlaps <- overlaps[which(overlaps@from != overlaps@to)]
@@ -266,13 +264,14 @@ addIntronInTranscript <- function(eventCoords,
                                    %in% gtfTranscripts$new_transcript_id))
     }
 
+    ##########################
     # fix starts/ends of introns
     gtfTranscripts$new_id_ex <-
-        with(mcols(gtfTranscripts), paste0(new_transcript_id, "_", exon_number))
+        paste0(gtfTranscripts$new_transcript_id, "_", gtfTranscripts$exon_number)
     flankingExons$from_ex <-
-        with(flankingExons, paste0(new_transcript_id, "_", from_exon_number))
+        paste0(flankingExons$new_transcript_id, "_", flankingExons$from_exon_number)
     flankingExons$to_ex <-
-        with(flankingExons, paste0(new_transcript_id, "_", to_exon_number))
+        paste0(flankingExons$new_transcript_id, "_", flankingExons$to_exon_number)
 
     if(match == "replace"){
         wi <- which(flankingExons$overlaps == "nonexact")

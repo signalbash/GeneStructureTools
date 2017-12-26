@@ -20,8 +20,13 @@
 #' gtf.transcripts <- gtf[gtf$type=="transcript"]
 #' event.exonSkip <- whippetDiffSplice[which(whippetDiffSplice$type=="CE")[1],]
 #' coords.exonSkip <- whippetCoords[whippetCoords$id %in% event.exonSkip$coord]
-#' exons.exonSkip <- findExonContainingTranscripts(coords.exonSkip, gtf.exons, gtf.transcripts)
-findExonContainingTranscripts <- function(eventCoords, gtf.exons, variableWidth=0, findIntrons=FALSE, gtf.transcripts){
+#' exons.exonSkip <- findExonContainingTranscripts(coords.exonSkip, gtf.exons,
+#' variableWidth=0, findIntrons=FALSE, gtf.transcripts)
+findExonContainingTranscripts <- function(eventCoords,
+                                          gtf.exons,
+                                          variableWidth=0,
+                                          findIntrons=FALSE,
+                                          gtf.transcripts){
     # remove any duplicates
     overlaps <- GenomicRanges::findOverlaps(eventCoords, type="equal")
 
@@ -170,7 +175,8 @@ findExonContainingTranscripts <- function(eventCoords, gtf.exons, variableWidth=
 #' gtf.transcripts <- gtf[gtf$type=="transcript"]
 #' event.exonSkip <- whippetDiffSplice[which(whippetDiffSplice$type=="CE")[1],]
 #' coords.exonSkip <- whippetCoords[whippetCoords$id %in% event.exonSkip$coord]
-#' exons.exonSkip <- findExonContainingTranscripts(coords.exonSkip, gtf.exons, gtf.transcripts)
+#' exons.exonSkip <- findExonContainingTranscripts(coords.exonSkip, gtf.exons,
+#' variableWidth=0, findIntrons=FALSE, gtf.transcripts)
 #' ExonSkippingTranscripts <- skipExonInTranscript(coords.exonSkip, exons.exonSkip, gtf.exons)
 
 skipExonInTranscript <- function(eventCoords, skippedExons, gtf.exons, glueExons=TRUE, match="exact"){
