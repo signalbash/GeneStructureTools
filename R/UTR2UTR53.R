@@ -92,7 +92,7 @@ UTR2UTR53 <- function(gtf){
                              gtf.cdsutr@ranges,
                              transcript_id=gtf.cdsutr@elementMetadata$transcript_id)
     gtf.cdsutrNames <- with(gtf.cdsutrDF, paste(chr,start,end,transcript_id, sep="_"))
-    gtfDD <- data.frame(chr=gtf@seqnames,
+    gtfDF <- data.frame(chr=gtf@seqnames,
                          gtf@ranges,
                          transcript_id=gtf@elementMetadata$transcript_id)
     gtfNames <- with(gtfDF, paste(chr,start,end,transcript_id, sep="_"))
