@@ -97,8 +97,8 @@ UTR2UTR53 <- function(gtf){
                          transcript_id=gtf@elementMetadata$transcript_id)
     gtfNames <- with(gtfDF, paste(chr,start,end,transcript_id, sep="_"))
 
-    m5 <- which(gtfNames %in% gtf.cdsutr_names[gtf.cdsutr@elementMetadata$type2 == "UTR5"])
-    m3 <- which(gtfNames %in% gtf.cdsutr_names[gtf.cdsutr@elementMetadata$type2 == "UTR3"])
+    m5 <- which(gtfNames %in% gtf.cdsutrNames[gtf.cdsutr@elementMetadata$type2 == "UTR5"])
+    m3 <- which(gtfNames %in% gtf.cdsutrNames[gtf.cdsutr@elementMetadata$type2 == "UTR3"])
 
     gtf@elementMetadata$type <- as.character(gtf@elementMetadata$type)
 
