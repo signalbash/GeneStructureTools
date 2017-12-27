@@ -1,79 +1,80 @@
 #' Convert DEXSeq ids to gene ids
 #'
-#' @param dexseq_ids vector of DEXSeq group or exon ids
+#' @param DEXSeqIds vector of DEXSeq group or exon ids
 #' @param removeVersion remove the version (.xx) of the gene?
 #' @return vector of unique gene ids
 #' @export
 #' @import stringr
 #' @examples
 #' # multiple genes in name
-#' dex_id <- "ENSMUSG00000027618.17+ENSMUSG00000098950.7+ENSMUSG00000089824.10+ENSMUSG00000074643.12"
-#' DEXSeqIdsToGeneIds(dex_id)
+#' DEXSeqId <- "ENSMUSG00000027618.17+ENSMUSG00000098950.7+ENSMUSG00000089824.10+ENSMUSG00000074643.12"
+#' DEXSeqIdsToGeneIds(DEXSeqId)
 #'
 #' # exonic part number in id
 #' DEXSeqIdsToGeneIds("ENSMUSG00000001017.15:E013", removeVersion=TRUE)
 #' @author Beth Signal
-DEXSeqIdsToGeneIds <- function(dexseq_ids, removeVersion=FALSE){
-    contains_exon <- grep(":E", dexseq_ids)
+DEXSeqIdsToGeneIds <- function(DEXSeqIds, removeVersion=FALSE){
+    containsExon <- grep(":E", DEXSeqIds)
 
-    if(length(contains_exon) >0 ){
-        dexseq_ids[contains_exon] <- unlist(lapply(stringr::str_split(dexseq_ids[contains_exon], ":E"), "[[",1))
+    if(length(containsExon) >0 ){
+        DEXSeqIds[containsExon] <- unlist(lapply(stringr::str_split(DEXSeqIds[containsExon], ":E"), "[[",1))
     }
 
-    gene_ids <- unique(unlist(stringr::str_split(dexseq_ids, "[+]")))
+    geneIds <- unique(unlist(stringr::str_split(DEXSeqIds, "[+]")))
 
     if(removeVersion==TRUE){
-        gene_ids <- removeVersion(gene_ids)
+        geneIds <- removeVersion(geneIds)
     }
 
-    return(gene_ids)
+    return(geneIds)
 }
 
 #' Remove version number from ensembl gene/transcript ids
 #'
 #' @param ids vector of ensembl ids
 #' @return vector of ensembl ids without the version number
+#' @import stringr
 #' @export
 #' @examples
 #' removeVersion("ENSMUSG00000001017.15")
 #' @author Beth Signal
 removeVersion <- function(ids){
-    return(unlist(lapply(str_split(ids, "[.]"), "[[",1)))
+    return(unlist(lapply(stringr::str_split(ids, "[.]"), "[[",1)))
 }
 
 #' Find a DEXSeq exons' biotype
 #'
-#' @param DEX_exon_id vector of DEXSeq exon ids
-#' @param dex_gtf GRanges object of the DEXSeq formatted gtf
+#' @param DEXSeqExonId vector of DEXSeq exon ids
+#' @param DEXSeqGtf GRanges object of the DEXSeq formatted gtf
 #' @param gtf GRanges object of the GTF annotated with exon biotypes - i.e. exon, CDS, UTR
 #' @param set which overlapping set of exon biotypes to return - to, from, and/or overlap
 #' @return overlaping types
 #' @export
 #' @import GenomicRanges
 #' @examples
-#' gtf_file <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+#' gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
 #' package = "GeneStructureTools")
-#' dex_gtf_file <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
+#' DEXSeqGtfFile <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
 #' package = "GeneStructureTools")
 #'
-#' gtf <- rtracklayer::import(gtf_file)
+#' gtf <- rtracklayer::import(gtfFile)
 #' gtf <- UTR2UTR53(gtf)
-#' dex_gtf <- rtracklayer::import(dex_gtf_file)
+#' DEXSeqGtf <- rtracklayer::import(DEXSeqGtfFile)
 #'
-#' findDEXexonType("ENSMUSG00000032366.15:E028", dex_gtf, gtf)
+#' findDEXexonType("ENSMUSG00000032366.15:E028", DEXSeqGtf, gtf)
 #'
-#' dex_results_file <- system.file("extdata","dexseq_results.small.txt",
+#' DEXSeqResultsFile <- system.file("extdata","dexseq_results.small.txt",
 #' package = "GeneStructureTools")
-#' dex_results <- read.table(dex_results_file, sep="\t")
+#' DEXSeqResults <- read.table(DEXSeqResultsFile, sep="\t")
 #'
-#' findDEXexonType(rownames(dex_results), dex_gtf, gtf)
+#' findDEXexonType(rownames(DEXSeqResults), DEXSeqGtf, gtf)
 #'
 #' @author Beth Signal
-findDEXexonType <- function(DEX_exon_id, dex_gtf, gtf,set="overlap"){
-    dex_gtf$id <- paste0(dex_gtf$gene_id,":E", dex_gtf$exonic_part_number)
-    dex_gtf.query <- dex_gtf[match(DEX_exon_id,dex_gtf$id)]
-    overlap_types <- overlapTypes(dex_gtf.query, gtf, set = set)[,2]
-    return(overlap_types)
+findDEXexonType <- function(DEXSeqExonId, DEXSeqGtf, gtf,set="overlap"){
+    DEXSeqGtf$id <- paste0(DEXSeqGtf$gene_id,":E", DEXSeqGtf$exonic_part_number)
+    DEXSeqGtf.query <- DEXSeqGtf[match(DEXSeqExonId,DEXSeqGtf$id)]
+    overlapTypes <- overlapTypes(DEXSeqGtf.query, gtf, set = set)[,2]
+    return(overlapTypes)
 }
 
 #' Summarise exon biotypes to broader categories
@@ -81,22 +82,22 @@ findDEXexonType <- function(DEX_exon_id, dex_gtf, gtf,set="overlap"){
 #' @return vector of broader exon biotypes
 #' @export
 #' @examples
-#' gtf_file <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+#' gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
 #' package = "GeneStructureTools")
-#' dex_gtf_file <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
+#' dexGtfFile <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
 #' package = "GeneStructureTools")
 #'
-#' gtf <- rtracklayer::import(gtf_file)
+#' gtf <- rtracklayer::import(gtfFile)
 #' gtf <- UTR2UTR53(gtf)
-#' dex_gtf <- rtracklayer::import(dex_gtf_file)
+#' dexGtf <- rtracklayer::import(dexGtfFile)
 #'
-#' dex_results_file <- system.file("extdata","dexseq_results.small.txt",
+#' DEXSeqResultsFile <- system.file("extdata","dexseq_results.small.txt",
 #' package = "GeneStructureTools")
-#' dex_results <- read.table(dex_results_file, sep="\t")
+#' DEXSeqResults <- read.table(DEXSeqResultsFile, sep="\t")
 #'
-#' types <- findDEXexonType(rownames(dex_results), dex_gtf, gtf)
-#' summarised_types <- summariseExonTypes(types)
-#' table(types, sumamrised_types)
+#' types <- findDEXexonType(rownames(DEXSeqResults), dexGtf, gtf)
+#' summarisedTypes <- summariseExonTypes(types)
+#' table(types, summarisedTypes)
 #' @author Beth Signal
 summariseExonTypes <- function(types){
 
@@ -119,7 +120,7 @@ summariseExonTypes <- function(types){
 #' Annotate introns and exonic parts by overlaping exon biotype
 #'
 #' Annotate introns and exonic parts by overlaping exon biotype
-#' @param query_ranges GRanges object of the query regions
+#' @param queryCoords GRanges object of the query regions
 #' @param gtf GRanges object of the GTF annotated with exon biotypes - i.e. exon, CDS, UTR
 #' @param set which overlapping set of exon biotypes to return - to, from, and/or overlap
 #' @return overlaping types in a data.frame
@@ -127,104 +128,113 @@ summariseExonTypes <- function(types){
 #' @import GenomicRanges
 #' @examples
 #' @author Beth Signal
-overlapTypes <- function(query_ranges, gtf, set=c("from", "to", "overlap")){
-    overlaps <- GenomicRanges::findOverlaps(query_ranges, gtf)
-    gtf_overlap <- gtf[overlaps@to]
-    gtf_overlap@elementMetadata$index <- overlaps@from
-    gtf_overlap <- gtf_overlap[(gtf_overlap@elementMetadata$type %in%
+#' gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+#' package = "GeneStructureTools")
+#' dexGtfFile <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
+#' package = "GeneStructureTools")
+#'
+#' gtf <- rtracklayer::import(gtfFile)
+#' gtf <- UTR2UTR53(gtf)
+#' dexGtf <- rtracklayer::import(dexGtfFile)
+#'
+#' overlapTypes(dexGtf[1], gtf, set="overlap")
+overlapTypes <- function(queryCoords, gtf, set=c("from", "to", "overlap")){
+    overlaps <- GenomicRanges::findOverlaps(queryCoords, gtf)
+    gtf.overlap <- gtf[overlaps@to]
+    gtf.overlap@elementMetadata$index <- overlaps@from
+    gtf.overlap <- gtf.overlap[(gtf.overlap@elementMetadata$type %in%
                                     c("exon", "CDS","UTR","UTR3","UTR5"))]
 
-    gtf_overlap <- filterGtfOverlap(gtf_overlap)
-    gtf_overlap <- addBroadTypes(gtf_overlap)
+    gtf.overlap <- filterGtfOverlap(gtf.overlap)
+    gtf.overlap <- addBroadTypes(gtf.overlap)
 
-    gtf_from <- NULL
-    gtf_to <- NULL
+    gtf.from <- NULL
+    gtf.to <- NULL
 
     if(any(set=="from")){
-        gtf_from <- gtf_overlap[end(gtf_overlap) ==
-                                    start(query_ranges[gtf_overlap@elementMetadata$index])]
+        gtf.from <- gtf.overlap[end(gtf.overlap) ==
+                                    start(queryCoords[gtf.overlap@elementMetadata$index])]
     }
     if(any(set=="to")){
-        gtf_to <- gtf_overlap[start(gtf_overlap) ==
-                                  end(query_ranges[gtf_overlap@elementMetadata$index])]
+        gtf.to <- gtf.overlap[start(gtf.overlap) ==
+                                  end(queryCoords[gtf.overlap@elementMetadata$index])]
     }
     #keep only hits with a exon-intron-exon pair
     if(any(set=="to") & any(set=="from")){
-        tid_index_from <- paste0(gtf_from@elementMetadata$transcript_id, "_",
-                                 gtf_from@elementMetadata$index)
-        tid_index_to <- paste0(gtf_to@elementMetadata$transcript_id, "_",
-                               gtf_to@elementMetadata$index)
-        tid_indexes_both <- tid_index_from[tid_index_from %in% tid_index_to]
-        gtf_from <- gtf_from[tid_index_from %in% tid_index_to]
-        gtf_to <- gtf_to[tid_index_to %in% tid_index_from]
+        tidIndex.from <- paste0(gtf.from@elementMetadata$transcript_id, "_",
+                                 gtf.from@elementMetadata$index)
+        tidIndex.to <- paste0(gtf.to@elementMetadata$transcript_id, "_",
+                               gtf.to@elementMetadata$index)
+        gtf.from <- gtf.from[tidIndex.from %in% tidIndex.to]
+        gtf.to <- gtf.to[tidIndex.to %in% tidIndex.from]
     }
 
-    if(any(set=="from") & length(gtf_from) > 0){
-        gtf_from@elementMetadata$typetype <- paste0(gtf_from@elementMetadata$transcript_type_broad,
-                                                    "-",gtf_from@elementMetadata$type)
+    if(any(set=="from") & length(gtf.from) > 0){
+        gtf.from@elementMetadata$typetype <- paste0(gtf.from@elementMetadata$transcript_type_broad,
+                                                    "-",gtf.from@elementMetadata$type)
         #remove nmd/retained introns -- these tend to be isoexons of protein coding exons
-        rm <- which(gtf_from@elementMetadata$typetype == "retained_intron|exon" |
-                        gtf_from@elementMetadata$transcript_type_broad == "nmd")
+        rm <- which(gtf.from@elementMetadata$typetype == "retained_intron|exon" |
+                        gtf.from@elementMetadata$transcript_type_broad == "nmd")
 
         #not used currently
-        from_types <- aggregate(type ~ index, gtf_from@elementMetadata,
+        fromTypes <- aggregate(type ~ index, gtf.from@elementMetadata,
                                 function(x) paste0(sort(unique(x)),collapse=":"))
         #not used currently
-        from_transcript_types <- aggregate(transcript_type_broad ~ index,
-                                           gtf_from@elementMetadata,
+        fromTranscriptTypes <- aggregate(transcript_type_broad ~ index,
+                                           gtf.from@elementMetadata,
                                            function(x) paste0(sort(unique(x)),collapse=":"))
-        from_typetypes <- aggregate(typetype ~ index,
-                                    gtf_from@elementMetadata[-rm,],
+        fromTypeTypes <- aggregate(typetype ~ index,
+                                    gtf.from@elementMetadata[-rm,],
                                     function(x) paste0(sort(unique(x)),collapse=":"))
     }
-    if(any(set=="to") & length(gtf_to) > 0){
-        gtf_to@elementMetadata$typetype <- paste0(gtf_to@elementMetadata$transcript_type_broad,
-                                                  "-",gtf_to@elementMetadata$type)
+    if(any(set=="to") & length(gtf.to) > 0){
+        gtf.to@elementMetadata$typetype <- paste0(gtf.to@elementMetadata$transcript_type_broad,
+                                                  "-",gtf.to@elementMetadata$type)
         #remove nmd/retained introns -- these tend to be isoexons of protein coding exons
-        rm <- which(gtf_to@elementMetadata$typetype == "retained_intron|exon" |
-                        gtf_to@elementMetadata$transcript_type_broad == "nmd")
+        rm <- which(gtf.to@elementMetadata$typetype == "retained_intron|exon" |
+                        gtf.to@elementMetadata$transcript_type_broad == "nmd")
 
-        to_types <- aggregate(type ~ index, gtf_to@elementMetadata,
+        toTypes <- aggregate(type ~ index, gtf.to@elementMetadata,
                               function(x) paste0(sort(unique(x)),collapse=":"))
-        to_transcript_types <- aggregate(transcript_type_broad ~ index,
-                                         gtf_to@elementMetadata,
+        toTranscriptTypes <- aggregate(transcript_type_broad ~ index,
+                                         gtf.to@elementMetadata,
                                          function(x) paste0(sort(unique(x)),collapse=":"))
-        to_typetypes <- aggregate(typetype ~ index,
-                                  gtf_to@elementMetadata[-rm,],
+        toTypeTypes <- aggregate(typetype ~ index,
+                                  gtf.to@elementMetadata[-rm,],
                                   function(x) paste0(sort(unique(x)),collapse=":"))
     }
     if(any(set=="overlap")){
-        gtf_overlap@elementMetadata$typetype <- paste0(gtf_overlap@elementMetadata$transcript_type_broad,
-                                                       "-",gtf_overlap@elementMetadata$type)
+        gtf.overlap@elementMetadata$typetype <- paste0(gtf.overlap@elementMetadata$transcript_type_broad,
+                                                       "-",gtf.overlap@elementMetadata$type)
         #remove nmd/retained introns -- these tend to be isoexons of protein coding exons
-        rm <- which(gtf_overlap@elementMetadata$typetype == "retained_intron|exon" |
-                        gtf_overlap@elementMetadata$transcript_type_broad == "nmd")
+        rm <- which(gtf.overlap@elementMetadata$typetype == "retained_intron|exon" |
+                        gtf.overlap@elementMetadata$transcript_type_broad == "nmd")
 
-        ol_types <- aggregate(type ~ index, gtf_overlap@elementMetadata,
+        overlapTypes <- aggregate(type ~ index, gtf.overlap@elementMetadata,
                               function(x) paste0(sort(unique(x)),collapse=":"))
-        ol_transcript_types <- aggregate(transcript_type_broad ~ index,
-                                         gtf_overlap@elementMetadata,
+        overlapTranscriptTypes <- aggregate(transcript_type_broad ~ index,
+                                         gtf.overlap@elementMetadata,
                                          function(x) paste0(sort(unique(x)),collapse=":"))
-        ol_typetypes <- aggregate(typetype ~ index,
-                                  gtf_overlap@elementMetadata[-rm,],
+        overlapTypeTypes <- aggregate(typetype ~ index,
+                                  gtf.overlap@elementMetadata[-rm,],
                                   function(x) paste0(sort(unique(x)),collapse=":"))
     }
 
-    type_types <- data.frame(index=1:length(start(ranges(query_ranges))))
-    if(any(set=="from") & length(gtf_from) > 0){
-        type_types$from <- from_typetypes$typetype[match(type_types$index,
-                                                         from_typetypes$index)]
+    typeTypes <- data.frame(index=1:length(start(ranges(queryCoords))))
+    if(any(set=="from") & length(gtf.from) > 0){
+        typeTypes$from <- fromTypeTypes$typetype[match(typeTypes$index,
+                                                         fromTypeTypes$index)]
     }
-    if(any(set=="to") & length(gtf_to) > 0){
-        type_types$to <- to_typetypes$typetype[match(type_types$index,
-                                                     to_typetypes$index)]
+    if(any(set=="to") & length(gtf.to) > 0){
+        typeTypes$to <- toTypeTypes$typetype[match(typeTypes$index,
+                                                     toTypeTypes$index)]
     }
     if(any(set=="overlap")){
-        type_types$overlap <- ol_typetypes$typetype[match(type_types$index,
-                                                          ol_typetypes$index)]
+        typeTypes$overlap <- overlapTypeTypes$typetype[match(typeTypes$index,
+                                                          overlapTypeTypes$index)]
     }
 
-    return(type_types)
+    return(typeTypes)
 }
 
 #' Change transcript biotypes to a broader set
@@ -234,11 +244,15 @@ overlapTypes <- function(query_ranges, gtf, set=c("from", "to", "overlap")){
 #' @return GRanges object of the GTF with new transcript types
 #' @export
 #' @import GenomicRanges
-#' @examples
 #' @author Beth Signal
+#' @examples
+#' gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+#' package = "GeneStructureTools")
+#' gtf <- rtracklayer::import(gtfFile)
+#' gtf <- addBroadTypes(gtf)
 addBroadTypes <- function(gtf){
-    transcript_types_new <- gtf@elementMetadata$transcript_type
-    transcript_types_new[which(transcript_types_new %in% c("3prime_overlapping_ncrna",
+    transcriptTypesBroad <- gtf@elementMetadata$transcript_type
+    transcriptTypesBroad[which(transcriptTypesBroad %in% c("3prime_overlapping_ncrna",
                                                            "3prime_overlapping_ncRNA",
                                                            "antisense",
                                                            "bidirectional_promoter_lncRNA",
@@ -249,7 +263,7 @@ addBroadTypes <- function(gtf){
                                                            "processed_transcript",
                                                            "sense_intronic",
                                                            "sense_overlapping"))] <- "lncRNA"
-    transcript_types_new[which(transcript_types_new %in% c("IG_C_gene","IG_C_pseudogene",
+    transcriptTypesBroad[which(transcriptTypesBroad %in% c("IG_C_gene","IG_C_pseudogene",
                                                            "IG_D_gene","IG_J_gene",
                                                            "IG_J_pseudogene","IG_V_gene",
                                                            "IG_D_pseudogene", "IG_LV_gene",
@@ -262,7 +276,7 @@ addBroadTypes <- function(gtf){
                                                            "TR_C_gene","TR_D_gene",
                                                            "TR_J_gene","TR_J_pseudogene" ,
                                                            "TR_V_gene","TR_V_pseudogene"))] <- "short_ncRNA"
-    transcript_types_new[which(transcript_types_new %in% c("processed_pseudogene"," pseudogene","transcribed_processed_pseudogene",
+    transcriptTypesBroad[which(transcriptTypesBroad %in% c("processed_pseudogene"," pseudogene","transcribed_processed_pseudogene",
                                                            "transcribed_unitary_pseudogene",
                                                            "transcribed_unprocessed_pseudogene",
                                                            "translated_processed_pseudogene",
@@ -271,35 +285,48 @@ addBroadTypes <- function(gtf){
                                                            "unitary_pseudogene",
                                                            "unprocessed_pseudogene"))] <- "pseudogene"
 
-    transcript_types_new[which(transcript_types_new %in% c("nonsense_mediated_decay","non_stop_decay"))] <- "nmd"
+    transcriptTypesBroad[which(transcriptTypesBroad %in% c("nonsense_mediated_decay","non_stop_decay"))] <- "nmd"
 
 
-    gtf@elementMetadata$transcript_type_broad <- transcript_types_new
+    gtf@elementMetadata$transcript_type_broad <- transcriptTypesBroad
     return(gtf)
 }
 
 #' Filter a GTF overlap to remove exons when exon is annotated as a CDS/UTR
 #'
 #' Filter a GTF overlap to remove exons when exon is annotated as a CDS/UTR
-#' @param gtf_from GRanges object of the GTF produced from an overlap
+#' @param gtf.from GRanges object of the GTF produced from an overlap
 #' @return GRanges object of the GTF with redundant exons removed
 #' @export
 #' @import GenomicRanges
-#' @examples
 #' @author Beth Signal
-filterGtfOverlap <- function(gtf_from){
-    gtf_from_df <- gtf_from@elementMetadata
-    gtf_from_df$exon_number <- as.numeric(gtf_from_df$exon_number)
-    gtf_from_df$start_ids <- paste0(start(ranges(gtf_from)),
-                                    gtf_from@elementMetadata$transcript_id)
-    gtf_from_df$end_ids <- paste0(end(ranges(gtf_from)),
-                                  gtf_from@elementMetadata$transcript_id)
+#' @examples
+#' gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+#' package = "GeneStructureTools")
+#' gtf <- rtracklayer::import(gtfFile)
+#' overlap <- findOverlaps(gtf[which(gtf$type=="CDS")[1]], gtf)
+#' table(gtf$type[overlap@to])
+#' overlapFiltered <- filterGtfOverlap(gtf[overlap@to])
+#' table(overlapFiltered$type[overlap@to])
 
-    rm_s <- which(gtf_from_df$type == "exon" &
-                      gtf_from_df$start_ids %in% gtf_from_df$start_ids[gtf_from_df$type %in% c("CDS","UTR","UTR3","UTR5")])
-    rm_e <- which(gtf_from_df$type == "exon" &
-                      gtf_from_df$end_ids %in% gtf_from_df$end_ids[gtf_from_df$type %in% c("CDS","UTR","UTR3","UTR5")])
-    rm <- unique(c(rm_e, rm_s))
-    gtf_from <- gtf_from[-rm]
-    return(gtf_from)
+#' overlap <- findOverlaps(gtf[which(gtf$transcript_type=="retained_intron")[1]], gtf)
+#' table(gtf$type[overlap@to])
+#' overlapFiltered <- filterGtfOverlap(gtf[overlap@to])
+#' table(overlapFiltered$type[overlap@to])
+
+filterGtfOverlap <- function(gtf.from){
+    gtf.fromDF <- gtf.from@elementMetadata
+    gtf.fromDF$exon_number <- as.numeric(gtf.fromDF$exon_number)
+    gtf.fromDF$start_ids <- paste0(start(ranges(gtf.from)),
+                                    gtf.from@elementMetadata$transcript_id)
+    gtf.fromDF$end_ids <- paste0(end(ranges(gtf.from)),
+                                  gtf.from@elementMetadata$transcript_id)
+
+    rmStart <- which(gtf.fromDF$type == "exon" &
+                      gtf.fromDF$start_ids %in% gtf.fromDF$start_ids[gtf.fromDF$type %in% c("CDS","UTR","UTR3","UTR5")])
+    rmEnd <- which(gtf.fromDF$type == "exon" &
+                      gtf.fromDF$end_ids %in% gtf.fromDF$end_ids[gtf.fromDF$type %in% c("CDS","UTR","UTR3","UTR5")])
+    rm <- unique(c(rmEnd, rmStart))
+    gtf.from <- gtf.from[-rm]
+    return(gtf.from)
 }
