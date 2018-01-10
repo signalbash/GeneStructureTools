@@ -101,38 +101,54 @@ orfDiff <- function(orfsX,
         orfChanges$filtered <- FALSE
     }
 
+    hasASidX <- grep("AS", orfsX$id)
+    orfsX$spliced_id <- orfsX$gene_id
+    orfsX$transcript_id <- orfsX$id
+    orfsX$spliced_id[hasASidX] <-
+        unlist(lapply(str_split(orfsX$id[hasASidX], " "), '[[', 2))
+    orfsX$transcript_id[hasASidX] <-
+        unlist(lapply(str_split(orfsX$id[hasASidX], "[+]"), '[[', 1))
 
-    orfsY$transcript_id <- unlist(lapply(str_split(orfsY$id, "[+]"),"[[", 1))
-    if(compareBy == "gene" & all(grepl("[+]", orfsY$id))){
-        orfsY$spliced_id <- unlist(lapply(str_split(orfsY$id, " "),"[[", 2))
-    }else if(all(grepl("[+]", orfsY$id))){
-        orfsY$spliced_id <- orfsY$id
-    }else{
-        orfsY$spliced_id <- orfsY$gene_id
+    hasASidY <- grep("AS", orfsY$id)
+    orfsY$spliced_id <- orfsY$gene_id
+    orfsY$transcript_id <- orfsY$id
+    orfsY$spliced_id[hasASidY] <-
+        unlist(lapply(str_split(orfsY$id[hasASidY], " "), '[[', 2))
+    orfsY$transcript_id[hasASidY] <-
+        unlist(lapply(str_split(orfsY$id[hasASidY], "[+]"), '[[', 1))
+
+    m <- match(paste0(orfsX$spliced_id,"_", orfsX$frame), paste0(orfsY$spliced_id,"_",orfsY$frame))
+    if(any(is.na(m))){
+        #hasASidX <- grep("[+]", orfsX$id)
+        if(length(hasASidX) > 0){
+            m2 <- match(paste0(orfsX$transcript_id[hasASidX],"_", orfsX$frame),
+                        paste0(orfsY$transcript_id,"_", orfsY$frame))
+            orfsY2 <- orfsY[m2,]
+            orfsY2$id <- orfsX$id[hasASidX]
+            orfsY2$spliced_id <- orfsX$spliced_id[hasASidX]
+            orfsY <- rbind(orfsY, orfsY2)
+        }
+        #hasASidY <- grep("[+]", orfsY$id)
+        if(length(hasASidY) > 0){
+            m2 <- match(paste0(orfsY$transcript_id[hasASidY],"_", orfsY$frame),
+                        paste0(orfsX$transcript_id,"_", orfsX$frame))
+            orfsX2 <- orfsX[m2,]
+            orfsX2$id <- orfsY$id[hasASidY]
+            orfsX2$spliced_id <- orfsY$spliced_id[hasASidY]
+            orfsX <- rbind(orfsX, orfsX2)
+        }
+        m2 <- match(paste0(orfsX$spliced_id,"_", orfsX$frame),
+                    paste0(orfsY$spliced_id,"_",orfsY$frame))
+        orfsX <- orfsX[which(!is.na(m2)),]
+        orfsY <- orfsY[m2[which(!is.na(m2))],]
     }
-
-    orfChanges$transcript_id <- orfsY$transcript_id[match(orfChanges$id, orfsY$spliced_id)]
-    orfChanges$gene_id <- orfsY$gene_id[match(orfChanges$id, orfsY$spliced_id)]
 
     orfsY$id_with_len <- paste0(orfsY$spliced_id, "_", orfsY$orf_length)
     orfChanges$id_orf_length_y <- paste0(orfChanges$id, "_",orfChanges$orf_length_bygroup_y)
-
     my <- match(orfChanges$id_orf_length_y, orfsY$id_with_len)
 
-    if(all(!grepl("AS", orfsX$id))){
-        orfsX$id_with_len <- paste0(orfsX$gene_id, "_", orfsX$orf_length)
-        orfChanges$id_orf_length_x <- paste0(orfChanges$gene_id, "_",
-                                             orfChanges$orf_length_bygroup_x)
-    }else{
-        if(compareBy == "gene"){
-            orfsX$spliced_id <- unlist(lapply(str_split(orfsX$id, " "),"[[", 2))
-        }else{
-            orfsX$spliced_id <- orfsX$id
-        }
-        orfsX$id_with_len <- paste0(orfsX$spliced_id, "_", orfsX$orf_length)
-        orfChanges$id_orf_length_x <- paste0(orfChanges$id, "_",orfChanges$orf_length_bygroup_x)
-    }
-
+    orfsX$id_with_len <- paste0(orfsX$spliced_id, "_", orfsX$orf_length)
+    orfChanges$id_orf_length_x <- paste0(orfChanges$id, "_",orfChanges$orf_length_bygroup_x)
     mx <- match(orfChanges$id_orf_length_x, orfsX$id_with_len)
 
     x <- as.numeric(mapply(function(x,y) orfSimilarity(x,y),
@@ -155,7 +171,7 @@ orfDiff <- function(orfsX,
 
     if(geneSimilarity == TRUE & !is.null(allORFs)){
 
-
+        orfChanges$gene_id <- orfsX$gene_id[match(orfChanges$id, orfsX$spliced_id)]
         geneMatches <- lapply(orfChanges$gene_id,
                               function(x) which(!is.na(match(allORFs$gene_id, x))))
         geneMatches <- unlist(geneMatches)
@@ -261,10 +277,6 @@ attrChangeAltSpliced <- function(orfsX,
                                  useMax = TRUE,
                                  compareUTR = FALSE){
 
-    #multiEventCheck <- FALSE
-    orfsX <- orfs_normal
-    orfsY <- orfs_skipped
-
     if(nrow(orfsX) > 0 & nrow(orfsY) > 0){
 
         if(useMax){
@@ -274,7 +286,7 @@ attrChangeAltSpliced <- function(orfsX,
         }
 
         # fix ids so spliced isoforms have same id
-        if(any(grepl("[+]",c(orfsX$id, orfsY$id)))){
+        if(all(grepl("[+]",c(orfsX$id, orfsY$id)))){
             asTypes <- unique(unlist(lapply(str_split(
                 lapply(stringr::str_split(
                     c(orfsX$id, orfsY$id), "[+]"
@@ -293,30 +305,29 @@ attrChangeAltSpliced <- function(orfsX,
 
         attributeX <- aggregate(. ~ id+gene_id, orfsX.part, aggFun)
 
-        if(all(grepl("AS", attributeX$id))){
-            attributeX$as_group <- unlist(lapply(str_split(attributeX$id, " "), '[[', 2))
-            attributeX$transcript_id <- unlist(lapply(str_split(attributeX$id, "[+]"), '[[', 1))
-        }else{
-            attributeX$as_group <- attributeX$gene_id
-            attributeX$transcript_id <- attributeX$id
-        }
+        hasASidX <- grep("AS", attributeX$id)
+        attributeX$as_group <- attributeX$gene_id
+        attributeX$transcript_id <- attributeX$id
+        attributeX$as_group[hasASidX] <-
+            unlist(lapply(str_split(attributeX$id[hasASidX], " "), '[[', 2))
+        attributeX$transcript_id[hasASidX] <-
+            unlist(lapply(str_split(attributeX$id[hasASidX], "[+]"), '[[', 1))
 
         m <- match(c('id','gene_id', attribute), colnames(orfsY))
         orfsY.part <- orfsY[,m]
         attributeY <- aggregate(. ~ id+gene_id, orfsY.part, aggFun)
 
-        if(all(grepl("AS", attributeY$id))){
-            attributeY$as_group <- unlist(lapply(str_split(attributeY$id, " "), '[[', 2))
-            attributeY$transcript_id <- unlist(lapply(str_split(attributeY$id, "[+]"), '[[', 1))
-        }else{
-            attributeY$as_group <- attributeY$gene_id
-            attributeY$transcript_id <- attributeY$id
-        }
-
+        hasASidY <- grep("AS", attributeY$id)
+        attributeY$as_group <- attributeY$gene_id
+        attributeY$transcript_id <- attributeY$id
+        attributeY$as_group[hasASidY] <-
+            unlist(lapply(str_split(attributeY$id[hasASidY], " "), '[[', 2))
+        attributeY$transcript_id[hasASidY] <-
+            unlist(lapply(str_split(attributeY$id[hasASidY], "[+]"), '[[', 1))
 
         m <- match(attributeX$id, attributeY$id)
         if(any(is.na(m))){
-            hasASidX <- grep("[+]", attributeX$id)
+            #hasASidX <- grep("[+]", attributeX$id)
             if(length(hasASidX) > 0){
                 m2 <- match(attributeX$transcript_id[hasASidX], attributeY$transcript_id)
                 attributeY2 <- attributeY[m2,]
@@ -324,7 +335,7 @@ attrChangeAltSpliced <- function(orfsX,
                 attributeY2$as_group <- attributeX$as_group[hasASidX]
                 attributeY <- rbind(attributeY, attributeY2)
             }
-            hasASidY <- grep("[+]", attributeY$id)
+            #hasASidY <- grep("[+]", attributeY$id)
             if(length(hasASidY) > 0){
                 m2 <- match(attributeY$transcript_id[hasASidY], attributeX$transcript_id)
                 attributeX2 <- attributeX[m2,]
