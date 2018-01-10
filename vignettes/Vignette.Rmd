@@ -13,7 +13,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-![](/Users/bethanysignal/Documents/Projects/GeneStructureTools/HexLogoGeneStructureTools.png)
+![](HexLogoGeneStructureTools.png)
 
 ## Introduction
 
@@ -145,7 +145,7 @@ It may also be helpfule to run each individual step if you would like to manuall
 ### Exon skipping
 Exon skipping, or cassette exon usage, occurs when a single exon is spliced out of the mature transcript.
 
-![Removal of a skipped exon](/Users/bethanysignal/Documents/Projects/GeneStructureTools/whippetExonSkip.png)
+![Removal of a skipped exon](whippetExonSkip.png)
 
 **1.a. Find skipped exon events**
 ```{r whippetSkippedFilter}
@@ -221,7 +221,7 @@ plotTracks(list(gtr,geneModel.all,geneModelNormal, geneModelSkipped), extend.lef
 ### Intron Retention
 Intron Retention occurs when an intron is not spliced out of the mature transcript.
 
-![Addition of a retained intron](/Users/bethanysignal/Documents/Projects/GeneStructureTools/whippetIntronRetention.png)
+![Addition of a retained intron](whippetIntronRetention.png)
 
 **1. Create normal and retained isoform structures from whippet coordinates**
 ```{r retainedIntronWhippet}
@@ -285,7 +285,7 @@ plotTracks(list(gtr,geneModel.all,geneModelNormal, geneModelRetained), extend.le
 ### Alternative acceptor and donor splice sites
 Creation of alternative donor/acceptor isoforms currently relies on junction read counts supplied by whippet.
 
-![Creation of transcripts with an alternative donor (left) or acceptor (right) splice site.](/Users/bethanysignal/Documents/Projects/GeneStructureTools/whippetAltAceDon.png)
+![Creation of transcripts with an alternative donor (left) or acceptor (right) splice site.](whippetAltAceDon.png)
 
 
 #### Aternative acceptor
@@ -416,7 +416,7 @@ plotTracks(list(gtr,geneModel.all,geneModelX, geneModelY), extend.left = 1000, e
 ### Alternative first/last exons
 Creation of alternative first/last isoforms currently relies on junction read counts supplied by whippet.
 
-![Creation of transcripts with an alternative first (left) or last (right) exon.](/Users/bethanysignal/Documents/Projects/GeneStructureTools/whippetAltFirstLast.png)
+![Creation of transcripts with an alternative first (left) or last (right) exon.](whippetAltFirstLast.png)
 
 #### Alternative first exons
 
