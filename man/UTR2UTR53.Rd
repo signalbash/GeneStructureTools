@@ -16,9 +16,9 @@ gtf annotation GRanges object
 Annotate UTRs from Gencode GTF as 5' or 3'
 }
 \examples{
-gtf_file <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
 package = "GeneStructureTools")
-gtf <- rtracklayer::import(gtf_file)
+gtf <- rtracklayer::import(gtfFile)
 gtf <- UTR2UTR53(gtf)
 table(gtf$type)
 }

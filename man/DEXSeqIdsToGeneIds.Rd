@@ -4,10 +4,10 @@
 \alias{DEXSeqIdsToGeneIds}
 \title{Convert DEXSeq ids to gene ids}
 \usage{
-DEXSeqIdsToGeneIds(dexseq_ids, removeVersion = FALSE)
+DEXSeqIdsToGeneIds(DEXSeqIds, removeVersion = FALSE)
 }
 \arguments{
-\item{dexseq_ids}{vector of DEXSeq group or exon ids}
+\item{DEXSeqIds}{vector of DEXSeq group or exon ids}
 
 \item{removeVersion}{remove the version (.xx) of the gene?}
 }
@@ -19,8 +19,8 @@ Convert DEXSeq ids to gene ids
 }
 \examples{
 # multiple genes in name
-dex_id <- "ENSMUSG00000027618.17+ENSMUSG00000098950.7+ENSMUSG00000089824.10+ENSMUSG00000074643.12"
-DEXSeqIdsToGeneIds(dex_id)
+DEXSeqId <- "ENSMUSG00000027618.17+ENSMUSG00000098950.7+ENSMUSG00000089824.10+ENSMUSG00000074643.12"
+DEXSeqIdsToGeneIds(DEXSeqId)
 
 # exonic part number in id
 DEXSeqIdsToGeneIds("ENSMUSG00000001017.15:E013", removeVersion=TRUE)

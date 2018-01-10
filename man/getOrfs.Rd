@@ -4,17 +4,18 @@
 \alias{getOrfs}
 \title{Get open reading frames for transcripts}
 \usage{
-getOrfs(transcripts, BSgenome = g, returnLongestOnly = TRUE,
-  all_frames = FALSE, longest = 1)
+getOrfs(transcripts, BSgenome = NULL, returnLongestOnly = TRUE,
+  allFrames = FALSE, longest = 1)
 }
 \arguments{
-\item{transcripts}{GRanges object with ONLY exon annotations (no gene, transcript, CDS etc.) with all transcripts for orf retrevial}
+\item{transcripts}{GRanges object with ONLY exon annotations
+(no gene, transcript, CDS etc.) with all transcripts for orf retrevial}
 
 \item{BSgenome}{BSgenome object}
 
 \item{returnLongestOnly}{only return longest ORF?}
 
-\item{all_frames}{return longest ORF for all 3 frames?}
+\item{allFrames}{return longest ORF for all 3 frames?}
 
 \item{longest}{return x longest ORFs (regardless of frames)}
 }
@@ -23,6 +24,18 @@ data.frame with longest orf details
 }
 \description{
 Get open reading frames for transcripts
+}
+\examples{
+gtf <- rtracklayer::import(system.file("extdata", "gencode.vM14.neurl1a.gtf",
+package="GeneStructureTools"))
+transcript <- gtf[gtf$type=="exon"]
+g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+# longest ORF for each transcripts
+orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = TRUE)
+# longest ORF in all 3 frames for each transcript
+orfs <- getOrfs(transcript, BSgenome = g, allFrames = TRUE)
+# longest 3 ORFS in eacht transcript
+orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = FALSE, longest=3)
 }
 \author{
 Beth Signal

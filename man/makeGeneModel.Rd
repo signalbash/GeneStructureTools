@@ -7,13 +7,19 @@
 makeGeneModel(transcript)
 }
 \arguments{
-\item{transcripts}{GRanges of gene model to be visualised}
+\item{transcript}{GRanges of gene model to be visualised}
 }
 \value{
 data.frame of a gene model for visualisation
 }
 \description{
 Convert GRanges gene model to data.frame for visualisation with Gviz
+}
+\examples{
+gtf <- rtracklayer::import(system.file("extdata", "gencode.vM14.neurl1a.gtf",
+package="GeneStructureTools"))
+transcript <- gtf[gtf$type=="exon"]
+geneModel <- makeGeneModel(transcript)
 }
 \author{
 Beth Signal

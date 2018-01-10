@@ -15,6 +15,12 @@ data.frame with junction counts for all files
 \description{
 Read in a list of whippet .jnc.gz files and format as a data.frame
 }
+\examples{
+whippetFiles <- list.files(system.file("extdata","whippet/",
+package = "GeneStructureTools"), full.names = TRUE)
+jncFiles <- whippetFiles[grep(".jnc", whippetFiles)]
+whippetJNC <- readWhippetJNCfiles(jncFiles)
+}
 \author{
 Beth Signal
 }

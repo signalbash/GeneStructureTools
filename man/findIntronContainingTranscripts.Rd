@@ -4,18 +4,37 @@
 \alias{findIntronContainingTranscripts}
 \title{Given the location of a whole retained intron, find transcripts which splice out this intron}
 \usage{
-findIntronContainingTranscripts(intronRanges, gtf.exons)
+findIntronContainingTranscripts(eventCoords, gtf.exons, match = "exact")
 }
 \arguments{
-\item{intronRanges}{GRanges object with ranges for introns}
+\item{eventCoords}{GRanges object with ranges for introns}
 
-\item{gtf.exons}{GRanges object made from a GTF with ONLY exon annotations (no gene, transcript, CDS etc.)}
+\item{gtf.exons}{GRanges object made from a GTF with ONLY exon annotations
+(no gene, transcript, CDS etc.)}
+
+\item{match}{what type of matching to perform? exact = only exons which bound the intron exactly,
+introns = any exon pairs which overlap the intron,
+all = any exon pairs AND single exons which overlap the intron}
 }
 \value{
 data.frame with all flanking exon pairs
 }
 \description{
 Given the location of a whole retained intron, find transcripts which splice out this intron
+}
+\examples{
+whippetFiles <- list.files(system.file("extdata","whippet/",
+package = "GeneStructureTools"), full.names = TRUE)
+diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
+whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
+whippetCoords <- formatWhippetEvents(whippetDiffSplice)
+gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
+package = "GeneStructureTools"))
+gtf.exons <- gtf[gtf$type=="exon"]
+gtf.transcripts <- gtf[gtf$type=="transcript"]
+event.intronRetention <- whippetDiffSplice[which(whippetDiffSplice$type=="RI")[1],]
+coords.intronRetention <- whippetCoords[whippetCoords$id \%in\% event.intronRetention$coord]
+exons.intronRetention <- findIntronContainingTranscripts(coords.intronRetention, gtf.exons)
 }
 \author{
 Beth Signal

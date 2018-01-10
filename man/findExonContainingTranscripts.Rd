@@ -4,18 +4,42 @@
 \alias{findExonContainingTranscripts}
 \title{Given the location of a whole retained exon, find transcripts which can splice out this exon}
 \usage{
-findExonContainingTranscripts(exonRanges, gtf.exons)
+findExonContainingTranscripts(eventCoords, gtf.exons, variableWidth = 0,
+  findIntrons = FALSE, gtf.transcripts)
 }
 \arguments{
-\item{exonRanges}{GRanges object with ranges for exons}
+\item{eventCoords}{GRanges object with ranges for exons}
 
-\item{gtf.exons}{GRanges object made from a GTF with ONLY exon annotations (no gene, transcript, CDS etc.)}
+\item{gtf.exons}{GRanges object made from a GTF containing exon coordinates}
+
+\item{variableWidth}{How many nts overhang is allowed for finding matching exons
+(default = 0, i.e. complete match)}
+
+\item{findIntrons}{Find transcripts where the event occurs within the intron?}
+
+\item{gtf.transcripts}{GRanges object made from a GTF containing transcript coordinates
+(only required if findIntrons=TRUE)}
 }
 \value{
 data.frame with all overlapping exons
 }
 \description{
 Given the location of a whole retained exon, find transcripts which can splice out this exon
+}
+\examples{
+whippetFiles <- list.files(system.file("extdata","whippet/",
+package = "GeneStructureTools"), full.names = TRUE)
+diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
+whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
+whippetCoords <- formatWhippetEvents(whippetDiffSplice)
+gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
+package = "GeneStructureTools"))
+gtf.exons <- gtf[gtf$type=="exon"]
+gtf.transcripts <- gtf[gtf$type=="transcript"]
+event.exonSkip <- whippetDiffSplice[which(whippetDiffSplice$type=="CE")[1],]
+coords.exonSkip <- whippetCoords[whippetCoords$id \%in\% event.exonSkip$coord]
+exons.exonSkip <- findExonContainingTranscripts(coords.exonSkip, gtf.exons,
+variableWidth=0, findIntrons=FALSE, gtf.transcripts)
 }
 \author{
 Beth Signal

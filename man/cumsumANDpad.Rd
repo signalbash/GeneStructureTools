@@ -4,18 +4,22 @@
 \alias{cumsumANDpad}
 \title{Cumulative sum of a sequence of numbers, padded with NA}
 \usage{
-cumsumANDpad(x, pad_length)
+cumsumANDpad(x, padLength)
 }
 \arguments{
 \item{x}{input numeric vector}
 
-\item{pad_length}{length to pad output to}
+\item{padLength}{length to pad output to}
 }
 \value{
 vector with cumulative sum, padded with NA
 }
 \description{
 Cumulative sum of a sequence of numbers, padded with NA
+}
+\examples{
+x <- c(1,4,7,2,5)
+cumsumANDpad(x, 10)
 }
 \author{
 Beth Signal

@@ -2,7 +2,8 @@
 % Please edit documentation in R/compareTranscripts.R
 \name{attrChangeAltSpliced}
 \alias{attrChangeAltSpliced}
-\title{Evaluate the change in an attribute between a set of 'normal' transcripts and 'alternative' transcripts}
+\title{Evaluate the change in an attribute between a set of 'normal' transcripts and
+'alternative' transcripts}
 \usage{
 attrChangeAltSpliced(orfsX, orfsY, attribute = "orf_length",
   compareBy = "gene", useMax = TRUE, compareUTR = FALSE)
@@ -16,13 +17,40 @@ attrChangeAltSpliced(orfsX, orfsY, attribute = "orf_length",
 
 \item{compareBy}{compare by 'transcript' isoforms or by 'gene' groups}
 
-\item{useMax}{use max as the summary function when multiple isoforms are aggregated? If FALSE, will use min instead.}
+\item{useMax}{use max as the summary function when multiple isoforms are aggregated?
+If FALSE, will use min instead.}
+
+\item{compareUTR}{compare the UTR lengths between transcripts?
+Only runs if attribute = "orf_length"}
 }
 \value{
 data.frame with attribute changes
 }
 \description{
-Evaluate the change in an attribute between a set of 'normal' transcripts and 'alternative' transcripts
+Evaluate the change in an attribute between a set of 'normal' transcripts and
+'alternative' transcripts
+}
+\examples{
+whippetFiles <- list.files(system.file("extdata","whippet/",
+package = "GeneStructureTools"), full.names = TRUE)
+diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
+whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
+whippetCoords <- formatWhippetEvents(whippetDiffSplice)
+gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
+package = "GeneStructureTools"))
+gtf.exons <- gtf[gtf$type=="exon"]
+gtf.transcripts <- gtf[gtf$type=="transcript"]
+event.exonSkip <- whippetDiffSplice[which(whippetDiffSplice$type=="CE")[1],]
+coords.exonSkip <- whippetCoords[whippetCoords$id \%in\% event.exonSkip$coord]
+exons.exonSkip <- findExonContainingTranscripts(coords.exonSkip, gtf.exons,
+variableWidth=0, findIntrons=FALSE, gtf.transcripts)
+ExonSkippingTranscripts <- skipExonInTranscript(coords.exonSkip, exons.exonSkip, gtf.exons)
+g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+orfsSkipped <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
+BSgenome = g)
+orfsIncluded <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="included_exon"],
+BSgenome = g)
+attrChangeAltSpliced(orfsSkipped, orfsIncluded,attribute = "orf_length")
 }
 \author{
 Beth Signal

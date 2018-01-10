@@ -8,12 +8,22 @@ readWhippetPSIfiles(files, attribute = "Total_Reads", maxNA = NA)
 }
 \arguments{
 \item{files}{vector of *.psi.gz file names}
+
+\item{attribute}{which attribute from the PSI files to use (Total_Reads, Psi, CI_width)}
+
+\item{maxNA}{maximum number of NA values allowed before a site is removed}
 }
 \value{
 data.frame with junction counts for all files
 }
 \description{
 Read in a list of whippet .psi.gz files and format as a data.frame
+}
+\examples{
+whippetFiles <- list.files(system.file("extdata","whippet/",
+package = "GeneStructureTools"), full.names = TRUE)
+psiFiles <- whippetFiles[grep(".psi", whippetFiles)]
+whippetPSI <- readWhippetPSIfiles(psiFiles)
 }
 \author{
 Beth Signal

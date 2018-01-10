@@ -4,12 +4,12 @@
 \alias{findDEXexonType}
 \title{Find a DEXSeq exons' biotype}
 \usage{
-findDEXexonType(DEX_exon_id, dex_gtf, gtf, set = "overlap")
+findDEXexonType(DEXSeqExonId, DEXSeqGtf, gtf, set = "overlap")
 }
 \arguments{
-\item{DEX_exon_id}{vector of DEXSeq exon ids}
+\item{DEXSeqExonId}{vector of DEXSeq exon ids}
 
-\item{dex_gtf}{GRanges object of the DEXSeq formatted gtf}
+\item{DEXSeqGtf}{GRanges object of the DEXSeq formatted gtf}
 
 \item{gtf}{GRanges object of the GTF annotated with exon biotypes - i.e. exon, CDS, UTR}
 
@@ -22,22 +22,22 @@ overlaping types
 Find a DEXSeq exons' biotype
 }
 \examples{
-gtf_file <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
 package = "GeneStructureTools")
-dex_gtf_file <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
+DEXSeqGtfFile <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
 package = "GeneStructureTools")
 
-gtf <- rtracklayer::import(gtf_file)
+gtf <- rtracklayer::import(gtfFile)
 gtf <- UTR2UTR53(gtf)
-dex_gtf <- rtracklayer::import(dex_gtf_file)
+DEXSeqGtf <- rtracklayer::import(DEXSeqGtfFile)
 
-findDEXexonType("ENSMUSG00000032366.15:E028", dex_gtf, gtf)
+findDEXexonType("ENSMUSG00000032366.15:E028", DEXSeqGtf, gtf)
 
-dex_results_file <- system.file("extdata","dexseq_results.small.txt",
+DEXSeqResultsFile <- system.file("extdata","dexseq_results.small.txt",
 package = "GeneStructureTools")
-dex_results <- read.table(dex_results_file, sep="\\t")
+DEXSeqResults <- read.table(DEXSeqResultsFile, sep="\\t")
 
-findDEXexonType(rownames(dex_results), dex_gtf, gtf)
+findDEXexonType(rownames(DEXSeqResults), DEXSeqGtf, gtf)
 
 }
 \author{

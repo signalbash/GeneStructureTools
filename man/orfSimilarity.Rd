@@ -4,18 +4,28 @@
 \alias{orfSimilarity}
 \title{calculate percentage of orfB contained in orfA}
 \usage{
-orfSimilarity(orfA, orfB)
+orfSimilarity(orfA, orfB, substitutionCost = 100)
 }
 \arguments{
 \item{orfA}{character string of ORF amino acid sequence}
 
 \item{orfB}{character string of ORF amino acid sequence}
+
+\item{substitutionCost}{cost for substitutions in ORF sequences.
+Set to 1 if substitutions should be weighted equally to insertions and deletions.}
 }
 \value{
 percentage of orfB contained in orfA
 }
 \description{
 calculate percentage of orfB contained in orfA
+}
+\examples{
+orfSimilarity("MFGLDIYAGTRSSFRQFSLT","MFGLDIYAGTRSSFRQFSLT")
+orfSimilarity("MFGLDIYAGTRSSFRQFSLT","MFGLDIYAFRQFSLT")
+orfSimilarity("MFGLDIYAFRQFSLT","MFGLDIYAGTRSSFRQFSLT")
+orfSimilarity("MFGLDIYAGTRXXFRQFSLT","MFGLDIYAGTRSSFRQFSLT")
+orfSimilarity("MFGLDIYAGTRXXFSLT","MFGLDIYAGTRSSFRQFSLT", 1)
 }
 \author{
 Beth Signal

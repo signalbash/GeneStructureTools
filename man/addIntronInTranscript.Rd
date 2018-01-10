@@ -4,23 +4,46 @@
 \alias{addIntronInTranscript}
 \title{Add a retained intron to the transcripts it is skipped by}
 \usage{
-addIntronInTranscript(intronRanges = IR_range, flanking_exons, gtf.exons,
-  glueExons = TRUE)
+addIntronInTranscript(eventCoords, flankingExons, gtf.exons, glueExons = TRUE,
+  match = "exact")
 }
 \arguments{
-\item{intronRanges}{GRanges object with ranges for introns}
+\item{eventCoords}{GRanges object with ranges for introns}
 
-\item{flanking_exons}{data.frame generataed by findIntronContainingTranscripts()}
+\item{flankingExons}{data.frame generataed by findIntronContainingTranscripts()}
 
-\item{gtf.exons}{GRanges object made from a GTF with ONLY exon annotations (no gene, transcript, CDS etc.)}
+\item{gtf.exons}{GRanges object made from a GTF with ONLY exon annotations
+(no gene, transcript, CDS etc.)}
 
 \item{glueExons}{Join together exons that are not seperated by introns?}
+
+\item{match}{what type of match replacement should be done?
+exact: exact matches to the intron only
+retain: keep non-exact intron match coordinates in spliced sets, and retain them in retained sets
+replace: replace non-exact intron match coordinates with event coordinates in spliced sets,
+and retain in retained sets}
 }
 \value{
 GRanges with transcripts containing retained introns
 }
 \description{
 Add a retained intron to the transcripts it is skipped by
+}
+\examples{
+whippetFiles <- list.files(system.file("extdata","whippet/",
+package = "GeneStructureTools"), full.names = TRUE)
+diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
+whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
+whippetCoords <- formatWhippetEvents(whippetDiffSplice)
+gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
+package = "GeneStructureTools"))
+gtf.exons <- gtf[gtf$type=="exon"]
+gtf.transcripts <- gtf[gtf$type=="transcript"]
+event.intronRetention <- whippetDiffSplice[which(whippetDiffSplice$type=="RI")[1],]
+coords.intronRetention <- whippetCoords[whippetCoords$id \%in\% event.intronRetention$coord]
+exons.intronRetention <- findIntronContainingTranscripts(coords.intronRetention, gtf.exons)
+IntronRetentionTranscripts <- addIntronInTranscript(coords.intronRetention,
+exons.intronRetention, gtf.exons)
 }
 \author{
 Beth Signal

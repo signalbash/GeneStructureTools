@@ -15,6 +15,12 @@ data.frame with junction counts for all files
 \description{
 Read in a list of whippet .diff.gz files and format as a data.frame
 }
+\examples{
+whippetFiles <- list.files(system.file("extdata","whippet/",
+package = "GeneStructureTools"), full.names = TRUE)
+diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
+whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
+}
 \author{
 Beth Signal
 }

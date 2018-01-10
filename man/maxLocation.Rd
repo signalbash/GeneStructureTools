@@ -5,14 +5,14 @@
 \title{Find the largest distance between two vectors of numbers
 Helper function for get_orfs}
 \usage{
-maxLocation(start_site, stop_site, longest = 1)
+maxLocation(startSite, stopSite, longest = 1)
 }
 \arguments{
-\item{start_site}{vector of start sites - i.e Met amino acid positions}
+\item{startSite}{vector of start sites - i.e Met amino acid positions}
 
-\item{stop_site}{vector of stop sites - i.e Stop (*) amino acid positions}
+\item{stopSite}{vector of stop sites - i.e Stop (*) amino acid positions}
 
-\item{longest}{how many pairs to return}
+\item{longest}{which pair to return (1 = longest pair, 2= 2nd longest pair etc.)}
 }
 \value{
 sequential start site and end site with the greatest difference
@@ -20,6 +20,18 @@ sequential start site and end site with the greatest difference
 \description{
 Find the largest distance between two vectors of numbers
 Helper function for get_orfs
+}
+\examples{
+starts <- c(1,10,15,25)
+stops <- c(4,16,50,55)
+# longest start site = 25, longest stop site = 50
+maxLocation(starts, stops, longest = 1)
+starts <- c(1,10,15,25)
+stops <- c(4,14,50,55)
+# longest start site = 15, longest stop site = 50
+maxLocation(starts, stops, longest = 1)
+# 2nd longest start site = 10, 2nd longest stop site = 14
+maxLocation(starts, stops, longest = 2)
 }
 \author{
 Beth Signal

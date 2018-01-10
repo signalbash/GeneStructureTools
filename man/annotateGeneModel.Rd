@@ -17,6 +17,15 @@ data.frame of a gene model for visualisation
 \description{
 Annotate a GRanges gene model with ORF boundries for visualisation with Gviz
 }
+\examples{
+gtf <- rtracklayer::import(system.file("extdata", "gencode.vM14.neurl1a.gtf",
+package="GeneStructureTools"))
+transcript <- gtf[gtf$type=="exon"]
+g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+# longest ORF for each transcripts
+orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = TRUE)
+geneModelAnnotated <- annotateGeneModel(transcript, orfs)
+}
 \author{
 Beth Signal
 }

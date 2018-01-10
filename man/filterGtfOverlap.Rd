@@ -4,16 +4,30 @@
 \alias{filterGtfOverlap}
 \title{Filter a GTF overlap to remove exons when exon is annotated as a CDS/UTR}
 \usage{
-filterGtfOverlap(gtf_from)
+filterGtfOverlap(gtf.from)
 }
 \arguments{
-\item{gtf_from}{GRanges object of the GTF produced from an overlap}
+\item{gtf.from}{GRanges object of the GTF produced from an overlap}
 }
 \value{
 GRanges object of the GTF with redundant exons removed
 }
 \description{
 Filter a GTF overlap to remove exons when exon is annotated as a CDS/UTR
+}
+\examples{
+gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+package = "GeneStructureTools")
+gtf <- rtracklayer::import(gtfFile)
+overlap <- GenomicRanges::findOverlaps(gtf[which(gtf$type=="CDS")[1]], gtf)
+table(gtf$type[overlap@to])
+overlapFiltered <- filterGtfOverlap(gtf[overlap@to])
+table(overlapFiltered$type[overlap@to])
+overlap <- GenomicRanges::findOverlaps(gtf[which(gtf$transcript_type=="retained_intron")[1]],
+gtf)
+table(gtf$type[overlap@to])
+overlapFiltered <- filterGtfOverlap(gtf[overlap@to])
+table(overlapFiltered$type[overlap@to])
 }
 \author{
 Beth Signal

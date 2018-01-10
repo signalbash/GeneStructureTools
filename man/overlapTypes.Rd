@@ -4,10 +4,10 @@
 \alias{overlapTypes}
 \title{Annotate introns and exonic parts by overlaping exon biotype}
 \usage{
-overlapTypes(query_ranges, gtf, set = c("from", "to", "overlap"))
+overlapTypes(queryCoords, gtf, set = c("from", "to", "overlap"))
 }
 \arguments{
-\item{query_ranges}{GRanges object of the query regions}
+\item{queryCoords}{GRanges object of the query regions}
 
 \item{gtf}{GRanges object of the GTF annotated with exon biotypes - i.e. exon, CDS, UTR}
 
@@ -18,6 +18,18 @@ overlaping types in a data.frame
 }
 \description{
 Annotate introns and exonic parts by overlaping exon biotype
+}
+\examples{
+gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+package = "GeneStructureTools")
+dexGtfFile <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
+package = "GeneStructureTools")
+
+gtf <- rtracklayer::import(gtfFile)
+gtf <- UTR2UTR53(gtf)
+dexGtf <- rtracklayer::import(dexGtfFile)
+
+overlapTypes(dexGtf[1], gtf, set="overlap")
 }
 \author{
 Beth Signal
