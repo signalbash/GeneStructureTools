@@ -6,7 +6,6 @@
 #' @return sequential start site and end site with the greatest difference
 #' @export
 #' @import plyr
-#' @examples
 #' @author Beth Signal
 #' @examples
 #' starts <- c(1,10,15,25)
@@ -32,7 +31,8 @@ maxLocation <- function(startSite, stopSite, longest = 1){
         stopPairIndex <- unlist(lapply(startSite, function(x) which.max(1/(stopSite - x))))
         pairs <- data.frame(start=startSite, stop=stopSite[stopPairIndex])
         pairs$len <- pairs$stop - pairs$start
-        pairs <- plyr::arrange(pairs, plyr::desc(len))
+        pairs <- pairs[order(plyr::desc(pairs$len)),]
+        #pairs <- plyr::arrange(pairs, plyr::desc(len))
         pairs <- pairs[!duplicated(pairs$stop),]
         return(as.numeric(pairs[longest,1:2]))    }else{
             return(c(NA,NA))
@@ -40,7 +40,8 @@ maxLocation <- function(startSite, stopSite, longest = 1){
 }
 
 #' Get open reading frames for transcripts
-#' @param transcripts GRanges object with ONLY exon annotations (no gene, transcript, CDS etc.) with all transcripts for orf retrevial
+#' @param transcripts GRanges object with ONLY exon annotations
+#' (no gene, transcript, CDS etc.) with all transcripts for orf retrevial
 #' @param BSgenome BSgenome object
 #' @param returnLongestOnly only return longest ORF?
 #' @param allFrames return longest ORF for all 3 frames?
@@ -50,10 +51,12 @@ maxLocation <- function(startSite, stopSite, longest = 1){
 #' @import GenomicRanges
 #' @import Biostrings
 #' @import stringr
-#' @examples
+#' @importFrom plyr arrange
+#' @importFrom stats aggregate
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata", "gencode.vM14.neurl1a.gtf", package="GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata", "gencode.vM14.neurl1a.gtf",
+#' package="GeneStructureTools"))
 #' transcript <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #' # longest ORF for each transcripts
@@ -62,7 +65,11 @@ maxLocation <- function(startSite, stopSite, longest = 1){
 #' orfs <- getOrfs(transcript, BSgenome = g, allFrames = TRUE)
 #' # longest 3 ORFS in eacht transcript
 #' orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = FALSE, longest=3)
-getOrfs <- function(transcripts, BSgenome = NULL, returnLongestOnly=TRUE, allFrames=FALSE, longest=1){
+getOrfs <- function(transcripts,
+                    BSgenome = NULL,
+                    returnLongestOnly=TRUE,
+                    allFrames=FALSE,
+                    longest=1){
 
     if (allFrames == TRUE) {
         returnLongestOnly = FALSE
@@ -238,7 +245,8 @@ getOrfs <- function(transcripts, BSgenome = NULL, returnLongestOnly=TRUE, allFra
     orfDF$aa_sequence <- NULL
 
     if (returnLongestOnly == TRUE) {
-        orfDF <- plyr::arrange(orfDF, plyr::desc(orf_length))
+        orfDF <- orfDF[order(plyr::desc(orfDF$orf_length)),]
+        #orfDF <- plyr::arrange(orfDF, plyr::desc(orf_length))
         orfDF <- orfDF[!duplicated(orfDF$id), ]
     }
 
@@ -255,7 +263,6 @@ getOrfs <- function(transcripts, BSgenome = NULL, returnLongestOnly=TRUE, allFra
 #' @param padLength length to pad output to
 #' @return vector with cumulative sum, padded with NA
 #' @export
-#' @examples
 #' @author Beth Signal
 #' @examples
 #' x <- c(1,4,7,2,5)

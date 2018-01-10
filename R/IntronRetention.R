@@ -1,16 +1,17 @@
 #' Given the location of a whole retained intron, find transcripts which splice out this intron
 #' @param eventCoords GRanges object with ranges for introns
-#' @param gtf.exons GRanges object made from a GTF with ONLY exon annotations (no gene, transcript, CDS etc.)
+#' @param gtf.exons GRanges object made from a GTF with ONLY exon annotations
+#' (no gene, transcript, CDS etc.)
 #' @param match what type of matching to perform? exact = only exons which bound the intron exactly,
 #' introns = any exon pairs which overlap the intron,
 #' all = any exon pairs AND single exons which overlap the intron
 #' @return data.frame with all flanking exon pairs
 #' @export
 #' @import GenomicRanges
-#' @examples
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- list.files(system.file("extdata","whippet/", package = "GeneStructureTools"), full.names = TRUE)
+#' whippetFiles <- list.files(system.file("extdata","whippet/",
+#' package = "GeneStructureTools"), full.names = TRUE)
 #' diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
 #' whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
 #' whippetCoords <- formatWhippetEvents(whippetDiffSplice)
@@ -53,8 +54,9 @@ findIntronContainingTranscripts <- function(eventCoords, gtf.exons, match="exact
 
     gtf.fromA <- gtf.exons[overlaps@to]
     gtf.fromA$from <- overlaps@from
-    gtf.fromA$new_id <- with(as.data.frame(GenomicRanges::mcols(gtf.fromA)),
-                             paste0(transcript_id, "_",from))
+    gtf.fromA$new_id <- paste(gtf.fromA$transcript_id, gtf.fromA$from, sep="_")
+    #gtf.fromA$new_id <- with(as.data.frame(GenomicRanges::mcols(gtf.fromA)$transcript_id),
+    #                         paste0(transcript_id, "_",from))
 
     # end of intron // start of exon b
     rangeRI.end <- eventCoords
@@ -70,8 +72,7 @@ findIntronContainingTranscripts <- function(eventCoords, gtf.exons, match="exact
 
     gtf.toA <- gtf.exons[overlaps@to]
     gtf.toA$from <- overlaps@from
-    gtf.toA$new_id <- with(as.data.frame(GenomicRanges::mcols(gtf.toA)),
-                           paste0(transcript_id, "_",from))
+    gtf.toA$new_id <- paste0(gtf.toA$transcript_id, "_",gtf.toA$from)
 
     keep.from <- which(gtf.fromA@elementMetadata$new_id %in% gtf.toA@elementMetadata$new_id)
     gtf.fromA <- gtf.fromA[keep.from]
@@ -88,15 +89,14 @@ findIntronContainingTranscripts <- function(eventCoords, gtf.exons, match="exact
     if(length(gtf.toA) > 0){
         mcols(gtf.toA)$overlaps <- "intron"
     }else{
-        mcols(gtf.toA) <- cbind(mcols(gtf.toA), DataFrame(overlaps=character()))
+        mcols(gtf.toA) <- cbind(mcols(gtf.toA), S4Vectors::DataFrame(overlaps=character()))
     }
     if(match == "introns" | match=="all"){
         # non-exact overlaps
         ol <- findOverlaps(eventCoords, gtf.exons)
         gtf.overlaps <- gtf.exons[ol@to]
         gtf.overlaps$from <- ol@from
-        gtf.overlaps$new_id <- with(as.data.frame(GenomicRanges::mcols(gtf.overlaps)),
-                                    paste0(transcript_id, "_",from))
+        gtf.overlaps$new_id <- paste0(gtf.overlaps$transcript_id, "_",gtf.overlaps$from)
         gtf.overlaps$exon_number <- as.numeric(gtf.overlaps$exon_number)
         # remove perfect match pairs
         gtf.overlaps <- gtf.overlaps[which(!(gtf.overlaps$new_id %in% gtf.toA$new_id))]
@@ -112,7 +112,8 @@ findIntronContainingTranscripts <- function(eventCoords, gtf.exons, match="exact
         gtf.overlapsPairs <- gtf.overlapsPairs[gtf.overlapsPairs$new_id %in% keep]
 
         if(length(gtf.overlapsPairs) > 0){
-            exon_numbers <- aggregate(exon_number ~ new_id, mcols(gtf.overlapsPairs), mean)
+            exon_numbers <- aggregate(exon_number ~ new_id,
+                                                 mcols(gtf.overlapsPairs), mean)
             gtf.overlapsPairs$intron_exon_number <-
                 exon_numbers$exon_number[match(gtf.overlapsPairs$new_id,
                                                exon_numbers$new_id)]
@@ -165,18 +166,22 @@ findIntronContainingTranscripts <- function(eventCoords, gtf.exons, match="exact
 #' Add a retained intron to the transcripts it is skipped by
 #' @param eventCoords GRanges object with ranges for introns
 #' @param flankingExons data.frame generataed by findIntronContainingTranscripts()
-#' @param gtf.exons GRanges object made from a GTF with ONLY exon annotations (no gene, transcript, CDS etc.)
+#' @param gtf.exons GRanges object made from a GTF with ONLY exon annotations
+#' (no gene, transcript, CDS etc.)
 #' @param glueExons Join together exons that are not seperated by introns?
 #' @param match what type of match replacement should be done?
 #' exact: exact matches to the intron only
 #' retain: keep non-exact intron match coordinates in spliced sets, and retain them in retained sets
-#' replace: replace non-exact intron match coordinates with event coordinates in spliced sets, and retain in retained sets
+#' replace: replace non-exact intron match coordinates with event coordinates in spliced sets,
+#' and retain in retained sets
 #' @return GRanges with transcripts containing retained introns
 #' @export
 #' @import GenomicRanges
+#' @importFrom S4Vectors DataFrame
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- list.files(system.file("extdata","whippet/", package = "GeneStructureTools"), full.names = TRUE)
+#' whippetFiles <- list.files(system.file("extdata","whippet/",
+#' package = "GeneStructureTools"), full.names = TRUE)
 #' diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
 #' whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
 #' whippetCoords <- formatWhippetEvents(whippetDiffSplice)
@@ -187,7 +192,8 @@ findIntronContainingTranscripts <- function(eventCoords, gtf.exons, match="exact
 #' event.intronRetention <- whippetDiffSplice[which(whippetDiffSplice$type=="RI")[1],]
 #' coords.intronRetention <- whippetCoords[whippetCoords$id %in% event.intronRetention$coord]
 #' exons.intronRetention <- findIntronContainingTranscripts(coords.intronRetention, gtf.exons)
-#' IntronRetentionTranscripts <- addIntronInTranscript(coords.intronRetention, exons.intronRetention, gtf.exons)
+#' IntronRetentionTranscripts <- addIntronInTranscript(coords.intronRetention,
+#' exons.intronRetention, gtf.exons)
 addIntronInTranscript <- function(eventCoords,
                                   flankingExons,
                                   gtf.exons,
@@ -223,17 +229,19 @@ addIntronInTranscript <- function(eventCoords,
     m <- match(gtfTranscripts$transcript_id, eventCoords$transcript_id)
     mcols(gtfTranscripts) <-
         cbind(mcols(gtfTranscripts),
-              DataFrame(new_transcript_id=paste0(gtfTranscripts$transcript_id,
+              S4Vectors::DataFrame(new_transcript_id=paste0(gtfTranscripts$transcript_id,
                                                  "+AS ", eventCoords$exon_id[m])))
     mcols(eventCoords) <-
         cbind(mcols(eventCoords),
-              DataFrame(new_transcript_id = paste0(eventCoords$transcript_id,
+              S4Vectors::DataFrame(new_transcript_id = paste0(eventCoords$transcript_id,
                                                    "+AS ", eventCoords$exon_id)))
     flankingExons$new_transcript_id <- paste0(flankingExons$transcript_id,
                                               "+AS ", flankingExons$from)
 
-    #mcols(gtfTranscripts)$new_transcript_id <- paste0(gtfTranscripts$transcript_id,"+AS ",eventCoords$exon_id[m])
-    #mcols(eventCoords)$new_transcript_id <- paste0(eventCoords$transcript_id,"+AS ",eventCoords$exon_id)
+    #mcols(gtfTranscripts)$new_transcript_id <- paste0(gtfTranscripts$transcript_id,"+AS ",
+    # eventCoords$exon_id[m])
+    #mcols(eventCoords)$new_transcript_id <- paste0(eventCoords$transcript_id,"+AS ",
+    # eventCoords$exon_id)
 
     mcols(gtfTranscripts) <- mcols(gtfTranscripts)[,c('gene_id','transcript_id',
                                                       'transcript_type','exon_id',
@@ -402,7 +410,8 @@ addIntronInTranscript <- function(eventCoords,
             gtfTranscripts.withIntron <- gtfTranscripts.withIntron[-rm]
         }
 
-        #order <- order(gtfTranscripts.withIntron$transcript_id, gtfTranscripts.withIntron$exon_number)
+        #order <- order(gtfTranscripts.withIntron$transcript_id,
+        #gtfTranscripts.withIntron$exon_number)
         #gtfTranscripts.withIntron <- gtfTranscripts.withIntron[order]
 
     }
