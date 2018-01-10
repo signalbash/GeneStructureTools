@@ -137,10 +137,16 @@ orfDiff <- function(orfsX,
             orfsX2$spliced_id <- orfsY$spliced_id[hasASidY]
             orfsX <- rbind(orfsX, orfsX2)
         }
-        m2 <- match(paste0(orfsX$spliced_id,"_", orfsX$frame),
-                    paste0(orfsY$spliced_id,"_",orfsY$frame))
-        orfsX <- orfsX[which(!is.na(m2)),]
-        orfsY <- orfsY[m2[which(!is.na(m2))],]
+
+        if(length(hasASidY) == 0 & length(hasASidX) == 0){
+            attributeX$id <- attributeX$gene_id
+            attributeY$id <- attributeY$gene_id
+        }else{
+            m2 <- match(paste0(orfsX$spliced_id,"_", orfsX$frame),
+                        paste0(orfsY$spliced_id,"_",orfsY$frame))
+            orfsX <- orfsX[which(!is.na(m2)),]
+            orfsY <- orfsY[m2[which(!is.na(m2))],]
+        }
     }
 
     orfsY$id_with_len <- paste0(orfsY$spliced_id, "_", orfsY$orf_length)
@@ -343,11 +349,16 @@ attrChangeAltSpliced <- function(orfsX,
                 attributeX2$as_group <- attributeY$as_group[hasASidY]
                 attributeX <- rbind(attributeX, attributeX2)
             }
-            m2 <- match(attributeX$id, attributeY$id)
-            attributeX <- attributeX[which(!is.na(m2)),]
-            attributeY <- attributeY[m2[which(!is.na(m2))],]
-            m <- match(attributeX$id, attributeY$id)
+            if(length(hasASidY) == 0 & length(hasASidX) == 0){
+                    attributeX$id <- attributeX$gene_id
+                    attributeY$id <- attributeY$gene_id
 
+            }else{
+                m2 <- match(attributeX$id, attributeY$id)
+                attributeX <- attributeX[which(!is.na(m2)),]
+                attributeY <- attributeY[m2[which(!is.na(m2))],]
+                m <- match(attributeX$id, attributeY$id)
+            }
         }
 
         colnames(attributeX)[3] <- "attr"
