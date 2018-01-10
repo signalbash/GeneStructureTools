@@ -72,6 +72,7 @@ filterSignificantWhippetEvents <- function(whippetDiff,
 #' @return Summarised ORF changes data.frame
 #' @export
 #' @import notNMD
+#' @import GenomicRanges
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
@@ -259,7 +260,7 @@ if(NMD == TRUE){
 #' whippetCoords <- formatWhippetEvents(whippetDiffSplice)
 #' jncFiles <- whippetFiles[grep(".jnc", whippetFiles)]
 #' jncCoords <- readWhippetJNCfiles(jncFiles)
-#' junctionCoords <- formatJunctions(jncCoords)
+#' jncCoords <- formatJunctions(jncCoords)
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
 #' gtf.exons <- gtf[gtf$type=="exon"]
