@@ -1,7 +1,7 @@
 ---
 title: "Gene Structure Tools: Analysis and Manipulation of Spliced Gene Structures"
 author: "Beth Signal"
-date: "23 October 2017 / Version 0.3.0"
+date: "30 December 2017 / Version 0.5.0"
 output:
     html_document:
         toc: true
@@ -48,7 +48,6 @@ You will also need to download the Gencode GTF file from [here](http://www.genco
 
 
 
-
 **1. Read in Whippet files**
 
 ```{r readWhippet, eval = FALSE}
@@ -88,6 +87,15 @@ whippet_diff$condition_2 <- unlist(lapply(str_split(conditions,"_v_"),"[[",2))
 # read in gtf annotation
 gtf <- rtracklayer::import("~/Downloads/gencode.vM14.annotation.gtf.gz")
 gtf.exons <- gtf[gtf$type=="exon"]
+gtf.transcripts <- gtf[gtf$type=="transcript"]
+
+# add first/last annotation (speeds up later steps)
+if(!("first_last" %in% colnames(mcols(gtf.exons)))){
+    t <- as.data.frame(table(gtf.exons$transcript_id))
+    gtf.exons$first_last <- NA
+    gtf.exons$first_last[gtf.exons$exon_number == 1] <- "first"
+    gtf.exons$first_last[gtf.exons$exon_number == t$Freq[match(gtf.exons$transcript_id, t$Var1)]] <- "last"
+}
 
 # specify the BSGenome annotation
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
@@ -121,10 +129,13 @@ significant_events <- filterSignificantWhippetEvents(whippet_diff,
 summary <- whippetTranscriptChangeSummary(significantEvents = significant_events,
                                            whippetCoords = whippet_coords,
                                            gtf.exons = gtf.exons,
-                                           g = g,
-                                           NMD = FALSE, # ignore nonsense mediated decay (for now)
-                                           whippetJnc = whippet_jnc)
+                                           gtf.transcripts = gtf.transcripts,
+                                           BSgenome = g,
+                                           jncCoords = jnc_ranges,
+                                           NMD = FALSE # ignore nonsense mediated decay (for now)
+                                           )
 head(summary)
+
 ```
 
 ## Altering Gene and Transcript Structures
@@ -170,14 +181,15 @@ ranges.ce.gtf$id <- "Ndufv3_manual"
 **2. Find transcripts which overlap the skipped exon, and create normal & skipped exon isoforms**
 ```{r findOverlapsSkipped}
 # find exons in the gtf that overlap the skipped exon event
-exons.ce <- findExonContainingTranscripts(ranges.ce, gtf.exons)
-# make skipped exon transcripts
-# removes the skipped exon from all transcritps which contain it
-skippedExonTranscripts <- removeExonInTranscript(ranges.ce, 
-                                                 exons.ce,
-                                                 gtf.exons)
-# make non-skipped exon transcripts
-normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% exons.ce$transcript_id]
+exons.ce <- findExonContainingTranscripts(eventCoords = ranges.ce, 
+                                          gtf.exons = gtf.exons,
+                                          gtf.transcripts = gtf.transcripts)
+# make skipped and included exon transcripts
+# removes the skipped exon from all transcripts which contain it
+skippedExonTranscripts <- skipExonInTranscript(eventCoords = ranges.ce,
+                                               skippedExons = exons.ce,
+                                               gtf.exons, 
+                                               match="exact")
 ```
 
 
@@ -188,15 +200,15 @@ library(Gviz)
 gtr <- Gviz::GenomeAxisTrack()
 
 # all transcripts for the gene
-geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id == normalTranscripts$gene_id[1]]),
+geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id == skippedExonTranscripts$gene_id[1]]),
                                  name="Reference Gene",
                                  showId=TRUE,transcriptAnnotation = "transcript")
 # reference transcript
-geneModelNormal <- GeneRegionTrack(makeGeneModel(normalTranscripts),
+geneModelNormal <- GeneRegionTrack(makeGeneModel(skippedExonTranscripts[skippedExonTranscripts$set=="included_exon"]),
                                    name="Reference Isoform",
                                    showId=TRUE, fill="#4D7ABE",transcriptAnnotation = "transcript")
 # for the skipped exon transcript
-geneModelSkipped <- GeneRegionTrack(makeGeneModel(skippedExonTranscripts),
+geneModelSkipped <- GeneRegionTrack(makeGeneModel(skippedExonTranscripts[skippedExonTranscripts$set=="skipped_exon"]),
                                    name="Alternative Isoform",
                                    showId=TRUE, fill="#94AFD8",transcriptAnnotation = "transcript")
 
@@ -238,28 +250,30 @@ ranges.ri.manual <- GRanges(seqnames="chr11",
 **2. Find transcripts which overlap the intron, and create normal & retained intron isoforms**
 ```{r findIntron}
 # find exons pairs in the gtf that bound the retained intron event
-exons.ri <- findIntronContainingTranscripts(ranges.ri, gtf.exons)
+exons.ri <- findIntronContainingTranscripts(eventCoords = ranges.ri, 
+                                            gtf.exons)
 
-# make retained transcripts
+# make retained and non-retained transcripts
 # adds the intron into all transcripts which overlap it
-retainedIntronTranscripts <- addIntronInTranscript(ranges.ri, exons.ri,
-                                                         gtf.exons, glueExons = TRUE)
-# make non-retained intron transcripts
-normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% exons.ri$transcript_id]
+retainedIntronTranscripts <- addIntronInTranscript(eventCoords = ranges.ri, 
+                                                   flankingExons = exons.ri,
+                                                   gtf.exons, 
+                                                   glueExons = TRUE)
+
 ```
 
 ```{r gvizIntronRetention, eval=TRUE}
 ## make Gviz models
 # all transcripts for the gene
-geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id == normalTranscripts$gene_id[1]]),
+geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id == retainedIntronTranscripts$gene_id[1]]),
                                  name="Reference Gene",
                                  showId=TRUE,transcriptAnnotation = "transcript")
 # reference transcript
-geneModelNormal <- GeneRegionTrack(makeGeneModel(normalTranscripts),
+geneModelNormal <- GeneRegionTrack(makeGeneModel(retainedIntronTranscripts[retainedIntronTranscripts$set=="spliced_intron"]),
                                    name="Reference Isoform",
                                    showId=TRUE, fill="#4D7ABE",transcriptAnnotation = "transcript")
 # for the retained intron transcript
-geneModelRetained <- GeneRegionTrack(makeGeneModel(retainedIntronTranscripts),
+geneModelRetained <- GeneRegionTrack(makeGeneModel(retainedIntronTranscripts[retainedIntronTranscripts$set=="retained_intron"]),
                                    name="Alternative Isoform",
                                    showId=TRUE, fill="#94AFD8",transcriptAnnotation = "transcript")
 
@@ -293,7 +307,9 @@ ranges.aa
 
 ```{r findJunctionsAA}
 # find exons pairs in the gtf that bound the retained intron event
-junctionPairs <- findJunctionPairs(ranges.aa, jncRanges = jnc_ranges, type="AA")
+junctionPairs <- findJunctionPairs(eventCoords = ranges.aa, 
+                                   jncCoords = jnc_ranges, 
+                                   type="AA")
 junctionPairs
 ```
 
@@ -314,13 +330,15 @@ junctionPairs.aa.manual <- GRanges(seqnames="chr16",
 
 ```{r replaceJunctionAA}
 # make transcripts with alternative junction usage
-altTranscripts <- replaceJunction(junctionPairs, ranges.aa, gtf.exons, type="AA")
-altTranscripts$transcript_id <- paste0(altTranscripts$transcript_id,"+AS ",
-                                                   altTranscripts$whippet_id)
+altTranscripts <- replaceJunction(junctionPairs = junctionPairs, 
+                                  eventCoords = ranges.aa, 
+                                  gtf.exons, 
+                                  type="AA")
+
 # make transcripts using junction X
-xTranscripts <- altTranscripts[altTranscripts$set=="X"]
+xTranscripts <- altTranscripts[altTranscripts$set=="AA_X"]
 # make transcripts using junction Y
-yTranscripts <- altTranscripts[altTranscripts$set=="Y"]
+yTranscripts <- altTranscripts[altTranscripts$set=="AA_Y"]
 ```
 
 ```{r altAceGvis}
@@ -362,16 +380,19 @@ ranges.ad
 
 ```{r createIsoformsAD}
 # find exons pairs in the gtf that bound the retained intron event
-junctionPairs <- findJunctionPairs(ranges.ad, jncRanges = jnc_ranges, type="AD")
+junctionPairs <- findJunctionPairs(eventCoords = ranges.ad, 
+                                   jncCoords = jnc_ranges, 
+                                   type="AD")
 
 # make transcripts with alternative junction usage
-altTranscripts <- replaceJunction(junctionPairs, ranges.ad, gtf.exons, type="AD")
-altTranscripts$transcript_id <- paste0(altTranscripts$transcript_id,"+AS ",
-                                                   altTranscripts$whippet_id)
+altTranscripts <- replaceJunction(junctionPairs = junctionPairs, 
+                                  eventCoords = ranges.ad, 
+                                  gtf.exons, type="AD")
+
 # make transcripts using junction X
-xTranscripts <- altTranscripts[altTranscripts$set=="X"]
+xTranscripts <- altTranscripts[altTranscripts$set=="AD_X"]
 # make transcripts using junction Y
-yTranscripts <- altTranscripts[altTranscripts$set=="Y"]
+yTranscripts <- altTranscripts[altTranscripts$set=="AD_Y"]
 ```
 
 ```{r altDonGvis}
@@ -417,7 +438,8 @@ ranges.af
 ```{r createIsoformsAF}
 # find junction pairs that use the same acceptor/donor as the specified first/last exon
 # i.e. find the alternative first/last exon
-junctionPairs <- findJunctionPairs(ranges.af, jncRanges = jnc_ranges, type="AF")
+junctionPairs <- findJunctionPairs(eventCoords = ranges.af, 
+                                   jncCoords = jnc_ranges, type="AF")
 ```
 
 You can create alternative isoforms manually by defining one of the first exons, and splice junctions which are used by this exon and an alternative first exon.
@@ -442,13 +464,15 @@ junctionPairs.af.manual <- GRanges(seqnames="chr1",
 
 ```{r replaceJunctionAF}
 # make transcripts with alternative junction usage
-altTranscripts <- replaceJunction(junctionPairs, ranges.af, gtf.exons, type="AF")
-altTranscripts$transcript_id <- paste0(altTranscripts$transcript_id,"+AS ",
-                                                   altTranscripts$new_event_id)
+altTranscripts <- replaceJunction(junctionPairs = junctionPairs, 
+                                  eventCoords = ranges.af, 
+                                  gtf.exons,
+                                  type="AF")
+
 # make transcripts using exon X
-xTranscripts <- altTranscripts[altTranscripts$set=="X"]
+xTranscripts <- altTranscripts[altTranscripts$set=="AF_X"]
 # make transcripts using exon Y
-yTranscripts <- altTranscripts[altTranscripts$set=="Y"]
+yTranscripts <- altTranscripts[altTranscripts$set=="AF_Y"]
 ```
 
 ```{r altFirstGvis}
@@ -488,16 +512,19 @@ ranges.al
 ```{r createIsoformsAL}
 # find junction pairs that use the same acceptor/donor as the specified first/last exon
 # i.e. find the alternative first/last exon
-junctionPairs <- findJunctionPairs(ranges.al, jncRanges = jnc_ranges, type="AL")
+junctionPairs <- findJunctionPairs(eventCoords = ranges.al, 
+                                   jncCoords = jnc_ranges, type="AL")
 
 # make transcripts with alternative junction usage
-altTranscripts <- replaceJunction(junctionPairs, ranges.af, gtf.exons, type="AL")
-altTranscripts$transcript_id <- paste0(altTranscripts$transcript_id,"+AS ",
-                                                   altTranscripts$new_event_id)
+altTranscripts <- replaceJunction(junctionPairs = junctionPairs, 
+                                  eventCoords = ranges.al, 
+                                  gtf.exons, 
+                                  type="AL")
+
 # make transcripts using junction X
-xTranscripts <- altTranscripts[altTranscripts$set=="X"]
+xTranscripts <- altTranscripts[altTranscripts$set=="AL_X"]
 # make transcripts using junction Y
-yTranscripts <- altTranscripts[altTranscripts$set=="Y"]
+yTranscripts <- altTranscripts[altTranscripts$set=="AL_Y"]
 ```
 
 ```{r altLastGvis}
@@ -527,59 +554,72 @@ significant_events.ce <- significant_events[significant_events$type=="CE",]
 significant_events.ce <- significant_events.ce[significant_events.ce$gene == "ENSMUSG00000024038.16",]
 ranges.ce <- whippet_coords[whippet_coords$id %in% significant_events.ce$coord]
 # find exons in the gtf that overlap the skipped exon event
-exons.ce <- findExonContainingTranscripts(ranges.ce, gtf.exons)
-# make skipped exon transcripts
-# removes the skipped exon from all transcritps which contain it
-skippedExonTranscripts <- removeExonInTranscript(ranges.ce, exons.ce,
-                                                 gtf.exons, glueExons = TRUE)
+exons.ce <- findExonContainingTranscripts(eventCoords = ranges.ce, 
+                                          gtf.exons = gtf.exons,
+                                          gtf.transcripts = gtf.transcripts)
+# make skipped and included exon transcripts
+# removes the skipped exon from all transcripts which contain it
+skippedExonTranscripts <- skipExonInTranscript(eventCoords = ranges.ce,
+                                               skippedExons = exons.ce,
+                                               gtf.exons, 
+                                               match="exact")
 # make non-skipped exon transcripts
 normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% exons.ce$transcript_id]
 
 # get ORF details for each set of transcripts
-orfs_normal <- getOrfs(normalTranscripts, g, returnLongestOnly = FALSE, all_frames = TRUE)
-orfs_skipped <- getOrfs(skippedExonTranscripts, g, returnLongestOnly = FALSE, all_frames = TRUE)
-
-head(orfs_normal[,-7])
+orfs_normal <- getOrfs(normalTranscripts, BSgenome = g, 
+                       returnLongestOnly = FALSE, allFrames = TRUE)
+orfs_skipped <- getOrfs(skippedExonTranscripts[skippedExonTranscripts$set == "skipped_exon"],
+                        BSgenome = g,
+                        returnLongestOnly = FALSE, allFrames = TRUE)
+orfs_included <- getOrfs(skippedExonTranscripts[skippedExonTranscripts$set == "included_exon"],
+                         BSgenome = g,
+                        returnLongestOnly = FALSE, allFrames = TRUE)
+head(orfs_normal[,-8])
 # id: transcript isoform id
 # gene_id: gene id
 # frame: which open reading frame (1:3)
 # seq_length: sequence length (in AA)
+# seq_length_nt: sequence length (in nt)
 # start_site: ORF start site (in AA)
 # stop_site: ORF stop site (in AA)
 # orf_sequence: ORF sequence (not shown)
 # orf_length: ORF length (in AA)
 # start_site_nt:  ORF start site (in nt) / 5'UTR length
 # stop_site_nt:  ORF stop site (in nt)
+# utr3_length: 3'UTR length (in nt)
 # min_dist_to_junction_a: distance from stop codon to upstream junction (junction A) 
 # exon_a_from_start: junction A exon number
 # min_dist_to_junction_b: distance from stop codon to downstream junction (junction B), 
 # exon_b_from_final: junction B exon number (counting backwards from the final exon)
-# utr3_length: 3'UTR length (in nt)
 ```
 
 **2. Compare ORFs**
 ```{r CompareORF}
 # compare normal and skipped isoforms
-orfChange <- orfDiff(orfsX = orfs_normal, 
+orfChange <- orfDiff(orfsX = orfs_included, 
                      orfsY = orfs_skipped, 
                      filterNMD = FALSE,
+                     compareBy="gene",
                      geneSimilarity = TRUE,
-                     compareUTR=TRUE)
+                     compareUTR=TRUE,
+                     allORFs = orfs_normal)
 
 orfChange
 # id: splicing event ID
-# orf_length_by_group_x: longest orf in first set of transcripts (normalTranscripts)
-# orf_length_by_group_y: longest orf in second set of transcripts (skippedExonTranscripts)
-# utr3_length_by_group_x: 3'UTR length in first set of transcripts (normalTranscripts)
-# utr3_length_by_group_y: 3'UTR length in second set of transcripts (skippedExonTranscripts)
-# utr5_length_by_group_x: 5'UTR length in first set of transcripts (normalTranscripts)
-# utr5_length_by_group_y: 5'UTR length in second set of transcripts (skippedExonTranscripts)
+# orf_length_by_group_x: longest orf in first set of transcripts (included exon)
+# orf_length_by_group_y: longest orf in second set of transcripts (skipped exon)
+# utr3_length_by_group_x: 3'UTR length in first set of transcripts (included exon)
+# utr3_length_by_group_y: 3'UTR length in second set of transcripts (skipped exon)
+# utr5_length_by_group_x: 5'UTR length in first set of transcripts (included exon)
+# utr5_length_by_group_y: 5'UTR length in second set of transcripts (skipped exon)
 # filtered: filtered for NMD ?
-# percent_orf_kept: percent of the normal ORF kept in the skipped exon transcript
-# max_percent_orf_kept: theoretical maximum percent of the ORF that could be kept in the skipped exon transcript (orf_length_by_group_y / orf_length_by_group_x)
-# orf_percent_new: percent of the skipped ORF not contained in the normal ORF
-# max_orf_similarity_bygene: max percent of a normal ORF shared in the skipped exon transcript. If multiple ORF frames and transcripts are available, this is the maximum value from comparing the skipped isoform ORF to ALL normal isoform ORFs. 
-# new_orfByGene: length (or percent?) of skipped ORF not contained in any of the normal ORFs.
+# percent_orf_shared: percent of the ORF shared between skipped and included exon transcripts
+# max_percent_orf_shared: theoretical maximum percent of the ORF that could be shared (orf_length_by_group_y / orf_length_by_group_x) or (orf_length_by_group_x / orf_length_by_group_y)
+# orf_percent_kept_x: percent of the ORF in group x (included exon) contained in group y (skipped exon)
+# orf_percent_kept_y: percent of the ORF in group y (skipped exon) contained in group x (included exon)
+# gene_similarity_x: max percent of a normal ORF shared in the group x (included exon) transcript. If multiple ORF frames and transcripts are available, this is the maximum value from comparing the skipped isoform ORF to ALL normal isoform ORFs. 
+# gene_similarity_y: max percent of a normal ORF shared in the group y (skipped exon) transcript. If multiple ORF frames and transcripts are available, this is the maximum value from comparing the skipped isoform ORF to ALL normal isoform ORFs. 
 ```
 
 **2.b. Compare ORFs with NMD probability**
@@ -597,15 +637,35 @@ significant_events.ce <- significant_events[significant_events$gene == "ENSMUSG0
 ranges.ce <- whippet_coords[whippet_coords$id %in% significant_events.ce$coord]
 # find exons in the gtf that overlap the skipped exon event
 exons.ce <- findExonContainingTranscripts(ranges.ce, gtf.exons)
-# make skipped exon transcripts
-# removes the skipped exon from all transcritps which contain it
-skippedExonTranscripts <- removeExonInTranscript(ranges.ce, exons.ce,
-                                                 gtf.exons, glueExons = TRUE)
+
+
+significant_events.ce <- significant_events[significant_events$type=="CE",]
+
+# we will be looking at Ndufv3 (ENSMUSG00000024038.16) again
+significant_events.ce <- significant_events.ce[significant_events.ce$gene == "ENSMUSG00000024038.16",]
+ranges.ce <- whippet_coords[whippet_coords$id %in% significant_events.ce$coord]
+# find exons in the gtf that overlap the skipped exon event
+exons.ce <- findExonContainingTranscripts(eventCoords = ranges.ce, 
+                                          gtf.exons = gtf.exons,
+                                          gtf.transcripts = gtf.transcripts)
+# make skipped and included exon transcripts
+# removes the skipped exon from all transcripts which contain it
+skippedExonTranscripts <- skipExonInTranscript(eventCoords = ranges.ce,
+                                               skippedExons = exons.ce,
+                                               gtf.exons, 
+                                               match="exact")
 # make non-skipped exon transcripts
 normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% exons.ce$transcript_id]
 
-orfs_normal <- getOrfs(normalTranscripts, g, returnLongestOnly = FALSE, all_frames = TRUE)
-orfs_skipped <- getOrfs(skippedExonTranscripts, g, returnLongestOnly = FALSE, all_frames = TRUE)
+# get ORF details for each set of transcripts
+orfs_normal <- getOrfs(normalTranscripts, BSgenome = g, 
+                       returnLongestOnly = FALSE, allFrames = TRUE)
+orfs_skipped <- getOrfs(skippedExonTranscripts[skippedExonTranscripts$set == "skipped_exon"],
+                        BSgenome = g,
+                        returnLongestOnly = FALSE, allFrames = TRUE)
+orfs_included <- getOrfs(skippedExonTranscripts[skippedExonTranscripts$set == "included_exon"],
+                         BSgenome = g,
+                        returnLongestOnly = FALSE, allFrames = TRUE)
 
 # calculate NMD probability
 # --- note that if you have a different method for assessing NMD potential, you may substitute the values here
@@ -613,17 +673,22 @@ orfs_normal$nmd_prob <- notNMD::predictNMD(orfs_normal, "prob")
 orfs_normal$nmd_class <- notNMD::predictNMD(orfs_normal)
 orfs_skipped$nmd_prob <- notNMD::predictNMD(orfs_skipped, "prob")
 orfs_skipped$nmd_class <- notNMD::predictNMD(orfs_skipped)
+orfs_included$nmd_prob <- notNMD::predictNMD(orfs_included, "prob")
+orfs_included$nmd_class <- notNMD::predictNMD(orfs_included)
 
 orfs_normal <- orfs_normal[which(!is.na(orfs_normal$orf_length)),]
 orfs_skipped <- orfs_skipped[which(!is.na(orfs_skipped$orf_length)),]
+orfs_included <- orfs_included[which(!is.na(orfs_included$orf_length)),]
+
 
 # compare normal and skipped isoforms
-orfChange <- orfDiff(orfsX = orfs_normal, 
+orfChange <- orfDiff(orfsX = orfs_included, 
                      orfsY = orfs_skipped, 
                      filterNMD = TRUE,
                      geneSimilarity = TRUE,
-                     compareUTR=TRUE)
-nmdChange <- attrChangeAltSpliced(orfs_normal,orfs_skipped,
+                     compareUTR=TRUE,
+                     allORFs = orfs_normal)
+nmdChange <- attrChangeAltSpliced(orfs_included,orfs_skipped,
                                            attribute="nmd_prob",
                                            compareBy="gene",
                                            useMax=FALSE)
@@ -638,11 +703,12 @@ orfChange
 # utr5_length_by_group_x: 5'UTR length in first set of transcripts (normalTranscripts)
 # utr5_length_by_group_y: 5'UTR length in second set of transcripts (skippedExonTranscripts)
 # filtered: filtered for NMD ?
-# percent_orf_kept: percent of the normal ORF kept in the skipped exon transcript
-# max_percent_orf_kept: theoretical maximum percent of the ORF that could be kept in the skipped exon transcript (orf_length_by_group_y / orf_length_by_group_x)
-# orf_percent_new: percent of the skipped ORF not contained in the normal ORF
-# max_orf_similarity_bygene: max percent of a normal ORF shared in the skipped exon transcript. If multiple ORF frames and transcripts are available, this is the maximum value from comparing the skipped isoform ORF to ALL normal isoform ORFs. 
-# new_orfByGene: length (or percent?) of skipped ORF not contained in any of the normal ORFs.
+# percent_orf_shared: percent of the ORF shared between skipped and included exon transcripts
+# max_percent_orf_shared: theoretical maximum percent of the ORF that could be shared (orf_length_by_group_y / orf_length_by_group_x) or (orf_length_by_group_x / orf_length_by_group_y)
+# orf_percent_kept_x: percent of the ORF in group x (included exon) contained in group y (skipped exon)
+# orf_percent_kept_y: percent of the ORF in group y (skipped exon) contained in group x (included exon)
+# gene_similarity_x: max percent of a normal ORF shared in the group x (included exon) transcript. If multiple ORF frames and transcripts are available, this is the maximum value from comparing the skipped isoform ORF to ALL normal isoform ORFs. 
+# gene_similarity_y: max percent of a normal ORF shared in the group y (skipped exon) transcript. If multiple ORF frames and transcripts are available, this is the maximum value from comparing the skipped isoform ORF to ALL normal isoform ORFs.
 # nmd_prob_bygroup_x: mininmum NMD probability in first set of transcripts (normalTranscripts)
 # nmd_prob_bygroup_y: mininmum NMD probability in second set of transcripts (skippedExonTranscripts)
 ```
@@ -651,29 +717,31 @@ orfChange
 ```{r plotORFs, eval = TRUE}
 # plot ORFs on transcripts
 # annotate UTR/CDS locations
-geneModel.normal <- annotateGeneModel(normalTranscripts, orfs_normal)
-geneModel.skipped <- annotateGeneModel(skippedExonTranscripts, orfs_skipped)
+geneModel.skipped <- annotateGeneModel(skippedExonTranscripts[
+    skippedExonTranscripts$set=="skipped_exon"], orfs_skipped)
+geneModel.included <- annotateGeneModel(skippedExonTranscripts[
+    skippedExonTranscripts$set=="included_exon"], orfs_included)
 
-# make tracks for UTR/CDS annotated transcripts
-grtr.normal <- GeneRegionTrack(geneModel.normal,
-                               name="Reference Isoform",
-                               showId=TRUE, fill="#4D7ABE")
+grtr.included <- GeneRegionTrack(geneModel.included,
+                            name="Included Isoform",
+                            showId=TRUE, fill="#4D7ABE",
+                            transcriptAnnotation = "transcript")
 # make tracks for non-nmd targeted CDS
-grtrCDS.normal <- GeneRegionTrack(geneModel.normal[geneModel.normal$feature == "CDS",],
-                              name="Reference Isoform CDS",
-                              showId=TRUE,fill="#CB3634", transcriptAnnotation = "transcript")
-
-geneModel.skipped$symbol <- geneModel.normal$symbol[1]
-geneModel.skipped$transcript <- gsub("[+]","\n",geneModel.skipped$transcript)
+grtrCDS.included <- GeneRegionTrack(geneModel.included[geneModel.included$feature == "CDS",],
+                                name="Included Isoform CDS",
+                                showId=TRUE,fill="#CB3634", 
+                                transcriptAnnotation = "transcript")
 
 grtr.skipped <- GeneRegionTrack(geneModel.skipped,
-                            name="Alternative Isoform",
-                            showId=TRUE, fill="#4D7ABE")
+                            name="Skipped Isoform",
+                            showId=TRUE, fill="#4D7ABE",
+                            transcriptAnnotation = "transcript")
 # make tracks for non-nmd targeted CDS
 grtrCDS.skipped <- GeneRegionTrack(geneModel.skipped[geneModel.skipped$feature == "CDS",],
-                                name="Alternative Isoform CDS",
-                                showId=TRUE,fill="#CB3634", transcriptAnnotation = "transcript")
-plotTracks(list(gtr, grtr.normal, grtr.skipped, grtrCDS.normal,grtrCDS.skipped), extend.left = 1000, extend.right = 1000)
+                                name="Skipped Isoform CDS",
+                                showId=TRUE,fill="#CB3634", 
+                                transcriptAnnotation = "transcript")
+plotTracks(list(gtr, grtr.included, grtr.skipped, grtrCDS.included,grtrCDS.skipped), extend.left = 1000, extend.right = 1000)
 # Full length transcripts in blue, CDS only in red
 ```
 
@@ -701,11 +769,17 @@ retainedIntronTranscripts <- addIntronInTranscript(ranges.ri, exons.ri,
 normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% exons.ri$transcript_id]
 
 # get ORF details for each set of transcripts
-orfs_normal <- getOrfs(normalTranscripts, g, returnLongestOnly = FALSE, all_frames = TRUE)
-orfs_retained <- getOrfs(retainedIntronTranscripts, g, returnLongestOnly = FALSE, all_frames = TRUE)
+orfs_normal <- getOrfs(normalTranscripts, BSgenome = g, 
+                       returnLongestOnly = FALSE, allFrames = TRUE)
+orfs_retained <- getOrfs(retainedIntronTranscripts[retainedIntronTranscripts$set == "retained_intron"],
+                        BSgenome = g,
+                        returnLongestOnly = FALSE, allFrames = TRUE)
+orfs_spliced <- getOrfs(retainedIntronTranscripts[retainedIntronTranscripts$set == "spliced_intron"],
+                         BSgenome = g,
+                        returnLongestOnly = FALSE, allFrames = TRUE)
 
 # compare normal and retained isoforms
-orfChange <- orfDiff(orfsX = orfs_normal, 
+orfChange <- orfDiff(orfsX = orfs_spliced, 
                      orfsY = orfs_retained, 
                      filterNMD = FALSE,
                      geneSimilarity = TRUE,
@@ -716,28 +790,29 @@ orfChange
 # plot ORFs on transcripts
 
 # annotate UTR/CDS locations
-geneModel.normal <- annotateGeneModel(normalTranscripts, orfs_normal)
-geneModel.retained <- annotateGeneModel(retainedIntronTranscripts, orfs_retained)
+geneModel.retained <- annotateGeneModel(retainedIntronTranscripts[retainedIntronTranscripts$set == "retained_intron"], orfs_retained)
+geneModel.spliced <- annotateGeneModel(retainedIntronTranscripts[retainedIntronTranscripts$set == "spliced_intron"], orfs_retained)
 
-# make tracks for UTR/CDS annotated transcripts
-grtr.normal <- GeneRegionTrack(geneModel.normal,
-                               name="Reference Isoform",
-                               showId=TRUE, fill="#4D7ABE")
-grtrCDS.normal <- GeneRegionTrack(geneModel.normal[geneModel.normal$feature == "CDS",],
-                              name="Reference Isoform CDS",
-                              showId=TRUE,fill="#CB3634", transcriptAnnotation = "transcript")
 
-geneModel.retained$symbol <- geneModel.normal$symbol[1]
-geneModel.retained$transcript <- gsub("[+]","\n",geneModel.retained$transcript)
+grtr.spliced <- GeneRegionTrack(geneModel.spliced,
+                            name="Spliced Isoform",
+                            showId=TRUE, fill="#4D7ABE", 
+                            transcriptAnnotation = "transcript")
+grtrCDS.spliced <- GeneRegionTrack(geneModel.spliced[geneModel.spliced$feature == "CDS",],
+                                name="Spliced Isoform CDS",
+                                showId=TRUE,fill="#CB3634", 
+                                transcriptAnnotation = "transcript")
 
 grtr.retained <- GeneRegionTrack(geneModel.retained,
-                            name="Alternative Isoform",
-                            showId=TRUE, fill="#4D7ABE")
+                            name="Retained Isoform",
+                            showId=TRUE, fill="#4D7ABE", 
+                            transcriptAnnotation = "transcript")
 grtrCDS.retained <- GeneRegionTrack(geneModel.retained[geneModel.retained$feature == "CDS",],
-                                name="Alternative Isoform CDS",
-                                showId=TRUE,fill="#CB3634", transcriptAnnotation = "transcript")
+                                name="Retained Isoform CDS",
+                                showId=TRUE,fill="#CB3634", 
+                                transcriptAnnotation = "transcript")
 gtr <- GenomeAxisTrack()
-plotTracks(list(gtr, grtr.normal, grtrCDS.normal, grtr.retained, grtrCDS.retained), extend.left = 1000, extend.right = 1000)
+plotTracks(list(gtr, grtr.spliced, grtrCDS.spliced, grtr.retained, grtrCDS.retained), extend.left = 1000, extend.right = 1000)
 
 # Full length transcripts in blue, CDS only in red
 
