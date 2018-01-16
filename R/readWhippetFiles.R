@@ -12,7 +12,7 @@
 readWhippetJNCfiles <- function(files){
 
     for(f in seq_along(files)){
-        whip <- data.table::fread(paste0("zcat < ", files[f]), data.table=F)
+        whip <- data.table::fread(paste0("zcat < ", files[f]), data.table=FALSE)
         colnames(whip) <- c("chromosome","start","end","id","count","strand")
 
         if(exists("whip.all")){
@@ -55,7 +55,7 @@ readWhippetJNCfiles <- function(files){
 readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
 
     for(f in seq_along(files)){
-        whip <- data.table::fread(paste0("zcat < ", files[f]), data.table=F)
+        whip <- data.table::fread(paste0("zcat < ", files[f]), data.table=FALSE)
         wantedCol <- which(colnames(whip) == attribute)
 
         if(exists("whip.all")){
@@ -92,7 +92,7 @@ readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
 readWhippetDIFFfiles <- function(files){
 
     for(f in seq_along(files)){
-        whip <- data.table::fread(paste0("zcat < ", files[f]), data.table=F, skip=1)
+        whip <- data.table::fread(paste0("zcat < ", files[f]), data.table=FALSE, skip=1)
 
         #remove the NA column
         keepcol <- which(apply(whip, 2, function(x) all(!is.na(x))))
