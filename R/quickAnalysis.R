@@ -166,7 +166,7 @@ transcriptChangeSummary <- function(transcriptsX,
   orfsX <- orfsX[which(!is.na(orfsX$orf_length)),]
   orfsY <- orfsY[which(!is.na(orfsY$orf_length)),]
 
-  if(compareToGene == TRUE){
+    if(compareToGene == TRUE){
 
       if(NMD == TRUE){
           orfAllGenes <- getOrfs(gtf.exons[gtf.exons$gene_id %in%
@@ -390,4 +390,113 @@ whippetTranscriptChangeSummary <- function(significantEvents,
     }
 
     return(SignificantEvents.withORF)
+}
+#' Compare open reading frames for whippet differentially spliced events
+#' @param significantEvents  data.frame containing information from the
+#' per_intron_results.tab file output from leafcutter.
+#' @param combineGeneEvents combine clusters occuring in the same gene?
+#' Currently NOT FUNCTIONAL
+#' @param gtf.exons GRanges gtf annotation of exons
+#' @param BSgenome BSGenome object containing the genome for the species analysed
+#' @param NMD Use NMD predictions? (Note: notNMD must be installed to use this feature)
+#' @param showProgressBar show a progress bar of alternative isoform generation?
+#' @return data.frame containing signficant whippet diff data and ORF change summaries
+#' @export
+#' @author Beth Signal
+#' @examples
+#' leafcutterFiles <- list.files(system.file("extdata","leafcutter/",
+#' package = "GeneStructureTools"), full.names = TRUE)
+#' leafcutterIntrons <- read.delim(leafcutterFiles[
+#' grep("intron_results", leafcutterFiles)],stringsAsFactors=FALSE)
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM14.Eif4a2.gtf",
+#' package = "GeneStructureTools"))
+#' gtf.exons <- gtf[gtf$type=="exon"]
+#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+#' leafcutterTranscriptChangeSummary(significantEvents = leafcutterIntrons,
+#' gtf.exons=gtf.exons,BSgenome = g,NMD=FALSE)
+
+leafcutterTranscriptChangeSummary <- function(significantEvents,
+                                              combineGeneEvents=FALSE,
+                                              gtf.exons,
+                                              BSgenome,
+                                              NMD = FALSE,
+                                              showProgressBar=TRUE){
+
+
+    geneEvents <- as.data.frame(table(significantEvents$ensemblID,
+                                      significantEvents$clusterID))
+    geneEvents <- geneEvents[geneEvents$Freq!=0,]
+
+    if(combineGeneEvents == FALSE){
+        if(showProgressBar){
+            message(paste0("Generating alternative isoforms for ",
+                           nrow(geneEvents), " clusters:"))
+            pb <- txtProgressBar(min = 0, max = nrow(geneEvents), style = 3)
+        }
+
+        altIso <- alternativeIntronUsage(significantEvents[
+            significantEvents$clusterID == geneEvents$Var2[1],],
+            gtf.exons)
+        if(showProgressBar){setTxtProgressBar(pb, 1)}
+
+        if(nrow(geneEvents) > 1){
+            for(i in 2:nrow(geneEvents)){
+                altIntronLocs = significantEvents[
+                    significantEvents$clusterID == geneEvents$Var2[i],]
+                altIntronLocs <- altIntronLocs[altIntronLocs$verdict=="annotated",]
+                if(nrow(altIntronLocs) > 1){
+                    altIso1 <- alternativeIntronUsage(altIntronLocs, gtf.exons)
+                    altIso <- c(altIso, altIso1)
+                }
+                if(showProgressBar){setTxtProgressBar(pb, i)}
+
+            }
+        }
+    }else{
+        genes <- unique(geneEvents$Var1)
+        if(showProgressBar){
+            message(paste0("Generating alternative isoforms for ",
+                           nrow(geneEvents), " genes:"))
+            pb <- txtProgressBar(min = 0, max = length(genes), style = 3)
+        }
+        for(j in seq_along(genes)){
+            clusters <- geneEvents[geneEvents$Var1==genes[j],]
+
+            altIso <- alternativeIntronUsage(significantEvents[
+                significantEvents$clusterID == clusters$Var2[1],],
+                gtf.exons)
+
+            if(nrow(clusters) > 1){
+                for(i in 2:nrow(clusters)){
+                    altIntronLocs = significantEvents[
+                        significantEvents$clusterID == clusters$Var2[i],]
+                    altIntronLocs <- altIntronLocs[altIntronLocs$verdict=="annotated",]
+                    if(nrow(altIntronLocs) > 1){
+                        altIso1 <- alternativeIntronUsage(altIntronLocs, c(gtf.exons, altIso))
+                        altIso <- c(altIso, altIso1)
+                    }
+
+                }
+            }
+            if(showProgressBar){setTxtProgressBar(pb, j)}
+
+        }
+
+
+    }
+    altIso$spliced_id <- unlist(lapply(
+        stringr::str_split(altIso$transcript_id, " "),"[[",2))
+
+    transcriptsX <- altIso[grep("dnre", altIso$transcript_id)]
+    transcriptsY <- altIso[grep("upre", altIso$transcript_id)]
+
+    orfDiff <- transcriptChangeSummary(transcriptsX,
+                                       transcriptsY,
+                                       BSgenome = BSgenome,
+                                       NMD = NMD)
+    m <- match(gsub("_","",significantEvents$clusterID), orfDiff$id)
+    significantEvents.withORF <- cbind(significantEvents, orfDiff[m,-1])
+    #significantEvents.withORF <- significantEvents.withORF[!duplicated(m),]
+
+    return(significantEvents.withORF)
 }
