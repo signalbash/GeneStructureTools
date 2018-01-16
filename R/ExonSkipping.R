@@ -412,9 +412,9 @@ reorderExonNumbers <- function(gtf.exons, by="transcript_id"){
     transcriptTable$strand <- as.character(strand(gtf.exons[match(transcriptTable$Var1,
                                                                   mcols(gtf.exons)[,n])]))
 
-    gtf.exons$exon_number <- unlist(apply(transcriptTable, 1,
+    gtf.exons$exon_number <- as.numeric(unlist(apply(transcriptTable, 1,
                                           function(x) if(x[3] == "+"){
-                                              c(1:(x[2]))}else{c((x[2]:1))}))
+                                              c(1:(x[2]))}else{c((x[2]:1))})))
     return(gtf.exons)
 }
 
