@@ -332,10 +332,7 @@ attrChangeAltSpliced <- function(orfsX,
                                   paste0(attributeX$id[hasASidX], ":")), 1, -2)
         attributeX$as_group[hasASidX] <-
             unlist(lapply(str_split(attributeX$id[hasASidX], " "), '[[', 2))
-        if(any(grepl(":", attributeX$as_group[hasASidX]))){
-            attributeX$as_group[hasASidX] <-
-                multipleGroupsToSingle(attributeX$as_group)[hasASidX]
-        }
+
         attributeX$transcript_id[hasASidX] <-
             unlist(lapply(str_split(attributeX$id[hasASidX], "[+]"), '[[', 1))
 
@@ -354,10 +351,7 @@ attrChangeAltSpliced <- function(orfsX,
                                   paste0(attributeY$id[hasASidY], ":")), 1, -2)
         attributeY$as_group[hasASidY] <-
             unlist(lapply(str_split(attributeY$id[hasASidY], " "), '[[', 2))
-        if(any(grepl(":", attributeY$as_group[hasASidY]))){
-            attributeY$as_group[hasASidY] <-
-                multipleGroupsToSingle(attributeY$as_group)[hasASidY]
-        }
+
         attributeY$transcript_id[hasASidY] <-
             unlist(lapply(str_split(attributeY$id[hasASidY], "[+]"), '[[', 1))
 
@@ -531,27 +525,4 @@ orfSimilarity <- function(orfA, orfB, substitutionCost=100){
             return(0)
         }
     }
-}
-
-multipleGroupsToSingle <- function(asGroups){
-    uniqueGroups <- unique(asGroups)
-    perID <- stringr::str_count(uniqueGroups,":")
-    groups <- data.frame(uniqueGroups, perID)
-    groups <- plyr::arrange(groups, plyr::desc(perID))
-    groups$newID <- NA
-
-    noNewId <- which(is.na(groups$newID))
-    while(length(noNewId) > 0){
-        groups$newID[noNewId][1] <- as.character(groups$uniqueGroups[noNewId][1])
-        subASgroups <- unlist(stringr::str_split(groups$uniqueGroups[noNewId][1],":"))
-        # which rows contain ids in the biggest group?
-        contained <- which(apply(
-            matrix(unlist(lapply(
-                subASgroups, function(x) grepl(x, groups$uniqueGroups[noNewId]))),
-                nrow = length(subASgroups), byrow = TRUE), 2, any))
-        groups$newID[noNewId][contained] <- groups$newID[noNewId][1]
-        noNewId <- which(is.na(groups$newID))
-    }
-    m <- match(asgroups, groups$uniqueGroups)
-    return(groups$newID[m])
 }
