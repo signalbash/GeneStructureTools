@@ -19,15 +19,15 @@ Filter a GTF overlap to remove exons when exon is annotated as a CDS/UTR
 gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
 package = "GeneStructureTools")
 gtf <- rtracklayer::import(gtfFile)
-overlap <- GenomicRanges::findOverlaps(gtf[which(gtf$type=="CDS")[1]], gtf)
-table(gtf$type[overlap@to])
-overlapFiltered <- filterGtfOverlap(gtf[overlap@to])
-table(overlapFiltered$type[overlap@to])
-overlap <- GenomicRanges::findOverlaps(gtf[which(gtf$transcript_type=="retained_intron")[1]],
-gtf)
-table(gtf$type[overlap@to])
-overlapFiltered <- filterGtfOverlap(gtf[overlap@to])
-table(overlapFiltered$type[overlap@to])
+overlap <- as.data.frame(GenomicRanges::findOverlaps(gtf[which(gtf$type=="CDS")[1]], gtf))
+table(gtf$type[overlap$subjectHits])
+overlapFiltered <- filterGtfOverlap(gtf[overlap$subjectHits])
+table(overlapFiltered$type[overlap$subjectHits])
+overlap <- as.data.frame(GenomicRanges::findOverlaps(gtf[which(
+gtf$transcript_type=="retained_intron")[1]],gtf))
+table(gtf$type[overlap$subjectHits])
+overlapFiltered <- filterGtfOverlap(gtf[overlap$subjectHits])
+table(overlapFiltered$type[overlap$subjectHits])
 }
 \author{
 Beth Signal
