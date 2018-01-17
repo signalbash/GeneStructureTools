@@ -348,8 +348,8 @@ addBroadTypes <- function(gtf){
 #' overlapFiltered <- filterGtfOverlap(gtf[overlap$subjectHits])
 #' table(overlapFiltered$type[overlap$subjectHits])
 
-#' overlap <- as.data.frame(GenomicRanges::findOverlaps(gtf[which(gtf$transcript_type=="retained_intron")[1]],
-#' gtf))
+#' overlap <- as.data.frame(GenomicRanges::findOverlaps(gtf[which(
+#' gtf$transcript_type=="retained_intron")[1]],gtf))
 #' table(gtf$type[overlap$subjectHits])
 #' overlapFiltered <- filterGtfOverlap(gtf[overlap$subjectHits])
 #' table(overlapFiltered$type[overlap$subjectHits])

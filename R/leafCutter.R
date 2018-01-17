@@ -5,12 +5,13 @@
 #' @return Granges object with a cluster of intron locations and corresponding set numbers
 #' @keywords internal
 #' @import GenomicRanges
+#' @importFrom plyr desc
 #' @author Beth Signal
 addSets <- function(clusterGRanges){
     clusterGRanges$set <- 1
 
-    ol <- findOverlaps(clusterGRanges)
-    ol <- as.data.frame(ol[ol@from !=ol@to])
+    ol <- as.data.frame(findOverlaps(clusterGRanges))
+    ol <- ol[ol$queryHits != ol$subjectHits,]
     ol$setFrom <- clusterGRanges$set[ol$queryHits]
     ol$setTo <- clusterGRanges$set[ol$subjectHits]
     ol <- ol[ol$setFrom == ol$setTo,]
@@ -18,7 +19,7 @@ addSets <- function(clusterGRanges){
     while(nrow(ol) > 0){
         #find coord with most overlaps
         tab <- as.data.frame(table(ol$queryHits))
-        tab <- arrange(tab, desc(Freq))
+        tab <- tab[order(plyr::desc(tab$Freq)),]
 
         clusterGRanges$set[as.numeric(as.character(tab$Var1[1]))] <- max(clusterGRanges$set) + 1
 
@@ -30,8 +31,8 @@ addSets <- function(clusterGRanges){
             line$set <- max(clusterGRanges$set)
             clusterGRanges <- c(clusterGRanges, line)
         }
-        ol <- findOverlaps(clusterGRanges)
-        ol <- as.data.frame(ol[ol@from !=ol@to])
+        ol <- as.data.frame(findOverlaps(clusterGRanges))
+        ol <- ol[ol$queryHits != ol$subjectHits,]
         ol$setFrom <- clusterGRanges$set[ol$queryHits]
         ol$setTo <- clusterGRanges$set[ol$subjectHits]
         ol <- ol[ol$setFrom == ol$setTo,]

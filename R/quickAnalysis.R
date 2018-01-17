@@ -402,6 +402,10 @@ whippetTranscriptChangeSummary <- function(significantEvents,
 #' @param showProgressBar show a progress bar of alternative isoform generation?
 #' @return data.frame containing signficant whippet diff data and ORF change summaries
 #' @export
+#' @importFrom utils setTxtProgressBar
+#' @importFrom utils txtProgressBar
+#' @importFrom stringr str_split
+#' @import GenomicRanges
 #' @author Beth Signal
 #' @examples
 #' leafcutterFiles <- list.files(system.file("extdata","leafcutter/",
@@ -431,13 +435,13 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
         if(showProgressBar){
             message(paste0("Generating alternative isoforms for ",
                            nrow(geneEvents), " clusters:"))
-            pb <- txtProgressBar(min = 0, max = nrow(geneEvents), style = 3)
+            pb <- utils::txtProgressBar(min = 0, max = nrow(geneEvents), style = 3)
         }
 
         altIso <- alternativeIntronUsage(significantEvents[
             significantEvents$clusterID == geneEvents$Var2[1],],
             gtf.exons)
-        if(showProgressBar){setTxtProgressBar(pb, 1)}
+        if(showProgressBar){utils::setTxtProgressBar(pb, 1)}
 
         if(nrow(geneEvents) > 1){
             for(i in 2:nrow(geneEvents)){
@@ -448,7 +452,7 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
                     altIso1 <- alternativeIntronUsage(altIntronLocs, gtf.exons)
                     altIso <- c(altIso, altIso1)
                 }
-                if(showProgressBar){setTxtProgressBar(pb, i)}
+                if(showProgressBar){utils::setTxtProgressBar(pb, i)}
 
             }
         }
@@ -457,7 +461,7 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
         if(showProgressBar){
             message(paste0("Generating alternative isoforms for ",
                            nrow(geneEvents), " genes:"))
-            pb <- txtProgressBar(min = 0, max = length(genes), style = 3)
+            pb <- utils::txtProgressBar(min = 0, max = length(genes), style = 3)
         }
         for(j in seq_along(genes)){
             clusters <- geneEvents[geneEvents$Var1==genes[j],]
@@ -478,7 +482,7 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
 
                 }
             }
-            if(showProgressBar){setTxtProgressBar(pb, j)}
+            if(showProgressBar){utils::setTxtProgressBar(pb, j)}
 
         }
 
