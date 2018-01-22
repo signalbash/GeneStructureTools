@@ -1,7 +1,7 @@
 Package: GeneStructureTools
 Type: Package
 Title: Tools for spliced gene structure manipulation and analysis
-Version: 0.5.0
+Version: 0.99.0
 Author: Beth Signal
 Maintainer: Beth Signal <b.signal@garvan.org.au>
 Description: GeneStructureTools can be used to create in silico alternative splicing events, and analyse potential effects this has on functional gene products. 
@@ -9,4 +9,5 @@ License: BSD_3_clause + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
-Imports: Biostrings,GenomicRanges,IRanges,data.table,plyr,qualV,stringdist,stringr,notNMD,S4Vectors,rtracklayer,BSgenome.Mmusculus.UCSC.mm10
+Imports: Biostrings,GenomicRanges,IRanges,data.table,plyr,stringdist,stringr,notNMD,S4Vectors,rtracklayer,BSgenome.Mmusculus.UCSC.mm10,stats,utils
+biocViews: Software, DifferentialSplicing, FunctionalPrediction, Transcriptomics, AlternativeSplicing, RNASeq
