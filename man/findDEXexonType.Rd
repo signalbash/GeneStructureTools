@@ -22,9 +22,9 @@ overlaping types
 Find a DEXSeq exons' biotype
 }
 \examples{
-gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+gtfFile <- system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools")
-DEXSeqGtfFile <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
+DEXSeqGtfFile <- system.file("extdata","gencode.vM14.dexseq.gtf",
 package = "GeneStructureTools")
 
 gtf <- rtracklayer::import(gtfFile)
@@ -33,7 +33,7 @@ DEXSeqGtf <- rtracklayer::import(DEXSeqGtfFile)
 
 findDEXexonType("ENSMUSG00000032366.15:E028", DEXSeqGtf, gtf)
 
-DEXSeqResultsFile <- system.file("extdata","dexseq_results.small.txt",
+DEXSeqResultsFile <- system.file("extdata","dexseq_results_significant.txt",
 package = "GeneStructureTools")
 DEXSeqResults <- read.table(DEXSeqResultsFile, sep="\\t")
 

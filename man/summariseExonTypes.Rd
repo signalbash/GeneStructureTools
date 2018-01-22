@@ -16,20 +16,22 @@ vector of broader exon biotypes
 Summarise exon biotypes to broader categories
 }
 \examples{
-gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+gtfFile <- system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools")
-dexGtfFile <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
+DEXSeqGtfFile <- system.file("extdata","gencode.vM14.dexseq.gtf",
 package = "GeneStructureTools")
 
 gtf <- rtracklayer::import(gtfFile)
 gtf <- UTR2UTR53(gtf)
-dexGtf <- rtracklayer::import(dexGtfFile)
+DEXSeqGtf <- rtracklayer::import(DEXSeqGtfFile)
 
-DEXSeqResultsFile <- system.file("extdata","dexseq_results.small.txt",
+findDEXexonType("ENSMUSG00000032366.15:E028", DEXSeqGtf, gtf)
+
+DEXSeqResultsFile <- system.file("extdata","dexseq_results_significant.txt",
 package = "GeneStructureTools")
 DEXSeqResults <- read.table(DEXSeqResultsFile, sep="\\t")
 
-types <- findDEXexonType(rownames(DEXSeqResults), dexGtf, gtf)
+types <- findDEXexonType(rownames(DEXSeqResults), DEXSeqGtf, gtf)
 summarisedTypes <- summariseExonTypes(types)
 table(types, summarisedTypes)
 }

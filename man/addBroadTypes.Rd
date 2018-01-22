@@ -16,7 +16,7 @@ GRanges object of the GTF with new transcript types
 Change transcript biotypes to a broader set in a GRanges GTF object
 }
 \examples{
-gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+gtfFile <- system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools")
 gtf <- rtracklayer::import(gtfFile)
 gtf <- addBroadTypes(gtf)

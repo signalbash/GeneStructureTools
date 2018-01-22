@@ -54,9 +54,9 @@ removeVersion <- function(ids){
 #' @import GenomicRanges
 #' @author Beth Signal
 #' @examples
-#' gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+#' gtfFile <- system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools")
-#' DEXSeqGtfFile <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
+#' DEXSeqGtfFile <- system.file("extdata","gencode.vM14.dexseq.gtf",
 #' package = "GeneStructureTools")
 #'
 #' gtf <- rtracklayer::import(gtfFile)
@@ -65,7 +65,7 @@ removeVersion <- function(ids){
 #'
 #' findDEXexonType("ENSMUSG00000032366.15:E028", DEXSeqGtf, gtf)
 #'
-#' DEXSeqResultsFile <- system.file("extdata","dexseq_results.small.txt",
+#' DEXSeqResultsFile <- system.file("extdata","dexseq_results_significant.txt",
 #' package = "GeneStructureTools")
 #' DEXSeqResults <- read.table(DEXSeqResultsFile, sep="\t")
 #'
@@ -83,20 +83,22 @@ findDEXexonType <- function(DEXSeqExonId, DEXSeqGtf, gtf,set="overlap"){
 #' @return vector of broader exon biotypes
 #' @export
 #' @examples
-#' gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+#' gtfFile <- system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools")
-#' dexGtfFile <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
+#' DEXSeqGtfFile <- system.file("extdata","gencode.vM14.dexseq.gtf",
 #' package = "GeneStructureTools")
 #'
 #' gtf <- rtracklayer::import(gtfFile)
 #' gtf <- UTR2UTR53(gtf)
-#' dexGtf <- rtracklayer::import(dexGtfFile)
+#' DEXSeqGtf <- rtracklayer::import(DEXSeqGtfFile)
 #'
-#' DEXSeqResultsFile <- system.file("extdata","dexseq_results.small.txt",
+#' findDEXexonType("ENSMUSG00000032366.15:E028", DEXSeqGtf, gtf)
+#'
+#' DEXSeqResultsFile <- system.file("extdata","dexseq_results_significant.txt",
 #' package = "GeneStructureTools")
 #' DEXSeqResults <- read.table(DEXSeqResultsFile, sep="\t")
 #'
-#' types <- findDEXexonType(rownames(DEXSeqResults), dexGtf, gtf)
+#' types <- findDEXexonType(rownames(DEXSeqResults), DEXSeqGtf, gtf)
 #' summarisedTypes <- summariseExonTypes(types)
 #' table(types, summarisedTypes)
 #' @author Beth Signal
@@ -129,25 +131,15 @@ summariseExonTypes <- function(types){
 #' @param gtf GRanges object of the GTF annotated with exon biotypes - i.e. exon, CDS, UTR
 #' @param set which overlapping set of exon biotypes to return - to, from, and/or overlap
 #' @return overlaping types in a data.frame
-#' @export
+#' @keywords internal
 #' @import GenomicRanges
 #' @importFrom stats aggregate
 #' @author Beth Signal
 #' @examples
-#' gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
-#' package = "GeneStructureTools")
-#' dexGtfFile <- system.file("extdata","gencode.vM14.annotation.dexseq.small.gtf",
-#' package = "GeneStructureTools")
-#'
-#' gtf <- rtracklayer::import(gtfFile)
-#' gtf <- UTR2UTR53(gtf)
-#' dexGtf <- rtracklayer::import(dexGtfFile)
-#'
-#' overlapTypes(dexGtf[1], gtf, set="overlap")
 overlapTypes <- function(queryCoords, gtf, set=c("from", "to", "overlap")){
     overlaps <- as.data.frame(GenomicRanges::findOverlaps(queryCoords, gtf))
     gtf.overlap <- gtf[overlaps$subjectHits]
-    gtf.overlap$index <- overlaps$subjectHits
+    gtf.overlap$index <- overlaps$queryHits
     gtf.overlap <- gtf.overlap[(gtf.overlap$type %in%
                                     c("exon", "CDS","UTR","UTR3","UTR5"))]
 
@@ -253,7 +245,7 @@ overlapTypes <- function(queryCoords, gtf, set=c("from", "to", "overlap")){
 #' @import GenomicRanges
 #' @author Beth Signal
 #' @examples
-#' gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+#' gtfFile <- system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools")
 #' gtf <- rtracklayer::import(gtfFile)
 #' gtf <- addBroadTypes(gtf)
@@ -340,7 +332,7 @@ addBroadTypes <- function(gtf){
 #' @importFrom stats aggregate
 #' @author Beth Signal
 #' @examples
-#' gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+#' gtfFile <- system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools")
 #' gtf <- rtracklayer::import(gtfFile)
 #' overlap <- as.data.frame(GenomicRanges::findOverlaps(gtf[which(gtf$type=="CDS")[1]], gtf))

@@ -26,7 +26,7 @@ leafcutterFiles <- list.files(system.file("extdata","leafcutter/",
 package = "GeneStructureTools"), full.names = TRUE)
 leafcutterIntrons <- read.delim(leafcutterFiles[grep("intron_results",
 leafcutterFiles)],stringsAsFactors=FALSE)
-gtf <- rtracklayer::import(system.file("extdata","gencode.vM14.Eif4a2.gtf",
+gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools"))
 gtf.exons <- gtf[gtf$type=="exon"]
 # single cluster processing

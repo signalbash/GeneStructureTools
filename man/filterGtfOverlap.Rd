@@ -16,7 +16,7 @@ GRanges object of the GTF with redundant exons removed
 Filter a GTF overlap to remove exons when exon is annotated as a CDS/UTR
 }
 \examples{
-gtfFile <- system.file("extdata","gencode.vM14.annotation.small.gtf",
+gtfFile <- system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools")
 gtf <- rtracklayer::import(gtfFile)
 overlap <- as.data.frame(GenomicRanges::findOverlaps(gtf[which(gtf$type=="CDS")[1]], gtf))

@@ -55,9 +55,9 @@ maxLocation <- function(startSite, stopSite, longest = 1){
 #' @importFrom stats aggregate
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata", "gencode.vM14.neurl1a.gtf",
+#' gtf <- rtracklayer::import(system.file("extdata", "example_gtf.gtf",
 #' package="GeneStructureTools"))
-#' transcript <- gtf[gtf$type=="exon"]
+#' transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Neurl1a"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #' # longest ORF for each transcripts
 #' orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = TRUE)

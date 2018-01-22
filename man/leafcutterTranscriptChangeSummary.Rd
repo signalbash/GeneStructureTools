@@ -6,7 +6,7 @@
 \usage{
 leafcutterTranscriptChangeSummary(significantEvents,
   combineGeneEvents = FALSE, gtf.exons, BSgenome, NMD = FALSE,
-  showProgressBar = TRUE, saveIsoRData = NULL)
+  showProgressBar = TRUE)
 }
 \arguments{
 \item{significantEvents}{data.frame containing information from the
@@ -22,8 +22,6 @@ Currently NOT FUNCTIONAL}
 \item{NMD}{Use NMD predictions? (Note: notNMD must be installed to use this feature)}
 
 \item{showProgressBar}{show a progress bar of alternative isoform generation?}
-
-\item{saveIsoRData}{file name to save transcript isoforms to.}
 }
 \value{
 data.frame containing signficant whippet diff data and ORF change summaries
@@ -36,7 +34,7 @@ leafcutterFiles <- list.files(system.file("extdata","leafcutter/",
 package = "GeneStructureTools"), full.names = TRUE)
 leafcutterIntrons <- read.delim(leafcutterFiles[
 grep("intron_results", leafcutterFiles)],stringsAsFactors=FALSE)
-gtf <- rtracklayer::import(system.file("extdata","gencode.vM14.Eif4a2.gtf",
+gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools"))
 gtf.exons <- gtf[gtf$type=="exon"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
