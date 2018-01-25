@@ -4,7 +4,7 @@
 #' @return GRanges object with junctions
 #' @export
 #' @import GenomicRanges
-#' @import IRanges
+#' @importFrom IRanges IRanges
 #' @importFrom S4Vectors Rle
 #' @author Beth Signal
 #' @examples
@@ -15,7 +15,7 @@
 #' junctionCoords <- formatJunctions(whippetJNC)
 formatJunctions <- function(junctions){
     jncCoords <- GRanges(seqnames=S4Vectors::Rle(junctions$chrom),
-                          ranges=IRanges(start=as.numeric(junctions$start),
+                          ranges=IRanges::IRanges(start=as.numeric(junctions$start),
                                          end=as.numeric(junctions$end)),
                           strand=junctions$strand, id=junctions$id)
     return(jncCoords)

@@ -2,7 +2,7 @@
 #' @param files vector of *.jnc.gz file names
 #' @return data.frame with junction counts for all files
 #' @export
-#' @import data.table
+#' @importFrom data.table fread
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
@@ -45,7 +45,7 @@ readWhippetJNCfiles <- function(files){
 #' @param maxNA maximum number of NA values allowed before a site is removed
 #' @return data.frame with junction counts for all files
 #' @export
-#' @import data.table
+#' @importFrom data.table fread
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
@@ -82,7 +82,7 @@ readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
 #' @param files vector of *.diff.gz file names
 #' @return data.frame with junction counts for all files
 #' @export
-#' @import data.table
+#' @importFrom data.table fread
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
@@ -120,7 +120,7 @@ readWhippetDIFFfiles <- function(files){
 #' @return GRanges object with events
 #' @export
 #' @import GenomicRanges
-#' @import IRanges
+#' @importFrom IRanges IRanges
 #' @import stringr
 #' @author Beth Signal
 #' @examples

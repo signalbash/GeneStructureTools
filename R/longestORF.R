@@ -52,6 +52,7 @@ maxLocation <- function(startSite, stopSite, longest = 1){
 #' @import Biostrings
 #' @import stringr
 #' @importFrom plyr arrange
+#' @importFrom plyr desc
 #' @importFrom stats aggregate
 #' @author Beth Signal
 #' @examples

@@ -178,6 +178,7 @@ findIntronContainingTranscripts <- function(eventCoords, gtf.exons, match="exact
 #' @export
 #' @import GenomicRanges
 #' @importFrom S4Vectors DataFrame
+#' @importFrom plyr desc
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",

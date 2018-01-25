@@ -173,6 +173,7 @@ findExonContainingTranscripts <- function(eventCoords,
 #' @return GRanges with transcripts skipping exons
 #' @export
 #' @import GenomicRanges
+#' @importFrom plyr desc
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",

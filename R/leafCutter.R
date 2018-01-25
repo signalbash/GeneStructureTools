@@ -76,6 +76,7 @@ removeSameExon <- function(exons){
 #' @return GRanges object with all potential alternative isoforms skipping the
 #' introns specified in either the upregulated or downregulated locations
 #' @export
+#' @importFrom IRanges IRanges
 #' @import GenomicRanges
 #' @author Beth Signal
 #' @examples
@@ -237,6 +238,7 @@ alternativeIntronUsage <- function(altIntronLocs, gtf.exons){
 #' @return GRanges object with transcripts
 #' @export
 #' @import GenomicRanges
+#' @importFrom IRanges IRanges
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",

@@ -3,7 +3,7 @@
 #' @param orfs ORF predictions. Created by getORFs()
 #' @return data.frame of a gene model for visualisation
 #' @export
-#' @import plyr
+#' @importFrom plyr desc
 #' @import GenomicRanges
 #' @author Beth Signal
 #' @examples
