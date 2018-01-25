@@ -8,6 +8,7 @@
 #' @return data.frame with all flanking exon pairs
 #' @export
 #' @import GenomicRanges
+#' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
@@ -179,6 +180,7 @@ findIntronContainingTranscripts <- function(eventCoords, gtf.exons, match="exact
 #' @import GenomicRanges
 #' @importFrom S4Vectors DataFrame
 #' @importFrom plyr desc
+#' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",

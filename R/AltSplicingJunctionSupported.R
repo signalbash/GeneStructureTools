@@ -206,6 +206,7 @@ findJunctionPairs <- function(eventCoords, jncCoords, type=NA){
 #' Note only one event type should be processed at a time.
 #' @return GRanges object with transcripts containing alternative junctions.
 #' @export
+#' @importFrom rtracklayer import
 #' @import GenomicRanges
 #' @author Beth Signal
 #' @examples
@@ -638,6 +639,7 @@ replaceJunction <- function(junctionPairs, eventCoords, gtf.exons, type=NA){
 #' @return GRanges object with unique transcript structures in exon form
 #' @export
 #' @import GenomicRanges
+#' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",

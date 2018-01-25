@@ -10,6 +10,7 @@
 #' @return data.frame with orf changes
 #' @export
 #' @import stringr
+#' @importFrom rtracklayer import
 #' @importFrom stats aggregate
 #' @author Beth Signal
 #' @examples
@@ -265,6 +266,7 @@ orfDiff <- function(orfsX,
 #' @return data.frame with attribute changes
 #' @export
 #' @import stringr
+#' @importFrom rtracklayer import
 #' @importFrom stats aggregate
 #' @author Beth Signal
 #' @examples

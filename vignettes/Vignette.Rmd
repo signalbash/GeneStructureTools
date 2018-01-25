@@ -61,8 +61,10 @@ For the purposes of this vignette, small subsets of these data are available in 
 library(GeneStructureTools)
 library(GenomicRanges)
 library(stringr)
-library(BSgenome)
+library(BSgenome.Mmusculus.UCSC.mm10)
 library(Gviz)
+library(rtracklayer)
+
 
 # list of files in the whippet directory
 whippet_files <- list.files("~/Downloads/GeneStructureTools_VignetteFiles/",
@@ -120,8 +122,9 @@ suppressPackageStartupMessages({
 library(GeneStructureTools)
 library(GenomicRanges)
 library(stringr)
-library(BSgenome)
+library(BSgenome.Mmusculus.UCSC.mm10)
 library(Gviz)
+library(rtracklayer)
 })
 # list of files in the whippet directory
 whippet_files <- list.files(system.file("extdata","whippet/", 
@@ -291,7 +294,7 @@ skippedExonTranscripts <- skipExonInTranscript(eventCoords = ranges.ce,
 ```{r skippedGviz, eval=TRUE}
 ## make Gvis models
 # set up for visualisation
-gtr <- Gviz::GenomeAxisTrack()
+gtr <- GenomeAxisTrack()
 
 # all transcripts for the gene
 geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id ==
@@ -700,7 +703,7 @@ altIsoforms1396_upreg <- altIsoforms1396[grep("upre",
                                             altIsoforms1396$transcript_id)]
 
 # visualise
-gtr <- Gviz::GenomeAxisTrack()
+gtr <- GenomeAxisTrack()
 
 geneModel.ref <- GeneRegionTrack(makeGeneModel(
 gtf.exons[gtf.exons$gene_id=="ENSMUSG00000022884.14"]),
@@ -743,7 +746,7 @@ altIsoforms1281_upreg <- altIsoforms1281[grep("upre",
                                             altIsoforms1281$transcript_id)]
 
 # visualise
-gtr <- Gviz::GenomeAxisTrack()
+gtr <- GenomeAxisTrack()
 
 geneModel.ref <- GeneRegionTrack(makeGeneModel(
 gtf.exons[gtf.exons$gene_id=="ENSMUSG00000034681.16"]),

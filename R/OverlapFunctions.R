@@ -52,6 +52,7 @@ removeVersion <- function(ids){
 #' @return overlaping types
 #' @export
 #' @import GenomicRanges
+#' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
 #' gtfFile <- system.file("extdata","example_gtf.gtf",
@@ -82,6 +83,7 @@ findDEXexonType <- function(DEXSeqExonId, DEXSeqGtf, gtf,set="overlap"){
 #' @param types vector of exon biotypes
 #' @return vector of broader exon biotypes
 #' @export
+#' @importFrom rtracklayer import
 #' @examples
 #' gtfFile <- system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools")
@@ -243,6 +245,7 @@ overlapTypes <- function(queryCoords, gtf, set=c("from", "to", "overlap")){
 #' @return GRanges object of the GTF with new transcript types
 #' @export
 #' @import GenomicRanges
+#' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
 #' gtfFile <- system.file("extdata","example_gtf.gtf",
@@ -330,6 +333,7 @@ addBroadTypes <- function(gtf){
 #' @export
 #' @import GenomicRanges
 #' @importFrom stats aggregate
+#' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
 #' gtfFile <- system.file("extdata","example_gtf.gtf",

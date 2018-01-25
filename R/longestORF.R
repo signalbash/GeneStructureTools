@@ -54,6 +54,7 @@ maxLocation <- function(startSite, stopSite, longest = 1){
 #' @importFrom plyr arrange
 #' @importFrom plyr desc
 #' @importFrom stats aggregate
+#' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata", "example_gtf.gtf",

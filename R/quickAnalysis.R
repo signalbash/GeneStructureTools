@@ -73,6 +73,7 @@ filterSignificantWhippetEvents <- function(whippetDiff,
 #' @export
 #' @import notNMD
 #' @import GenomicRanges
+#' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
@@ -251,6 +252,7 @@ if(NMD == TRUE){
 #' @param NMD Use NMD predictions? (Note: notNMD must be installed to use this feature)
 #' @return data.frame containing signficant whippet diff data and ORF change summaries
 #' @export
+#' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
@@ -405,6 +407,7 @@ whippetTranscriptChangeSummary <- function(significantEvents,
 #' @importFrom utils setTxtProgressBar
 #' @importFrom utils txtProgressBar
 #' @importFrom stringr str_split
+#' @importFrom rtracklayer import
 #' @import GenomicRanges
 #' @author Beth Signal
 #' @examples

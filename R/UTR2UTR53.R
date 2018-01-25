@@ -5,6 +5,7 @@
 #' @return gtf annotation GRanges object
 #' @export
 #' @import GenomicRanges
+#' @importFrom rtracklayer import
 #' @examples
 #' gtfFile <- system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools")

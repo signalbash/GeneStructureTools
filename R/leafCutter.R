@@ -47,6 +47,7 @@ addSets <- function(clusterGRanges){
 #' @return GRanges object with unique exons
 #' @export
 #' @import GenomicRanges
+#' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
@@ -78,6 +79,7 @@ removeSameExon <- function(exons){
 #' @export
 #' @importFrom IRanges IRanges
 #' @import GenomicRanges
+#' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
 #' leafcutterFiles <- list.files(system.file("extdata","leafcutter/",
@@ -239,6 +241,7 @@ alternativeIntronUsage <- function(altIntronLocs, gtf.exons){
 #' @export
 #' @import GenomicRanges
 #' @importFrom IRanges IRanges
+#' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",

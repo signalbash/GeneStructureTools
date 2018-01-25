@@ -9,6 +9,7 @@
 #' @return data.frame with all overlapping exons
 #' @export
 #' @import GenomicRanges
+#' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
@@ -174,6 +175,7 @@ findExonContainingTranscripts <- function(eventCoords,
 #' @export
 #' @import GenomicRanges
 #' @importFrom plyr desc
+#' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
@@ -396,6 +398,7 @@ skipExonInTranscript <- function(eventCoords,
 #' @return The same input GRanges, but with exon numbers reordered.
 #' @export
 #' @import GenomicRanges
+#' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
