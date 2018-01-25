@@ -1,23 +1,27 @@
 ---
-title: "Gene Structure Tools: Analysis and Manipulation of Spliced Gene Structures"
-author: "Beth Signal"
-date: "23 January 2017 / Version 0.99.0"
-output:
-    html_document:
-        toc: true
-        theme: united
-        
+title: 'Gene Structure Tools: Analysis and Manipulation of Spliced Gene Structures'
+author: 'Beth Signal'
+date: "`r Sys.Date()`"
+package: GeneStructureTools
+output: BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{Gene Structure Tools: Analysis and Manipulation of Spliced Gene Structures}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      tidy = FALSE,
+                      warning = FALSE,
+                      message = FALSE)
 ```
 
 ![](HexLogoGeneStructureTools.png)
 
-## Introduction
+# Introduction
 
-GeneStructureTools is an in-development package for the manipulation and analysis of transcribed gene structures.
+GeneStructureTools is a package for the manipulation and analysis of transcribed gene structures.
 
 We have provided functions for importing Whippet and leafcutter alternative splicing data, and the analysis of these splicing events. 
 Splicing events can also be defined manually if you are using a different splicing analysis tool to Whippet.
@@ -28,7 +32,7 @@ Current comparisons of transcripts include annotating and analysing ORF and UTR 
 
 We also have functions for re-annotation of .GTF features, such as annotating UTRs as 3' or 5', and assigning a broader biotype for genes and transcripts so more informative analysis can be performed between these classes. 
 
-## Importing Differential Splicing Data
+# Importing Differential Splicing Data
 
 Currently, very few available tools output splicing event type information (i.e. exon skipping, intron retention) within tested genes.
 GeneStructureTools currently has functions for processing data from:
@@ -39,7 +43,7 @@ GeneStructureTools currently has functions for processing data from:
 
 [**leafcutter**](https://github.com/davidaknowles/leafcutter)
 
-### Whippet
+## Whippet
 
 **Data Preparation**
 
@@ -50,7 +54,65 @@ You will also need to download the Gencode GTF file from [here](http://www.genco
 
 For the purposes of this vignette, small subsets of these data are available in the package data (inst/extdata).
 
-**Read in Whippet files**
+**Read in Whippet files from downloaded data**
+
+```{r readWhippetWholeData, eval = FALSE}
+# Load packages
+library(GeneStructureTools)
+library(GenomicRanges)
+library(stringr)
+library(BSgenome)
+library(Gviz)
+
+# list of files in the whippet directory
+whippet_files <- list.files("~/Downloads/GeneStructureTools_VignetteFiles/",
+full.names = TRUE)
+
+# read in junction files (junctions + read counts)
+whippet_jnc <- readWhippetJNCfiles(grep(".jnc", whippet_files,value = TRUE))
+jnc_ranges <- formatJunctions(whippet_jnc)
+
+# read in psi (percent spliced in) files (default: total reads for each event)
+whippet_counts <- readWhippetPSIfiles(grep(".psi", whippet_files,value = TRUE))
+
+# read in diff files (events + differential splicing testing)
+whippet_diff <- readWhippetDIFFfiles(grep(".diff", whippet_files,value = TRUE))
+
+# format events as a GRanges Object
+whippet_coords <- formatWhippetEvents(whippet_diff)
+
+# create a sample table with sample id, condition and replicate
+whippet_sampleTable <- data.frame(sample=c("A01","B01","A21","B21"),
+                                  condition=c("01","01","21","21"),
+                                  replicate=(c("A","B","A","B")))
+
+# You may need to manually annotate conditions in the differential splicing data.frame to match the condition column in whippet_sampleTable
+
+conditions <- whippet_diff$comparison
+whippet_diff$condition_1 <- unlist(lapply(str_split(conditions,"_v_"),"[[",1))
+whippet_diff$condition_2 <- unlist(lapply(str_split(conditions,"_v_"),"[[",2))
+
+# read in gtf annotation
+gtf <- rtracklayer::import("~/Downloads/gencode.vM14.annotation.gtf.gz")
+gtf.exons <- gtf[gtf$type=="exon"]
+gtf.transcripts <- gtf[gtf$type=="transcript"]
+
+# add first/last annotation (speeds up later steps)
+if(!("first_last" %in% colnames(mcols(gtf.exons)))){
+    t <- as.data.frame(table(gtf.exons$transcript_id))
+    gtf.exons$first_last <- NA
+    gtf.exons$first_last[gtf.exons$exon_number == 1] <- "first"
+    gtf.exons$first_last[gtf.exons$exon_number == 
+    t$Freq[match(gtf.exons$transcript_id, t$Var1)]] <- "last"
+}
+
+# specify the BSGenome annotation
+g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+
+save.image("~/Downloads/GeneStructureTools_VignetteFiles/mouse.Rdata")
+```
+
+**Read in Whippet files from package data**
 
 ```{r readWhippet}
 # Load packages
@@ -62,7 +124,8 @@ library(BSgenome)
 library(Gviz)
 })
 # list of files in the whippet directory
-whippet_files <- list.files(system.file("extdata","whippet/", package = "GeneStructureTools"),full.names = TRUE)
+whippet_files <- list.files(system.file("extdata","whippet/", 
+package = "GeneStructureTools"),full.names = TRUE)
 
 # read in junction files (junctions + read counts)
 whippet_jnc <- readWhippetJNCfiles(grep(".jnc", whippet_files,value = TRUE))
@@ -93,7 +156,8 @@ whippet_diff$condition_1 <- unlist(lapply(str_split(conditions,"_v_"),"[[",1))
 whippet_diff$condition_2 <- unlist(lapply(str_split(conditions,"_v_"),"[[",2))
 
 # read in gtf annotation
-gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf", package = "GeneStructureTools"))
+gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf", 
+package = "GeneStructureTools"))
 gtf.exons <- gtf[gtf$type=="exon"]
 gtf.transcripts <- gtf[gtf$type=="transcript"]
 
@@ -102,7 +166,8 @@ if(!("first_last" %in% colnames(mcols(gtf.exons)))){
     t <- as.data.frame(table(gtf.exons$transcript_id))
     gtf.exons$first_last <- NA
     gtf.exons$first_last[gtf.exons$exon_number == 1] <- "first"
-    gtf.exons$first_last[gtf.exons$exon_number == t$Freq[match(gtf.exons$transcript_id, t$Var1)]] <- "last"
+    gtf.exons$first_last[gtf.exons$exon_number == 
+    t$Freq[match(gtf.exons$transcript_id, t$Var1)]] <- "last"
 }
 
 # specify the BSGenome annotation
@@ -110,7 +175,7 @@ g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
 ```
 
-### leafcutter
+## leafcutter
 
 Only the file `per_intron_results.tab`, and the .gtf file used with leafcutter needs to be read in for results processing.
 ```{r readLeafcutter}
@@ -129,27 +194,29 @@ intron_results <- read.delim(leafcutter_files[grep("per_intron_results.tab", lea
 ```
 
 
-## Summarise changes in gene structures due to splicing
-### Whippet
+# Summarise changes in gene structures due to splicing
+## Whippet
 ```{r filterWhippetEvents}
 # filter events for significance
-significant_events <- filterSignificantWhippetEvents(whippet_diff,
-                                                     probability = 0.95, # min probability
-                                                     psiDelta = 0.1, # min change in PSI
-                                                     eventTypes = "all", # all event types
-                                                     whippetCounts = whippet_counts,
-                                                     minCounts = 100, # mean of at least 100 counts in one condition
-                                                     sampleTable = whippet_sampleTable)
+significant_events <- filterSignificantWhippetEvents(
+whippet_diff,
+probability = 0.95, # min probability
+psiDelta = 0.1, # min change in PSI
+eventTypes = "all", # all event types
+whippetCounts = whippet_counts,
+minCounts = 100, # mean of at least 100 counts in one condition
+sampleTable = whippet_sampleTable)
 
 # check for changes in gene/transcript structure
-summary <- whippetTranscriptChangeSummary(significantEvents = significant_events,
-                                           whippetCoords = whippet_coords,
-                                           gtf.exons = gtf.exons,
-                                           gtf.transcripts = gtf.transcripts,
-                                           BSgenome = g,
-                                           jncCoords = jnc_ranges,
-                                           NMD = FALSE # ignore nonsense mediated decay (for now)
-                                           )
+summary <- whippetTranscriptChangeSummary(
+significantEvents = significant_events,
+whippetCoords = whippet_coords,
+gtf.exons = gtf.exons,
+gtf.transcripts = gtf.transcripts,
+BSgenome = g,
+jncCoords = jnc_ranges,
+NMD = FALSE # ignore nonsense mediated decay
+)
 head(summary)
 
 ```
@@ -166,11 +233,11 @@ head(leafcutter_summary[!duplicated(leafcutter_summary$cluster),])
 ```
 
 
-## Altering Gene and Transcript Structures
+# Altering Gene and Transcript Structures
 whippetTranscriptChangeSummary() combines several functions for analysing changes in gene structures. While this has been made to simplify analysis from whippet data, individual functions can be used on other data sources or manually annotated gene structures.
 It may also be helpfule to run each individual step if you would like to manually investigate changes to genes.
 
-### Exon skipping
+## Exon skipping
 Exon skipping, or cassette exon usage, occurs when a single exon is spliced out of the mature transcript.
 
 ![Removal of a skipped exon](whippetExonSkip.png)
@@ -227,25 +294,33 @@ skippedExonTranscripts <- skipExonInTranscript(eventCoords = ranges.ce,
 gtr <- Gviz::GenomeAxisTrack()
 
 # all transcripts for the gene
-geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id == skippedExonTranscripts$gene_id[1]]),
+geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id ==
+skippedExonTranscripts$gene_id[1]]),
                                  name="Reference Gene",
-                                 showId=TRUE,transcriptAnnotation = "transcript")
+                                 showId=TRUE,
+                                 transcriptAnnotation = "transcript")
 # reference transcript
-geneModelNormal <- GeneRegionTrack(makeGeneModel(skippedExonTranscripts[skippedExonTranscripts$set=="included_exon"]),
+geneModelNormal <- GeneRegionTrack(makeGeneModel(
+skippedExonTranscripts[skippedExonTranscripts$set=="included_exon"]),
                                    name="Reference Isoform",
-                                   showId=TRUE, fill="#4D7ABE",transcriptAnnotation = "transcript")
+                                   showId=TRUE, fill="#4D7ABE",
+                                   transcriptAnnotation = "transcript")
 # for the skipped exon transcript
-geneModelSkipped <- GeneRegionTrack(makeGeneModel(skippedExonTranscripts[skippedExonTranscripts$set=="skipped_exon"]),
+geneModelSkipped <- GeneRegionTrack(makeGeneModel(
+skippedExonTranscripts[skippedExonTranscripts$set=="skipped_exon"]),
                                    name="Alternative Isoform",
-                                   showId=TRUE, fill="#94AFD8",transcriptAnnotation = "transcript")
+                                   showId=TRUE, fill="#94AFD8",
+                                   transcriptAnnotation = "transcript")
 
-plotTracks(list(gtr,geneModel.all,geneModelNormal, geneModelSkipped), extend.left = 1000, extend.right = 1000)
-# Only the transcript isoform containing the skipped exon (exon 3) is used for analysis, and a 'novel' isoform is created by exon skipping
+plotTracks(list(gtr,geneModel.all,geneModelNormal, geneModelSkipped), 
+extend.left = 1000, extend.right = 1000)
+# Only the transcript isoform containing the skipped exon (exon 3) 
+# is used for analysis, and a 'novel' isoform is created by exon skipping
 
 ```
 
 
-### Intron Retention
+## Intron Retention
 Intron Retention occurs when an intron is not spliced out of the mature transcript.
 
 ![Addition of a retained intron](whippetIntronRetention.png)
@@ -260,7 +335,8 @@ event.ri <- event.ri[event.ri$gene == "ENSMUSG00000018379.17",]
 
 # whippet outputs the retained coordinates
 ranges.ri <- whippet_coords[whippet_coords$id %in% event.ri$coord]
-# need to extend whippet coords to cover the last/first base of the surrounding exons
+# need to extend whippet coords to cover the last/first base 
+# of the surrounding exons
 start(ranges.ri) <- start(ranges.ri) -1
 end(ranges.ri) <- end(ranges.ri) +1
 ranges.ri
@@ -294,28 +370,34 @@ retainedIntronTranscripts <- addIntronInTranscript(eventCoords = ranges.ri,
 # all transcripts for the gene
 geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id == retainedIntronTranscripts$gene_id[1]]),
                                  name="Reference Gene",
-                                 showId=TRUE,transcriptAnnotation = "transcript")
+                                 showId=TRUE,
+                                 transcriptAnnotation = "transcript")
 # reference transcript
-geneModelNormal <- GeneRegionTrack(makeGeneModel(retainedIntronTranscripts[retainedIntronTranscripts$set=="spliced_intron"]),
+geneModelNormal <- GeneRegionTrack(makeGeneModel(
+retainedIntronTranscripts[retainedIntronTranscripts$set=="spliced_intron"]),
                                    name="Reference Isoform",
-                                   showId=TRUE, fill="#4D7ABE",transcriptAnnotation = "transcript")
+                                   showId=TRUE, fill="#4D7ABE",
+                                   transcriptAnnotation = "transcript")
 # for the retained intron transcript
-geneModelRetained <- GeneRegionTrack(makeGeneModel(retainedIntronTranscripts[retainedIntronTranscripts$set=="retained_intron"]),
+geneModelRetained <- GeneRegionTrack(makeGeneModel(
+retainedIntronTranscripts[retainedIntronTranscripts$set=="retained_intron"]),
                                    name="Alternative Isoform",
-                                   showId=TRUE, fill="#94AFD8",transcriptAnnotation = "transcript")
+                                   showId=TRUE, fill="#94AFD8",
+                                   transcriptAnnotation = "transcript")
 
 # Only the transcript isoforms with exons at the boundries of the retained intron are used for analysis, and 'novel' isoforms are created by intron retention
-plotTracks(list(gtr,geneModel.all,geneModelNormal, geneModelRetained), extend.left = 1000, extend.right = 1000)
+plotTracks(list(gtr,geneModel.all,geneModelNormal, geneModelRetained), 
+extend.left = 1000, extend.right = 1000)
 ```
 
 
-### Alternative acceptor and donor splice sites
+## Alternative acceptor and donor splice sites
 Creation of alternative donor/acceptor isoforms currently relies on junction read counts supplied by whippet.
 
 ![Creation of transcripts with an alternative donor (left) or acceptor (right) splice site.](whippetAltAceDon.png)
 
 
-#### Aternative acceptor
+### Aternative acceptor
 
 **1. Create normal and alternative isoform structures from whippet coordinates**
 ```{r altAccept}
@@ -348,8 +430,11 @@ ranges.aa.manual <- GRanges(seqnames="chr16",
                             strand="-",
                             id="AA_manual")
 junctionPairs.aa.manual <- GRanges(seqnames="chr16",
-                            ranges=IRanges(start=c(38549433, 38549636), # splice site 1 (intronic), splice site 2 (intronic)
-                                           end=c(38550083,38550083)), # splice site 1 junction pair, splice site 2 junction pair
+                            ranges=IRanges(start=c(38549433, 38549636), 
+                            # splice site 1 (intronic), splice site 2 (intronic)
+                                           end=c(38550083,38550083)), 
+                                           # splice site 1 junction pair, 
+                                           # splice site 2 junction pair
                             strand="-",
                             id=rep("AA_manual", 2))
 
@@ -371,24 +456,29 @@ yTranscripts <- altTranscripts[altTranscripts$set=="AA_Y"]
 ```{r altAceGvis}
 geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id == altTranscripts$gene_id[1]]),
                                  name="Reference Gene",
-                                 showId=TRUE,transcriptAnnotation = "transcript")
+                                 showId=TRUE,
+                                 transcriptAnnotation = "transcript")
 # transcript X
 geneModelX <- GeneRegionTrack(makeGeneModel(xTranscripts),
                                    name="Isoform X",
-                                   showId=TRUE, fill="#4D7ABE",transcriptAnnotation = "transcript")
+                                   showId=TRUE, fill="#4D7ABE",
+                                   transcriptAnnotation = "transcript")
 # transcript Y
 geneModelY<- GeneRegionTrack(makeGeneModel(yTranscripts),
                                    name="Isoform Y",
-                                   showId=TRUE, fill="#94AFD8",transcriptAnnotation = "transcript")
+                                   showId=TRUE, fill="#94AFD8",
+                                   transcriptAnnotation = "transcript")
 
-plotTracks(list(gtr,geneModel.all,geneModelX, geneModelY), extend.left = 1000, extend.right = 1000)
+plotTracks(list(gtr,geneModel.all,geneModelX, geneModelY), 
+extend.left = 1000, extend.right = 1000)
 
 # Zoomed in at the alternative acceptor site
-plotTracks(list(gtr,geneModel.all,geneModelX, geneModelY), from = 38547500, to = 38551000)
+plotTracks(list(gtr,geneModel.all,geneModelX, geneModelY), 
+from = 38547500, to = 38551000)
 
 ```
 
-#### Aternative donor
+### Aternative donor
 
 **1. Create normal and alternative isoform structures from whippet coordinates**
 ```{r altDonor}
@@ -425,27 +515,31 @@ yTranscripts <- altTranscripts[altTranscripts$set=="AD_Y"]
 ```{r altDonGvis}
 geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id == altTranscripts$gene_id[1]]),
                                  name="Reference Gene",
-                                 showId=TRUE,transcriptAnnotation = "transcript")
+                                 showId=TRUE,
+                                 transcriptAnnotation = "transcript")
 # transcript X
 geneModelX <- GeneRegionTrack(makeGeneModel(xTranscripts),
                                    name="Isoform X",
-                                   showId=TRUE, fill="#4D7ABE",transcriptAnnotation = "transcript")
+                                   showId=TRUE, fill="#4D7ABE",
+                                   transcriptAnnotation = "transcript")
 # transcript Y
 geneModelY<- GeneRegionTrack(makeGeneModel(yTranscripts),
                                    name="Isoform Y",
-                                   showId=TRUE, fill="#94AFD8",transcriptAnnotation = "transcript")
+                                   showId=TRUE, fill="#94AFD8",
+                                   transcriptAnnotation = "transcript")
 
-plotTracks(list(gtr,geneModel.all,geneModelX, geneModelY), extend.left = 1000, extend.right = 1000)
+plotTracks(list(gtr,geneModel.all,geneModelX, geneModelY), 
+extend.left = 1000, extend.right = 1000)
 
 ```
 
 
-### Alternative first/last exons
+## Alternative first/last exons
 Creation of alternative first/last isoforms currently relies on junction read counts supplied by whippet.
 
 ![Creation of transcripts with an alternative first (left) or last (right) exon.](whippetAltFirstLast.png)
 
-#### Alternative first exons
+### Alternative first exons
 
 **1. Create normal and alternative isoform structures from whippet coordinates**
 ```{r altFirst}
@@ -478,12 +572,16 @@ ranges.af.manual <- GRanges(seqnames="chr1",
                             strand="+",
                             id="AF_manual")
 junctionPairs.af.manual <- GRanges(seqnames="chr1",
-                            ranges=IRanges(start=c(135729274, 135720193), # splice site 1 (first exon),  splice site 1 (alternative first exon)
-                                           end=c(135739400,135739400)), #splice site 2 (shared junction pair)  
+                            ranges=IRanges(start=c(135729274, 135720193), 
+                            # splice site 1 (first exon), 
+                            # splice site 1 (alternative first exon)
+                                           end=c(135739400,135739400)), 
+                            # splice site 2 (shared junction pair)  
                             strand=c("+","+"),
                             id=c("junction1", "junction2"),
                             whippet_id=rep("AF_manual", 2),
-                            search=c("right", "right"), # search to the right for the shared junction pair
+                            search=c("right", "right"), 
+                            # search to the right for the shared junction pair
                             set=c("X","Y"))
 
 ```
@@ -505,21 +603,25 @@ yTranscripts <- altTranscripts[altTranscripts$set=="AF_Y"]
 ```{r altFirstGvis}
 geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id == altTranscripts$gene_id[1]]),
                                  name="Reference Gene",
-                                 showId=TRUE,transcriptAnnotation = "transcript")
+                                 showId=TRUE,
+                                 transcriptAnnotation = "transcript")
 # reference transcript
 geneModelX <- GeneRegionTrack(makeGeneModel(xTranscripts),
                                    name="Isoform X",
-                                   showId=TRUE, fill="#4D7ABE",transcriptAnnotation = "transcript")
+                                   showId=TRUE, fill="#4D7ABE",
+                                   transcriptAnnotation = "transcript")
 # for the retained intron transcript
 geneModelY<- GeneRegionTrack(makeGeneModel(yTranscripts),
                                    name="Isoform Y",
-                                   showId=TRUE, fill="#94AFD8",transcriptAnnotation = "transcript")
+                                   showId=TRUE, fill="#94AFD8",
+                                   transcriptAnnotation = "transcript")
 
 # Only the transcript isoforms with exons at the boundries of the retained intron are used for analysis, and 'novel' isoforms are created by intron retention
-plotTracks(list(gtr,geneModel.all,geneModelX, geneModelY), extend.left = 1000, extend.right = 1000)
+plotTracks(list(gtr,geneModel.all,geneModelX, geneModelY), 
+extend.left = 1000, extend.right = 1000)
 ```
 
-#### Alternative last exons
+### Alternative last exons
 
 **1. Create normal and alternative isoform structures from whippet coordinates**
 ```{r altLast}
@@ -557,21 +659,25 @@ yTranscripts <- altTranscripts[altTranscripts$set=="AL_Y"]
 ```{r altLastGvis}
 geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id == altTranscripts$gene_id[1]]),
                                  name="Reference Gene",
-                                 showId=TRUE,transcriptAnnotation = "transcript")
+                                 showId=TRUE,
+                                 transcriptAnnotation = "transcript")
 # reference transcript
 geneModelX <- GeneRegionTrack(makeGeneModel(xTranscripts),
                                    name="Isoform X",
-                                   showId=TRUE, fill="#4D7ABE",transcriptAnnotation = "transcript")
+                                   showId=TRUE, fill="#4D7ABE",
+                                   transcriptAnnotation = "transcript")
 # for the retained intron transcript
 geneModelY<- GeneRegionTrack(makeGeneModel(yTranscripts),
                                    name="Isoform Y",
-                                   showId=TRUE, fill="#94AFD8",transcriptAnnotation = "transcript")
+                                   showId=TRUE, fill="#94AFD8",
+                                   transcriptAnnotation = "transcript")
 
 # Only the transcript isoforms with exons at the boundries of the retained intron are used for analysis, and 'novel' isoforms are created by intron retention
-plotTracks(list(gtr,geneModel.all,geneModelX, geneModelY), extend.left = 1000, extend.right = 1000)
+plotTracks(list(gtr,geneModel.all,geneModelX, geneModelY), 
+extend.left = 1000, extend.right = 1000)
 ```
 
-### Alternative Intron usage (leafcutter)
+## Alternative Intron usage (leafcutter)
 leafcutter uses an intron-centric view of splicing, and therefore all tested events are given as intron coordinates in clusters. Alternative isoforms are generated in sets. If possible, all downregulated introns/junctions are grouped together in a set, and all upregulated introns/junctions in another. 
 
 alternativeIntronUsage() first finds transcripts which overlap each intron set, and have perfect matches to the start and end of the intron (i.e. share splice sites). If exons are present within the range overlapping the intron set, these are replaced with exons that preserve the intron usage set.
@@ -580,23 +686,27 @@ alternativeIntronUsage() first finds transcripts which overlap each intron set, 
 
 ![Alternative intron leafcutter event in Eif4a2](Eif4a2_clu_1396.png)
 
-```{r}
+```{r leafcutterEif4a2}
 # select a single cluster
 cluster <- leafcutter_summary[leafcutter_summary$cluster=="chr16:clu_1396",]
 
 # generate alternative isoforms
 altIsoforms1396 <- alternativeIntronUsage(cluster, gtf.exons)
 # downregulated isoforms
-altIsoforms1396_dnreg <- altIsoforms1396[grep("dnre", altIsoforms1396$transcript_id)]
+altIsoforms1396_dnreg <- altIsoforms1396[grep("dnre", 
+                                            altIsoforms1396$transcript_id)]
 # upregulated isoforms
-altIsoforms1396_upreg <- altIsoforms1396[grep("upre", altIsoforms1396$transcript_id)]
+altIsoforms1396_upreg <- altIsoforms1396[grep("upre", 
+                                            altIsoforms1396$transcript_id)]
 
 # visualise
 gtr <- Gviz::GenomeAxisTrack()
 
-geneModel.ref <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id=="ENSMUSG00000022884.14"]),
+geneModel.ref <- GeneRegionTrack(makeGeneModel(
+gtf.exons[gtf.exons$gene_id=="ENSMUSG00000022884.14"]),
                                     name="Reference Gene",
-                                    showId=TRUE,transcriptAnnotation = "transcript")
+                                    showId=TRUE,
+                                    transcriptAnnotation = "transcript")
 
 geneModel.dnreg <- GeneRegionTrack(makeGeneModel(altIsoforms1396_dnreg),
                                     name="Downregulated isoforms",
@@ -605,9 +715,11 @@ geneModel.dnreg <- GeneRegionTrack(makeGeneModel(altIsoforms1396_dnreg),
 
 geneModel.upreg <- GeneRegionTrack(makeGeneModel(altIsoforms1396_upreg),
                                 name="Upregulated isoforms",fill="#94AFD8",
-                                showId=TRUE,transcriptAnnotation = "transcript")
+                                showId=TRUE,
+                                transcriptAnnotation = "transcript")
 
-plotTracks(list(geneModel.ref,geneModel.dnreg, geneModel.upreg), extend.left = 1000, extend.right = 1000)
+plotTracks(list(geneModel.ref,geneModel.dnreg, geneModel.upreg), 
+extend.left = 1000, extend.right = 1000)
 
 ```
 **Five intron cluster**
@@ -616,7 +728,7 @@ In this case, the downregulated introns can overlap, so are split into two sets:
 
 ![Alternative intron leafcutter event in Rnps1](Rnps1_clu_1281.png)
 
-```{r}
+```{r leafcutterRnps1}
 # select a single cluster
 cluster <- leafcutter_summary[leafcutter_summary$cluster=="chr17:clu_1281",]
 
@@ -624,16 +736,20 @@ cluster <- leafcutter_summary[leafcutter_summary$cluster=="chr17:clu_1281",]
 altIsoforms1281 <- alternativeIntronUsage(cluster, gtf.exons)
 
 # downregulated isoforms
-altIsoforms1281_dnreg <- altIsoforms1281[grep("dnre", altIsoforms1281$transcript_id)]
+altIsoforms1281_dnreg <- altIsoforms1281[grep("dnre", 
+                                            altIsoforms1281$transcript_id)]
 # upregulated isoforms
-altIsoforms1281_upreg <- altIsoforms1281[grep("upre", altIsoforms1281$transcript_id)]
+altIsoforms1281_upreg <- altIsoforms1281[grep("upre", 
+                                            altIsoforms1281$transcript_id)]
 
 # visualise
 gtr <- Gviz::GenomeAxisTrack()
 
-geneModel.ref <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id=="ENSMUSG00000034681.16"]),
+geneModel.ref <- GeneRegionTrack(makeGeneModel(
+gtf.exons[gtf.exons$gene_id=="ENSMUSG00000034681.16"]),
                                     name="Reference Gene",
-                                    showId=TRUE,transcriptAnnotation = "transcript")
+                                    showId=TRUE,
+                                    transcriptAnnotation = "transcript")
 
 geneModel.dnreg <- GeneRegionTrack(makeGeneModel(altIsoforms1281_dnreg),
                                     name="Downregulated isoforms",
@@ -642,13 +758,15 @@ geneModel.dnreg <- GeneRegionTrack(makeGeneModel(altIsoforms1281_dnreg),
 
 geneModel.upreg <- GeneRegionTrack(makeGeneModel(altIsoforms1281_upreg),
                                 name="Upregulated isoforms",fill="#94AFD8",
-                                showId=TRUE,transcriptAnnotation = "transcript")
+                                showId=TRUE,
+                                transcriptAnnotation = "transcript")
 
-plotTracks(list(geneModel.ref,geneModel.dnreg, geneModel.upreg), extend.left = 1000, extend.right = 1000)
+plotTracks(list(geneModel.ref,geneModel.dnreg, geneModel.upreg), 
+extend.left = 1000, extend.right = 1000)
 
 ```
 
-## Annotate Open Reading Frames
+# Annotate Open Reading Frames
 
 **1. Find open reading frame features**
 ```{r, SkippedExonORF}
@@ -668,15 +786,18 @@ skippedExonTranscripts <- skipExonInTranscript(eventCoords = ranges.ce,
                                                gtf.exons, 
                                                match="exact")
 # make non-skipped exon transcripts
-normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% exons.ce$transcript_id]
+normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% 
+                                        exons.ce$transcript_id]
 
 # get ORF details for each set of transcripts
 orfs_normal <- getOrfs(normalTranscripts, BSgenome = g, 
                        returnLongestOnly = FALSE, allFrames = TRUE)
-orfs_skipped <- getOrfs(skippedExonTranscripts[skippedExonTranscripts$set == "skipped_exon"],
+orfs_skipped <- getOrfs(skippedExonTranscripts[skippedExonTranscripts$set == 
+                                                                "skipped_exon"],
                         BSgenome = g,
                         returnLongestOnly = FALSE, allFrames = TRUE)
-orfs_included <- getOrfs(skippedExonTranscripts[skippedExonTranscripts$set == "included_exon"],
+orfs_included <- getOrfs(skippedExonTranscripts[skippedExonTranscripts$set == 
+                                                               "included_exon"],
                          BSgenome = g,
                         returnLongestOnly = FALSE, allFrames = TRUE)
 head(orfs_normal[,-8])
@@ -735,8 +856,9 @@ You can also use our package ["notNMD"](https://github.com/betsig/notNMD) to pre
 library(notNMD)
 
 # we will be looking at Ndufv3 (ENSMUSG00000024038.16) again
-event.ce <- significant_events[significant_events$gene == "ENSMUSG00000024038.16" & 
-                                                   significant_events$type == "CE",]
+event.ce <- significant_events[significant_events$gene == 
+                                "ENSMUSG00000024038.16" & 
+                                significant_events$type == "CE",]
 ranges.ce <- whippet_coords[whippet_coords$id %in% event.ce$coord]
 # find exons in the gtf that overlap the skipped exon event
 exons.ce <- findExonContainingTranscripts(eventCoords = ranges.ce, 
@@ -754,10 +876,12 @@ normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% exons.ce$transcript_
 # get ORF details for each set of transcripts
 orfs_normal <- getOrfs(normalTranscripts, BSgenome = g, 
                        returnLongestOnly = FALSE, allFrames = TRUE)
-orfs_skipped <- getOrfs(skippedExonTranscripts[skippedExonTranscripts$set == "skipped_exon"],
+orfs_skipped <- getOrfs(skippedExonTranscripts[skippedExonTranscripts$set == 
+                                                                "skipped_exon"],
                         BSgenome = g,
                         returnLongestOnly = FALSE, allFrames = TRUE)
-orfs_included <- getOrfs(skippedExonTranscripts[skippedExonTranscripts$set == "included_exon"],
+orfs_included <- getOrfs(skippedExonTranscripts[skippedExonTranscripts$set == 
+                                                               "included_exon"],
                          BSgenome = g,
                         returnLongestOnly = FALSE, allFrames = TRUE)
 
@@ -821,7 +945,8 @@ grtr.included <- GeneRegionTrack(geneModel.included,
                             showId=TRUE, fill="#4D7ABE",
                             transcriptAnnotation = "transcript")
 # make tracks for non-nmd targeted CDS
-grtrCDS.included <- GeneRegionTrack(geneModel.included[geneModel.included$feature == "CDS",],
+grtrCDS.included <- GeneRegionTrack(
+    geneModel.included[geneModel.included$feature == "CDS",],
                                 name="Included Isoform CDS",
                                 showId=TRUE,fill="#CB3634", 
                                 transcriptAnnotation = "transcript")
@@ -831,11 +956,14 @@ grtr.skipped <- GeneRegionTrack(geneModel.skipped,
                             showId=TRUE, fill="#4D7ABE",
                             transcriptAnnotation = "transcript")
 # make tracks for non-nmd targeted CDS
-grtrCDS.skipped <- GeneRegionTrack(geneModel.skipped[geneModel.skipped$feature == "CDS",],
+grtrCDS.skipped <- GeneRegionTrack(
+      geneModel.skipped[geneModel.skipped$feature == "CDS",],
                                 name="Skipped Isoform CDS",
                                 showId=TRUE,fill="#CB3634", 
                                 transcriptAnnotation = "transcript")
-plotTracks(list(gtr, grtr.included, grtr.skipped, grtrCDS.included,grtrCDS.skipped), extend.left = 1000, extend.right = 1000)
+plotTracks(list(gtr, grtr.included, grtr.skipped, 
+grtrCDS.included,grtrCDS.skipped), 
+extend.left = 1000, extend.right = 1000)
 # Full length transcripts in blue, CDS only in red
 ```
 
@@ -843,7 +971,8 @@ By using GeneStructureTools and examining visually, we find that skipping of exo
 
 ```{r, RetainedORF}
 # we will be looking at Srsf1 (ENSMUSG00000018379.17) again
-event.ri <- significant_events[significant_events$gene == "ENSMUSG00000018379.17" 
+event.ri <- significant_events[significant_events$gene == 
+                                            "ENSMUSG00000018379.17" 
                                             & significant_events$type=="RI",]
 # psi_a = 0.371, psi_b = 0.213
 # percentage of transcripts retaining intron decreases from timepoint 1 to 21
@@ -858,17 +987,21 @@ exons.ri <- findIntronContainingTranscripts(ranges.ri, gtf.exons)
 # make retained transcripts
 # adds the intron into all transcripts which overlap it
 retainedIntronTranscripts <- addIntronInTranscript(ranges.ri, exons.ri,
-                                                         gtf.exons, glueExons = TRUE)
+                                                         gtf.exons,
+                                                         glueExons = TRUE)
 # make non-retained intron transcripts
-normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% exons.ri$transcript_id]
+normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% 
+                                        exons.ri$transcript_id]
 
 # get ORF details for each set of transcripts
 orfs_normal <- getOrfs(normalTranscripts, BSgenome = g, 
                        returnLongestOnly = FALSE, allFrames = TRUE)
-orfs_retained <- getOrfs(retainedIntronTranscripts[retainedIntronTranscripts$set == "retained_intron"],
+orfs_retained <- getOrfs(
+retainedIntronTranscripts[retainedIntronTranscripts$set == "retained_intron"],
                         BSgenome = g,
                         returnLongestOnly = FALSE, allFrames = TRUE)
-orfs_spliced <- getOrfs(retainedIntronTranscripts[retainedIntronTranscripts$set == "spliced_intron"],
+orfs_spliced <- getOrfs(
+retainedIntronTranscripts[retainedIntronTranscripts$set == "spliced_intron"],
                          BSgenome = g,
                         returnLongestOnly = FALSE, allFrames = TRUE)
 
@@ -884,15 +1017,20 @@ orfChange
 # plot ORFs on transcripts
 
 # annotate UTR/CDS locations
-geneModel.retained <- annotateGeneModel(retainedIntronTranscripts[retainedIntronTranscripts$set == "retained_intron"], orfs_retained)
-geneModel.spliced <- annotateGeneModel(retainedIntronTranscripts[retainedIntronTranscripts$set == "spliced_intron"], orfs_retained)
+geneModel.retained <- annotateGeneModel(
+retainedIntronTranscripts[retainedIntronTranscripts$set == "retained_intron"], 
+                                                                orfs_retained)
+geneModel.spliced <- annotateGeneModel(
+retainedIntronTranscripts[retainedIntronTranscripts$set == "spliced_intron"], 
+                                                                orfs_retained)
 
 
 grtr.spliced <- GeneRegionTrack(geneModel.spliced,
                             name="Spliced Isoform",
                             showId=TRUE, fill="#4D7ABE", 
                             transcriptAnnotation = "transcript")
-grtrCDS.spliced <- GeneRegionTrack(geneModel.spliced[geneModel.spliced$feature == "CDS",],
+grtrCDS.spliced <- GeneRegionTrack(
+geneModel.spliced[geneModel.spliced$feature == "CDS",],
                                 name="Spliced Isoform CDS",
                                 showId=TRUE,fill="#CB3634", 
                                 transcriptAnnotation = "transcript")
@@ -901,12 +1039,15 @@ grtr.retained <- GeneRegionTrack(geneModel.retained,
                             name="Retained Isoform",
                             showId=TRUE, fill="#4D7ABE", 
                             transcriptAnnotation = "transcript")
-grtrCDS.retained <- GeneRegionTrack(geneModel.retained[geneModel.retained$feature == "CDS",],
+grtrCDS.retained <- GeneRegionTrack(
+geneModel.retained[geneModel.retained$feature == "CDS",],
                                 name="Retained Isoform CDS",
                                 showId=TRUE,fill="#CB3634", 
                                 transcriptAnnotation = "transcript")
 gtr <- GenomeAxisTrack()
-plotTracks(list(gtr, grtr.spliced, grtrCDS.spliced, grtr.retained, grtrCDS.retained), extend.left = 1000, extend.right = 1000)
+plotTracks(list(gtr, grtr.spliced, grtrCDS.spliced, 
+grtr.retained, grtrCDS.retained), 
+extend.left = 1000, extend.right = 1000)
 
 # Full length transcripts in blue, CDS only in red
 
@@ -914,16 +1055,17 @@ plotTracks(list(gtr, grtr.spliced, grtrCDS.spliced, grtr.retained, grtrCDS.retai
 
 By using GeneStructureTools and examining visually, we find that intron retention in Srsf1 decreases the size open reading frame (from 253 to 201AA), by generating a premature stop codon. 
 
-## DEXSeq
+# DEXSeq
 DEXSeq tests exons (or 'exonic parts') for differential usage between conditions. GeneStructureTools provides a few helper functions to help further annotate where in a transcript differential exon usage occurs.
 
-### GTF reannotation
+## GTF reannotation
 
 **Annotation of 5' and 3' UTRs**
 
 Reannotates any blocks in a gtf GRanges that are annotated as a UTR and have a CDS block annotated in the same transcript. 
 ```{r gtfreannotate}
-gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf", package = "GeneStructureTools"))
+gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf", 
+package = "GeneStructureTools"))
 
 table(gtf$type)
 
@@ -945,7 +1087,7 @@ table(gtf$transcript_type, gtf$transcript_type_broad)
 transcript_types <- read.delim("transcript_types_broad_table.txt")
 transcript_types
 ```
-### DEXSeq event overlapping
+## DEXSeq event overlapping
 
 ```{r dexseqImport, eval=FALSE}
 # load dexseq processed data
@@ -961,18 +1103,27 @@ write.table(dexseq_results.significant, file="dexseq_results_significant.txt",
 ```{r dexseq}
 # import dexseq gtf
 
-gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf", package = "GeneStructureTools"))
+gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf", 
+package = "GeneStructureTools"))
 gtf <- UTR2UTR53(gtf)
 
-dexseq_ranges <- rtracklayer::import(system.file("extdata","gencode.vM14.dexseq.gtf", package = "GeneStructureTools"))
+dexseq_ranges <- rtracklayer::import(system.file("extdata",
+"gencode.vM14.dexseq.gtf", package = "GeneStructureTools"))
 
-dexseq_results.significant <- read.delim(system.file("extdata","dexseq_results_significant.txt", package = "GeneStructureTools"))
+dexseq_results.significant <- read.delim(system.file("extdata",
+"dexseq_results_significant.txt", package = "GeneStructureTools"))
 
 # find the exon type of the significant events
-dexseq_results.significant$overlap_types <- findDEXexonType(rownames(dexseq_results.significant), dexseq_ranges, gtf=gtf)
+dexseq_results.significant$overlap_types <- 
+findDEXexonType(rownames(dexseq_results.significant), dexseq_ranges, gtf=gtf)
 overlap_types <- table(dexseq_results.significant$overlap_types)
 
 # broader definition
 dexseq_results.significant$overlap_types_broad <- summariseExonTypes(dexseq_results.significant$overlap_types)
 table(dexseq_results.significant$overlap_types_broad)
+```
+
+# Session Info
+```{r SessionInfo}
+sessionInfo()
 ```
