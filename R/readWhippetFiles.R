@@ -112,6 +112,13 @@ readWhippetDIFFfiles <- function(files){
         whip$unique_name <- paste(whip$gene,whip$coord,whip$type,whip$node, sep="_")
         #whip$unique_name <- with(whip, paste0(gene,"_",coord,"_",type,"_",node))
         whip$comparison <- gsub(".diff.gz","", basename(files[f]))
+        conditions <- unique(whip$comparison)
+        conditionsSplit <- stringr::str_split(conditions, "_")
+        condition1 <- unlist(lapply(conditionsSplit, "[[", 1))
+        condition2 <- unlist(lapply(conditionsSplit, function(x) tail(x, n=1)))
+
+        whip$condition_1 <- condition1[match(conditions, whip$comparisons)]
+        whip$condition_2 <- condition2[match(conditions, whip$comparisons)]
 
         if(exists("whip.all")){
             whip.all <- rbind(whip.all, whip)
