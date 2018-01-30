@@ -2,7 +2,7 @@
 % Please edit documentation in R/readWhippetFiles.R
 \name{readWhippetJNCfiles}
 \alias{readWhippetJNCfiles}
-\title{Read in a list of whippet .jnc.gz files and format as a data.frame}
+\title{Read in a list of whippet .jnc.gz files and format as a GRanges object}
 \usage{
 readWhippetJNCfiles(files)
 }
@@ -10,10 +10,10 @@ readWhippetJNCfiles(files)
 \item{files}{vector of *.jnc.gz file names}
 }
 \value{
-data.frame with junction counts for all files
+GRanges object with junctions
 }
 \description{
-Read in a list of whippet .jnc.gz files and format as a data.frame
+Read in a list of whippet .jnc.gz files and format as a GRanges object
 }
 \examples{
 whippetFiles <- list.files(system.file("extdata","whippet/",

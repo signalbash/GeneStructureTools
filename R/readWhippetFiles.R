@@ -1,8 +1,11 @@
-#' Read in a list of whippet .jnc.gz files and format as a data.frame
+#' Read in a list of whippet .jnc.gz files and format as a GRanges object
 #' @param files vector of *.jnc.gz file names
-#' @return data.frame with junction counts for all files
+#' @return GRanges object with junctions
 #' @export
 #' @importFrom data.table fread
+#' @import GenomicRanges
+#' @importFrom IRanges IRanges
+#' @importFrom S4Vectors Rle
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
@@ -36,7 +39,12 @@ readWhippetJNCfiles <- function(files){
     }
 
     colnames(whip.all)[-(1:5)] <- gsub(".jnc.gz","", basename(files))
-    return(whip.all)
+
+    jncCoords <- GRanges(seqnames=S4Vectors::Rle(whip.all$chrom),
+                         ranges=IRanges::IRanges(start=as.numeric(whip.all$start),
+                                                 end=as.numeric(whip.all$end)),
+                         strand=whip.all$strand, id=whip.all$id)
+    return(jncCoords)
 }
 
 #' Read in a list of whippet .psi.gz files and format as a data.frame
