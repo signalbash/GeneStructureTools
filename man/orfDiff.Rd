@@ -30,25 +30,29 @@ data.frame with orf changes
 Evaluate changes to ORFs caused by alternative splicing
 }
 \examples{
+
+whippetFiles <- system.file("extdata","whippet/",
+package = "GeneStructureTools")
+wds <- readWhippetDataSet(whippetFiles)
+wds <- filterWhippetEvents(wds)
+
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools"))
 gtf.exons <- gtf[gtf$type=="exon"]
+gtf.transcripts <- gtf[gtf$type=="transcript"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+
 orfsProteinCoding <- getOrfs(gtf.exons[gtf.exons$gene_name=="Prex2" &
 gtf.exons$transcript_type=="protein_coding"], BSgenome = g)
 orfsNMD <- getOrfs(gtf.exons[gtf.exons$gene_name=="Prex2" &
 gtf.exons$transcript_type=="nonsense_mediated_decay"], BSgenome = g)
-orfChange <- orfDiff(orfsProteinCoding, orfsNMD, filterNMD=FALSE)
-whippetFiles <- list.files(system.file("extdata","whippet/",
-package = "GeneStructureTools"), full.names = TRUE)
-diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
-whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
-whippetCoords <- formatWhippetEvents(whippetDiffSplice)
-event.exonSkip <- whippetDiffSplice[which(whippetDiffSplice$type=="CE")[1],]
-coords.exonSkip <- whippetCoords[whippetCoords$id \%in\% event.exonSkip$coord]
-exons.exonSkip <- findExonContainingTranscripts(coords.exonSkip, gtf.exons,
+orfDiff(orfsProteinCoding, orfsNMD, filterNMD=FALSE)
+
+wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
+exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, gtf.exons,
 variableWidth=0, findIntrons=FALSE, gtf.transcripts)
-ExonSkippingTranscripts <- skipExonInTranscript(coords.exonSkip, exons.exonSkip, gtf.exons)
+ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, gtf.exons)
+
 orfsSkipped <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
 BSgenome = g)
 orfsIncluded <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="included_exon"],

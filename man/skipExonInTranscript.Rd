@@ -2,13 +2,13 @@
 % Please edit documentation in R/ExonSkipping.R
 \name{skipExonInTranscript}
 \alias{skipExonInTranscript}
-\title{Remove and iclude a skipped exon from the transcripts it overlaps}
+\title{Remove and include a skipped exon from the transcripts it overlaps}
 \usage{
-skipExonInTranscript(eventCoords, skippedExons, gtf.exons, glueExons = TRUE,
-  match = "exact")
+skipExonInTranscript(whippetDataSet, skippedExons, gtf.exons,
+  glueExons = TRUE, match = "exact")
 }
 \arguments{
-\item{eventCoords}{GRanges object with ranges for exons}
+\item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
 
 \item{skippedExons}{data.frame generataed by findExonContainingTranscripts()}
 
@@ -27,23 +27,24 @@ and skip them in skipped sets}
 GRanges with transcripts skipping exons
 }
 \description{
-Remove and iclude a skipped exon from the transcripts it overlaps
+Remove and include a skipped exon from the transcripts it overlaps
 }
 \examples{
-whippetFiles <- list.files(system.file("extdata","whippet/",
-package = "GeneStructureTools"), full.names = TRUE)
-diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
-whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
-whippetCoords <- formatWhippetEvents(whippetDiffSplice)
+whippetFiles <- system.file("extdata","whippet/",
+package = "GeneStructureTools")
+wds <- readWhippetDataSet(whippetFiles)
+wds <- filterWhippetEvents(wds)
+
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools"))
 gtf.exons <- gtf[gtf$type=="exon"]
 gtf.transcripts <- gtf[gtf$type=="transcript"]
-event.exonSkip <- whippetDiffSplice[which(whippetDiffSplice$type=="CE")[1],]
-coords.exonSkip <- whippetCoords[whippetCoords$id \%in\% event.exonSkip$coord]
-exons.exonSkip <- findExonContainingTranscripts(coords.exonSkip, gtf.exons,
+g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+
+wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
+exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, gtf.exons,
 variableWidth=0, findIntrons=FALSE, gtf.transcripts)
-ExonSkippingTranscripts <- skipExonInTranscript(coords.exonSkip, exons.exonSkip, gtf.exons)
+ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, gtf.exons)
 }
 \author{
 Beth Signal

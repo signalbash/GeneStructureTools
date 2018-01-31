@@ -6,7 +6,7 @@
 \usage{
 leafcutterTranscriptChangeSummary(significantEvents,
   combineGeneEvents = FALSE, gtf.exons, BSgenome, NMD = FALSE,
-  showProgressBar = TRUE)
+  showProgressBar = TRUE, exportGTF = NULL)
 }
 \arguments{
 \item{significantEvents}{data.frame containing information from the
@@ -22,6 +22,8 @@ Currently NOT FUNCTIONAL}
 \item{NMD}{Use NMD predictions? (Note: notNMD must be installed to use this feature)}
 
 \item{showProgressBar}{show a progress bar of alternative isoform generation?}
+
+\item{exportGTF}{file name to export alternative isoform GTFs (default=NULL)}
 }
 \value{
 data.frame containing signficant whippet diff data and ORF change summaries

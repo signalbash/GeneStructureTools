@@ -67,33 +67,16 @@ library(rtracklayer)
 
 
 # list of files in the whippet directory
-whippet_files <- list.files("~/Downloads/GeneStructureTools_VignetteFiles/",
-full.names = TRUE)
+whippet_file_directory <- "~/Downloads/GeneStructureTools_VignetteFiles/"
 
-# read in junction files (junctions + read counts)
-whippet_jnc <- readWhippetJNCfiles(grep(".jnc", whippet_files,value = TRUE))
-jnc_ranges <- formatJunctions(whippet_jnc)
-
-# read in psi (percent spliced in) files (default: total reads for each event)
-whippet_counts <- readWhippetPSIfiles(grep(".psi", whippet_files,value = TRUE))
-
-# read in diff files (events + differential splicing testing)
-whippet_diff <- readWhippetDIFFfiles(grep(".diff", whippet_files,value = TRUE))
-
-# format events as a GRanges Object
-whippet_coords <- formatWhippetEvents(whippet_diff)
+# read in files as a whippetDataSet
+wds <- readWhippetDataSet(whippet_file_directory)
 
 # create a sample table with sample id, condition and replicate
 whippet_sampleTable <- data.frame(sample=c("A01","B01","A21","B21"),
                                   condition=c("01","01","21","21"),
                                   replicate=(c("A","B","A","B")))
-
-# You may need to manually annotate conditions in the differential splicing data.frame to match the condition column in whippet_sampleTable
-
-conditions <- whippet_diff$comparison
-whippet_diff$condition_1 <- unlist(lapply(str_split(conditions,"_v_"),"[[",1))
-whippet_diff$condition_2 <- unlist(lapply(str_split(conditions,"_v_"),"[[",2))
-
+                                  
 # read in gtf annotation
 gtf <- rtracklayer::import("~/Downloads/gencode.vM14.annotation.gtf.gz")
 gtf.exons <- gtf[gtf$type=="exon"]
@@ -111,7 +94,6 @@ if(!("first_last" %in% colnames(mcols(gtf.exons)))){
 # specify the BSGenome annotation
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
-save.image("~/Downloads/GeneStructureTools_VignetteFiles/mouse.Rdata")
 ```
 
 **Read in Whippet files from package data**
@@ -127,36 +109,16 @@ library(Gviz)
 library(rtracklayer)
 })
 # list of files in the whippet directory
-whippet_files <- list.files(system.file("extdata","whippet/", 
-package = "GeneStructureTools"),full.names = TRUE)
+whippet_file_directory <- system.file("extdata","whippet/", 
+package = "GeneStructureTools")
 
-# read in junction files (junctions + read counts)
-whippet_jnc <- readWhippetJNCfiles(grep(".jnc", whippet_files,value = TRUE))
-jnc_ranges <- formatJunctions(whippet_jnc)
-
-# read in psi (percent spliced in) files (default: total reads for each event)
-whippet_counts <- readWhippetPSIfiles(grep(".psi", whippet_files,value = TRUE))
-# rename column names to remove "example_"
-colnames(whippet_counts) <- gsub("example_","",colnames(whippet_counts))
-
-# read in diff files (events + differential splicing testing)
-whippet_diff <- readWhippetDIFFfiles(grep(".diff", whippet_files,value = TRUE))
-# rename comparison names to remove "example_"
-whippet_diff$comparison <- gsub("example_","",whippet_diff$comparison)
-
-# format events as a GRanges Object
-whippet_coords <- formatWhippetEvents(whippet_diff)
+# read in files as a whippetDataSet
+wds <- readWhippetDataSet(whippet_file_directory)
 
 # create a sample table with sample id, condition and replicate
 whippet_sampleTable <- data.frame(sample=c("A01","B01","A21","B21"),
                                   condition=c("01","01","21","21"),
                                   replicate=(c("A","B","A","B")))
-
-# You may need to manually annotate conditions in the differential splicing data.frame to match the condition column in whippet_sampleTable
-
-conditions <- whippet_diff$comparison
-whippet_diff$condition_1 <- unlist(lapply(str_split(conditions,"_v_"),"[[",1))
-whippet_diff$condition_2 <- unlist(lapply(str_split(conditions,"_v_"),"[[",2))
 
 # read in gtf annotation
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf", 
@@ -201,23 +163,18 @@ intron_results <- read.delim(leafcutter_files[grep("per_intron_results.tab", lea
 ## Whippet
 ```{r filterWhippetEvents}
 # filter events for significance
-significant_events <- filterSignificantWhippetEvents(
-whippet_diff,
+wds <- filterWhippetEvents(wds,
 probability = 0.95, # min probability
 psiDelta = 0.1, # min change in PSI
 eventTypes = "all", # all event types
-whippetCounts = whippet_counts,
 minCounts = 100, # mean of at least 100 counts in one condition
 sampleTable = whippet_sampleTable)
 
 # check for changes in gene/transcript structure
-summary <- whippetTranscriptChangeSummary(
-significantEvents = significant_events,
-whippetCoords = whippet_coords,
+summary <- whippetTranscriptChangeSummary(wds,
 gtf.exons = gtf.exons,
 gtf.transcripts = gtf.transcripts,
 BSgenome = g,
-jncCoords = jnc_ranges,
 NMD = FALSE # ignore nonsense mediated decay
 )
 head(summary)
@@ -238,7 +195,7 @@ head(leafcutter_summary[!duplicated(leafcutter_summary$cluster),])
 
 # Altering Gene and Transcript Structures
 whippetTranscriptChangeSummary() combines several functions for analysing changes in gene structures. While this has been made to simplify analysis from whippet data, individual functions can be used on other data sources or manually annotated gene structures.
-It may also be helpfule to run each individual step if you would like to manually investigate changes to genes.
+It may also be helpful to run each individual step if you would like to manually investigate changes to genes.
 
 ## Exon skipping
 Exon skipping, or cassette exon usage, occurs when a single exon is spliced out of the mature transcript.
@@ -248,45 +205,30 @@ Exon skipping, or cassette exon usage, occurs when a single exon is spliced out 
 **1.a. Find skipped exon events**
 ```{r whippetSkippedFilter}
 # filter out skipped exon events (coded as "CE")
-event.ce <- significant_events[significant_events$type=="CE",]
-
 # we will be looking at Ndufv3 (ENSMUSG00000024038.16)
-event.ce <- event.ce[event.ce$gene == "ENSMUSG00000024038.16",]
+wds.ce <- filterWhippetEvents(wds, psiDelta=0,probability=0, 
+event="CE", idList="ENSMUSG00000024038.16")
+
+diffSplicingResults(wds.ce)
 # psi_a = 0.137, psi_b = 0.275
 # percentage of transcripts skipping exon 3 decreases from timepoint 1 to 21
 
 # whippet outputs the skipped exon coordinates
-ranges.ce <- whippet_coords[whippet_coords$id %in% event.ce$coord]
-ranges.ce
+coordinates(wds.ce)
 
 ```
-
-*or*
-
-**1.b. Create skipped exon events**
-```{r SkippedCreate}
-ranges.ce.manual <- GRanges(seqnames="chr17",
-                            ranges=IRanges(start=31527310, end=31528401),
-                            strand="+",
-                            id="Ndufv3_manual")
-
-# or from an annotated exon
-ranges.ce.gtf <- gtf.exons[gtf.exons$exon_id == "ENSMUSE00000315216.3"]
-ranges.ce.gtf$id <- "Ndufv3_manual"
-```
-
 
 **2. Find transcripts which overlap the skipped exon, and create normal & skipped exon isoforms**
 ```{r findOverlapsSkipped}
 # find exons in the gtf that overlap the skipped exon event
-exons.ce <- findExonContainingTranscripts(eventCoords = ranges.ce, 
+exons.ce <- findExonContainingTranscripts(wds.ce, 
                                           gtf.exons = gtf.exons,
                                           gtf.transcripts = gtf.transcripts)
 # make skipped and included exon transcripts
 # removes the skipped exon from all transcripts which contain it
-skippedExonTranscripts <- skipExonInTranscript(eventCoords = ranges.ce,
+skippedExonTranscripts <- skipExonInTranscript(wds,
                                                skippedExons = exons.ce,
-                                               gtf.exons, 
+                                               gtf.exons=gtf.exons, 
                                                match="skip")
 ```
 
@@ -331,24 +273,11 @@ Intron Retention occurs when an intron is not spliced out of the mature transcri
 **1. Create normal and retained isoform structures from whippet coordinates**
 ```{r retainedIntronWhippet}
 # filter out retained events (coded as "RI")
-event.ri <- significant_events[significant_events$type=="RI",]
-
 # we will be looking at Srsf1 (ENSMUSG00000018379.17)
-event.ri <- event.ri[event.ri$gene == "ENSMUSG00000018379.17",]
+wds.ri <- filterWhippetEvents(wds, psiDelta=0,probability=0, 
+event="RI", idList="ENSMUSG00000018379.17")
 
-# whippet outputs the retained coordinates
-ranges.ri <- whippet_coords[whippet_coords$id %in% event.ri$coord]
-# need to extend whippet coords to cover the last/first base 
-# of the surrounding exons
-start(ranges.ri) <- start(ranges.ri) -1
-end(ranges.ri) <- end(ranges.ri) +1
-ranges.ri
-
-# manually create
-ranges.ri.manual <- GRanges(seqnames="chr11",
-                            ranges=IRanges(start=88049215, end=88049412),
-                            strand="+",
-                            id="Srsf1_manual")
+diffSplicingResults(wds.ri)
 
 ```
 
@@ -356,14 +285,14 @@ ranges.ri.manual <- GRanges(seqnames="chr11",
 **2. Find transcripts which overlap the intron, and create normal & retained intron isoforms**
 ```{r findIntron}
 # find exons pairs in the gtf that bound the retained intron event
-exons.ri <- findIntronContainingTranscripts(eventCoords = ranges.ri, 
+exons.ri <- findIntronContainingTranscripts(wds.ri, 
                                             gtf.exons)
 
 # make retained and non-retained transcripts
 # adds the intron into all transcripts which overlap it
-retainedIntronTranscripts <- addIntronInTranscript(eventCoords = ranges.ri, 
-                                                   flankingExons = exons.ri,
-                                                   gtf.exons, 
+retainedIntronTranscripts <- addIntronInTranscript(wds.ri,
+                                                   exons.ri, 
+                                                   gtf.exons = gtf.exons, 
                                                    glueExons = TRUE)
 
 ```
@@ -405,48 +334,27 @@ Creation of alternative donor/acceptor isoforms currently relies on junction rea
 **1. Create normal and alternative isoform structures from whippet coordinates**
 ```{r altAccept}
 # filter out alternative acceptor events (coded as "AA")
-event.aa <- significant_events[significant_events$type=="AA",]
+wds.aa <- filterWhippetEvents(wds, psiDelta=0,probability=0, 
+event="AA", idList="ENSMUSG00000034064.14")
 
-# we will be looking at Poglut1 (ENSMUSG00000034064.14)
-event.aa <- event.aa[event.aa$gene == "ENSMUSG00000034064.14",]
+diffSplicingResults(wds.aa)
 
-# whippet outputs the retained coordinates
-ranges.aa <- whippet_coords[whippet_coords$id %in% event.aa$coord]
 # AA/AD coordinates range from the normal acceptor splice site to the alternative acceptor splice site
-ranges.aa
+coordinates(wds.aa)
 ```
 
 
 ```{r findJunctionsAA}
 # find exons pairs in the gtf that bound the retained intron event
-junctionPairs.aa <- findJunctionPairs(eventCoords = ranges.aa, 
-                                   jncCoords = jnc_ranges, 
+junctionPairs.aa <- findJunctionPairs(wds.aa, 
                                    type="AA")
 junctionPairs.aa
 ```
 
-You can create alternative isoforms manually by defining BOTH the two splice sites as a range, and splice junctions which use these sites.
-```{r manualAA}
-ranges.aa.manual <- GRanges(seqnames="chr16",
-                            ranges=IRanges(start=38549434, # splice site 1 
-                                           end=38549636), # splice site 2
-                            strand="-",
-                            id="AA_manual")
-junctionPairs.aa.manual <- GRanges(seqnames="chr16",
-                            ranges=IRanges(start=c(38549433, 38549636), 
-                            # splice site 1 (intronic), splice site 2 (intronic)
-                                           end=c(38550083,38550083)), 
-                                           # splice site 1 junction pair, 
-                                           # splice site 2 junction pair
-                            strand="-",
-                            id=rep("AA_manual", 2))
-
-```
-
 ```{r replaceJunctionAA}
 # make transcripts with alternative junction usage
-altTranscripts <- replaceJunction(junctionPairs = junctionPairs.aa, 
-                                  eventCoords = ranges.aa, 
+altTranscripts <- replaceJunction(wds.aa, 
+                                  junctionPairs.aa, 
                                   gtf.exons, 
                                   type="AA")
 
@@ -486,27 +394,23 @@ from = 38547500, to = 38551000)
 **1. Create normal and alternative isoform structures from whippet coordinates**
 ```{r altDonor}
 # filter out alternative acceptor events (coded as "AD")
-event.ad <- significant_events[significant_events$type=="AD",]
-
 # we will be looking at Mdbd3 (ENSMUSG00000035478.14)
-event.ad <- event.ad[event.ad$gene == "ENSMUSG00000035478.14",]
+wds.ad <- filterWhippetEvents(wds, psiDelta=0,probability=0, 
+event="AD", idList="ENSMUSG00000035478.14")
 
-# whippet outputs the retained coordinates
-ranges.ad <- whippet_coords[whippet_coords$id %in% event.ad$coord]
+diffSplicingResults(wds.ad)
 # AD coordinates range from the normal donor splice site to the alternative donor splice site
-ranges.ad
+coordinates(wds.ad)
 ```
 
 
 ```{r createIsoformsAD}
 # find exons pairs in the gtf that bound the retained intron event
-junctionPairs.ad <- findJunctionPairs(eventCoords = ranges.ad, 
-                                   jncCoords = jnc_ranges, 
-                                   type="AD")
+junctionPairs.ad <- findJunctionPairs(wds.ad, type="AD")
 
 # make transcripts with alternative junction usage
-altTranscripts <- replaceJunction(junctionPairs = junctionPairs.ad, 
-                                  eventCoords = ranges.ad, 
+altTranscripts <- replaceJunction(wds.ad, 
+                                  junctionPairs.ad, 
                                   gtf.exons, type="AD")
 
 # make transcripts using junction X
@@ -547,53 +451,28 @@ Creation of alternative first/last isoforms currently relies on junction read co
 **1. Create normal and alternative isoform structures from whippet coordinates**
 ```{r altFirst}
 # filter out alternative acceptor events (coded as "AF")
-event.af <- significant_events[significant_events$type=="AF",]
+# we will be looking at Csrp1 (ENSMUSG00000026421.14)
+wds.af <- filterWhippetEvents(wds, psiDelta=0,probability=0, 
+event="AF", idList="ENSMUSG00000026421.14")
 
-# we will be looking at Csrp1 (ENSMUSG00000029922.15)
-event.af <- event.af[event.af$gene == "ENSMUSG00000026421.14",]
+diffSplicingResults(wds.af)
 
 # whippet outputs first (or last) exon being tested only
-ranges.af <- whippet_coords[whippet_coords$id %in% event.af$coord]
 # AF/AL coordinates range are exon coordinates for the tested first/last exon
-ranges.af
+coordinates(wds.af)
 ```
 
 
 ```{r createIsoformsAF}
 # find junction pairs that use the same acceptor/donor as the specified first/last exon
 # i.e. find the alternative first/last exon
-junctionPairs.af <- findJunctionPairs(eventCoords = ranges.af, 
-                                   jncCoords = jnc_ranges, type="AF")
-```
-
-You can create alternative isoforms manually by defining one of the first exons, and splice junctions which are used by this exon and an alternative first exon.
-See the schematic for details.
-```{r manualAF}
-ranges.af.manual <- GRanges(seqnames="chr1",
-                            ranges=IRanges(start=135729147, # exon start
-                                           end=135729274), # exon end
-                            strand="+",
-                            id="AF_manual")
-junctionPairs.af.manual <- GRanges(seqnames="chr1",
-                            ranges=IRanges(start=c(135729274, 135720193), 
-                            # splice site 1 (first exon), 
-                            # splice site 1 (alternative first exon)
-                                           end=c(135739400,135739400)), 
-                            # splice site 2 (shared junction pair)  
-                            strand=c("+","+"),
-                            id=c("junction1", "junction2"),
-                            whippet_id=rep("AF_manual", 2),
-                            search=c("right", "right"), 
-                            # search to the right for the shared junction pair
-                            set=c("X","Y"))
-
+junctionPairs.af <- findJunctionPairs(wds.af, type="AF")
 ```
 
 
 ```{r replaceJunctionAF}
 # make transcripts with alternative junction usage
-altTranscripts <- replaceJunction(junctionPairs = junctionPairs.af, 
-                                  eventCoords = ranges.af, 
+altTranscripts <- replaceJunction(wds.af, junctionPairs.af, 
                                   gtf.exons,
                                   type="AF")
 
@@ -628,28 +507,26 @@ extend.left = 1000, extend.right = 1000)
 
 **1. Create normal and alternative isoform structures from whippet coordinates**
 ```{r altLast}
-# filter out alternative acceptor events (coded as "AF")
-event.al <- significant_events[significant_events$type=="AL",]
+# filter out alternative acceptor events (coded as "AL")
+# we will be looking at Ppm1b (ENSMUSG00000061130.12)
+wds.al <- filterWhippetEvents(wds, psiDelta=0,probability=0, 
+event="AL", idList="ENSMUSG00000061130.12")
 
-# we will be looking at Ppm1b
-event.al <- event.al[event.al$gene == "ENSMUSG00000061130.12",]
+diffSplicingResults(wds.al)
 
 # whippet outputs first (or last) exon being tested only
-ranges.al <- whippet_coords[whippet_coords$id %in% event.al$coord]
 # AF/AL coordinates range are exon coordinates for the tested first/last exon
-ranges.al
+coordinates(wds.al)
 ```
 
 
 ```{r createIsoformsAL}
 # find junction pairs that use the same acceptor/donor as the specified first/last exon
 # i.e. find the alternative first/last exon
-junctionPairs.al <- findJunctionPairs(eventCoords = ranges.al, 
-                                   jncCoords = jnc_ranges, type="AL")
+junctionPairs.al <- findJunctionPairs(wds.al, type="AL")
 
 # make transcripts with alternative junction usage
-altTranscripts <- replaceJunction(junctionPairs = junctionPairs.al, 
-                                  eventCoords = ranges.al, 
+altTranscripts <- replaceJunction(wds.al, junctionPairs.al, 
                                   gtf.exons, 
                                   type="AL")
 
@@ -773,20 +650,19 @@ extend.left = 1000, extend.right = 1000)
 
 **1. Find open reading frame features**
 ```{r, SkippedExonORF}
-event.ce <- significant_events[significant_events$type=="CE",]
-
 # we will be looking at Ndufv3 (ENSMUSG00000024038.16) again
-event.ce <- event.ce[event.ce$gene == "ENSMUSG00000024038.16",]
-ranges.ce <- whippet_coords[whippet_coords$id %in% event.ce$coord]
+wds.ce <- filterWhippetEvents(wds, psiDelta=0,probability=0, 
+event="CE", idList="ENSMUSG00000024038.16")
+
 # find exons in the gtf that overlap the skipped exon event
-exons.ce <- findExonContainingTranscripts(eventCoords = ranges.ce, 
+exons.ce <- findExonContainingTranscripts(wds.ce, 
                                           gtf.exons = gtf.exons,
                                           gtf.transcripts = gtf.transcripts)
 # make skipped and included exon transcripts
 # removes the skipped exon from all transcripts which contain it
-skippedExonTranscripts <- skipExonInTranscript(eventCoords = ranges.ce,
+skippedExonTranscripts <- skipExonInTranscript(wds,
                                                skippedExons = exons.ce,
-                                               gtf.exons, 
+                                               gtf.exons=gtf.exons, 
                                                match="exact")
 # make non-skipped exon transcripts
 normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% 
@@ -854,24 +730,24 @@ orfChange
 
 You can also use our package ["notNMD"](https://github.com/betsig/notNMD) to predict nonsense-mediated decay potential in transcripts
 
-```{r CompareORFNMD}
+
+```{r CompareORFNMD, eval=FALSE}
 # devtools::install_github("betsig/notNMD")
 library(notNMD)
 
 # we will be looking at Ndufv3 (ENSMUSG00000024038.16) again
-event.ce <- significant_events[significant_events$gene == 
-                                "ENSMUSG00000024038.16" & 
-                                significant_events$type == "CE",]
-ranges.ce <- whippet_coords[whippet_coords$id %in% event.ce$coord]
+wds.ce <- filterWhippetEvents(wds, psiDelta=0,probability=0, 
+event="CE", idList="ENSMUSG00000024038.16")
+
 # find exons in the gtf that overlap the skipped exon event
-exons.ce <- findExonContainingTranscripts(eventCoords = ranges.ce, 
+exons.ce <- findExonContainingTranscripts(wds.ce, 
                                           gtf.exons = gtf.exons,
                                           gtf.transcripts = gtf.transcripts)
 # make skipped and included exon transcripts
 # removes the skipped exon from all transcripts which contain it
-skippedExonTranscripts <- skipExonInTranscript(eventCoords = ranges.ce,
+skippedExonTranscripts <- skipExonInTranscript(wds,
                                                skippedExons = exons.ce,
-                                               gtf.exons, 
+                                               gtf.exons=gtf.exons, 
                                                match="exact")
 # make non-skipped exon transcripts
 normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% exons.ce$transcript_id]
@@ -903,6 +779,7 @@ orfs_included <- orfs_included[which(!is.na(orfs_included$orf_length)),]
 
 
 # compare normal and skipped isoforms
+# this time setting filterNMD to TRUE, which removes NMD targeted frames/isoforms where possible
 orfChange <- orfDiff(orfsX = orfs_included, 
                      orfsY = orfs_skipped, 
                      filterNMD = TRUE,
@@ -915,24 +792,12 @@ nmdChange <- attrChangeAltSpliced(orfs_included,orfs_skipped,
                                            useMax=FALSE)
 m <- match(orfChange$id, nmdChange$id)
 orfChange <- cbind(orfChange, nmdChange[m,-1])
-orfChange
-# id: splicing event ID
-# orf_length_by_group_x: longest orf in first set of transcripts (normalTranscripts)
-# orf_length_by_group_y: longest orf in second set of transcripts (skippedExonTranscripts)
-# utr3_length_by_group_x: 3'UTR length in first set of transcripts (normalTranscripts)
-# utr3_length_by_group_y: 3'UTR length in second set of transcripts (skippedExonTranscripts)
-# utr5_length_by_group_x: 5'UTR length in first set of transcripts (normalTranscripts)
-# utr5_length_by_group_y: 5'UTR length in second set of transcripts (skippedExonTranscripts)
-# filtered: filtered for NMD ?
-# percent_orf_shared: percent of the ORF shared between skipped and included exon transcripts
-# max_percent_orf_shared: theoretical maximum percent of the ORF that could be shared (orf_length_by_group_y / orf_length_by_group_x) or (orf_length_by_group_x / orf_length_by_group_y)
-# orf_percent_kept_x: percent of the ORF in group x (included exon) contained in group y (skipped exon)
-# orf_percent_kept_y: percent of the ORF in group y (skipped exon) contained in group x (included exon)
-# gene_similarity_x: max percent of a normal ORF shared in the group x (included exon) transcript. If multiple ORF frames and transcripts are available, this is the maximum value from comparing the skipped isoform ORF to ALL normal isoform ORFs. 
-# gene_similarity_y: max percent of a normal ORF shared in the group y (skipped exon) transcript. If multiple ORF frames and transcripts are available, this is the maximum value from comparing the skipped isoform ORF to ALL normal isoform ORFs.
-# nmd_prob_bygroup_x: mininmum NMD probability in first set of transcripts (normalTranscripts)
-# nmd_prob_bygroup_y: mininmum NMD probability in second set of transcripts (skippedExonTranscripts)
 ```
+
+This adds an extra two columns to the orfChange output:
+
+`nmd_prob_bygroup_x`: mininmum NMD probability in first set of transcripts (normalTranscripts)
+`nmd_prob_bygroup_y`: mininmum NMD probability in second set of transcripts (skippedExonTranscripts)
 
 
 ```{r plotORFs, eval = TRUE}
@@ -974,24 +839,19 @@ By using GeneStructureTools and examining visually, we find that skipping of exo
 
 ```{r, RetainedORF}
 # we will be looking at Srsf1 (ENSMUSG00000018379.17) again
-event.ri <- significant_events[significant_events$gene == 
-                                            "ENSMUSG00000018379.17" 
-                                            & significant_events$type=="RI",]
-# psi_a = 0.371, psi_b = 0.213
-# percentage of transcripts retaining intron decreases from timepoint 1 to 21
+wds.ri <- filterWhippetEvents(wds, psiDelta=0,probability=0, 
+event="RI", idList="ENSMUSG00000018379.17")
 
-# whippet outputs the retained coordinates
-ranges.ri <- whippet_coords[whippet_coords$id %in% event.ri$coord]
-# need to extend whippet coords to cover the last/first base of the surrounding exons
-start(ranges.ri) <- start(ranges.ri) -1
-end(ranges.ri) <- end(ranges.ri) +1
-# find exons pairs in the gtf that bound the retained intron event
-exons.ri <- findIntronContainingTranscripts(ranges.ri, gtf.exons)
-# make retained transcripts
+# find flanking exons
+exons.ri <- findIntronContainingTranscripts(wds.ri, 
+                                            gtf.exons)
+
+# make retained and non-retained transcripts
 # adds the intron into all transcripts which overlap it
-retainedIntronTranscripts <- addIntronInTranscript(ranges.ri, exons.ri,
-                                                         gtf.exons,
-                                                         glueExons = TRUE)
+retainedIntronTranscripts <- addIntronInTranscript(wds.ri,
+                                                   exons.ri, 
+                                                   gtf.exons = gtf.exons, 
+                                                   glueExons = TRUE)
 # make non-retained intron transcripts
 normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% 
                                         exons.ri$transcript_id]
@@ -1057,6 +917,21 @@ extend.left = 1000, extend.right = 1000)
 ```
 
 By using GeneStructureTools and examining visually, we find that intron retention in Srsf1 decreases the size open reading frame (from 253 to 201AA), by generating a premature stop codon. 
+
+
+If notNMD is installed and loaded, `NMD` can be set to `TRUE` in the `whippetTranscriptChangeSummary` function.
+
+```{r notNMDsummary, eval=FALSE}
+summary <- whippetTranscriptChangeSummary(
+whippetDataSet=wds,
+gtf.exons = gtf.exons,
+gtf.transcripts = gtf.transcripts,
+BSgenome = g,
+NMD =TRUE # ignore nonsense mediated decay
+)
+```
+
+
 
 # DEXSeq
 DEXSeq tests exons (or 'exonic parts') for differential usage between conditions. GeneStructureTools provides a few helper functions to help further annotate where in a transcript differential exon usage occurs.

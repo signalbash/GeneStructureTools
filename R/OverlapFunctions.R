@@ -137,7 +137,6 @@ summariseExonTypes <- function(types){
 #' @import GenomicRanges
 #' @importFrom stats aggregate
 #' @author Beth Signal
-#' @examples
 overlapTypes <- function(queryCoords, gtf, set=c("from", "to", "overlap")){
     overlaps <- as.data.frame(GenomicRanges::findOverlaps(queryCoords, gtf))
     gtf.overlap <- gtf[overlaps$subjectHits]

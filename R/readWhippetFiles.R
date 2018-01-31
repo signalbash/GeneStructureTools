@@ -40,10 +40,12 @@ readWhippetJNCfiles <- function(files){
 
     colnames(whip.all)[-(1:5)] <- gsub(".jnc.gz","", basename(files))
 
+    geneIds <- unlist(lapply(stringr::str_split(whip.all$id, ":"), "[[", 1))
+
     jncCoords <- GRanges(seqnames=S4Vectors::Rle(whip.all$chrom),
                          ranges=IRanges::IRanges(start=as.numeric(whip.all$start),
                                                  end=as.numeric(whip.all$end)),
-                         strand=whip.all$strand, id=whip.all$id)
+                         strand=whip.all$strand, id=whip.all$id, gene=geneIds)
     return(jncCoords)
 }
 
@@ -117,8 +119,8 @@ readWhippetDIFFfiles <- function(files){
         condition1 <- unlist(lapply(conditionsSplit, "[[", 1))
         condition2 <- unlist(lapply(conditionsSplit, function(x) tail(x, n=1)))
 
-        whip$condition_1 <- condition1[match(conditions, whip$comparisons)]
-        whip$condition_2 <- condition2[match(conditions, whip$comparisons)]
+        whip$condition_1 <- condition1[match(conditions, whip$comparison)]
+        whip$condition_2 <- condition2[match(conditions, whip$comparison)]
 
         if(exists("whip.all")){
             whip.all <- rbind(whip.all, whip)
@@ -126,6 +128,9 @@ readWhippetDIFFfiles <- function(files){
             whip.all <- whip
         }
     }
+
+
+
     return(whip.all)
 }
 
@@ -160,3 +165,38 @@ formatWhippetEvents <- function(whippet){
     return(eventCoords)
 }
 
+#' Import whippet results files as a whippetDataSet
+#' @param filePath path to whippet output files
+#' @return whippetDataSet
+#' @export
+#' @import stringr
+#' @author Beth Signal
+#' @examples
+#' whippetFiles <- system.file("extdata","whippet/",
+#' package = "GeneStructureTools")
+#' wds <- readWhippetDataSet(whippetFiles)
+readWhippetDataSet <- function(filePath="."){
+
+    fileNames <- list.files(filePath)
+    wds <- new("whippetDataSet", filePath=filePath)
+    filesDiff <- fileNames[grep(".diff.gz", fileNames)]
+    if(length(filesDiff) > 0){
+        slot(wds, "diffSplicingResults") <- readWhippetDIFFfiles(paste0(filePath, "/", filesDiff))
+        slot(wds, "comparisons") <- unique(diffSplicingResults(wds)$comparison)
+        slot(wds, "coordinates") <- formatWhippetEvents(diffSplicingResults(wds))
+        m <- match(diffSplicingResults(wds)$coord, coordinates(wds)$id)
+        slot(wds, "diffSplicingResults") <- cbind(diffSplicingResults(wds), coord_match=m)
+    }
+
+    filesJnc <- fileNames[grep(".jnc.gz", fileNames)]
+    if(length(filesJnc) > 0){
+        slot(wds, "junctions") <- readWhippetJNCfiles(paste0(filePath, "/", filesJnc))
+    }
+
+    filesPsi <- fileNames[grep(".psi.gz", fileNames)]
+    if(length(filesPsi) > 0){
+        slot(wds, "readCounts") <- readWhippetPSIfiles(paste0(filePath, "/", filesPsi))
+    }
+
+    return(wds)
+}

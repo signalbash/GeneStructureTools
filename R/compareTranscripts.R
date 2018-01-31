@@ -14,28 +14,29 @@
 #' @importFrom stats aggregate
 #' @author Beth Signal
 #' @examples
+#'
+#' whippetFiles <- system.file("extdata","whippet/",
+#' package = "GeneStructureTools")
+#' wds <- readWhippetDataSet(whippetFiles)
+#' wds <- filterWhippetEvents(wds)
+#'
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
 #' gtf.exons <- gtf[gtf$type=="exon"]
+#' gtf.transcripts <- gtf[gtf$type=="transcript"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
-
+#'
 #' orfsProteinCoding <- getOrfs(gtf.exons[gtf.exons$gene_name=="Prex2" &
 #' gtf.exons$transcript_type=="protein_coding"], BSgenome = g)
 #' orfsNMD <- getOrfs(gtf.exons[gtf.exons$gene_name=="Prex2" &
 #' gtf.exons$transcript_type=="nonsense_mediated_decay"], BSgenome = g)
-#' orfChange <- orfDiff(orfsProteinCoding, orfsNMD, filterNMD=FALSE)
-
-#' whippetFiles <- list.files(system.file("extdata","whippet/",
-#' package = "GeneStructureTools"), full.names = TRUE)
-#' diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
-#' whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
-#' whippetCoords <- formatWhippetEvents(whippetDiffSplice)
-
-#' event.exonSkip <- whippetDiffSplice[which(whippetDiffSplice$type=="CE")[1],]
-#' coords.exonSkip <- whippetCoords[whippetCoords$id %in% event.exonSkip$coord]
-#' exons.exonSkip <- findExonContainingTranscripts(coords.exonSkip, gtf.exons,
+#' orfDiff(orfsProteinCoding, orfsNMD, filterNMD=FALSE)
+#'
+#' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
+#' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, gtf.exons,
 #' variableWidth=0, findIntrons=FALSE, gtf.transcripts)
-#' ExonSkippingTranscripts <- skipExonInTranscript(coords.exonSkip, exons.exonSkip, gtf.exons)
+#' ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, gtf.exons)
+#'
 #' orfsSkipped <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
 #' BSgenome = g)
 #' orfsIncluded <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="included_exon"],
@@ -129,6 +130,9 @@ orfDiff <- function(orfsX,
 
 
     m <- match(paste0(orfsX$spliced_id,"_", orfsX$frame), paste0(orfsY$spliced_id,"_",orfsY$frame))
+    # check that there are matches if we ignore the frame (i.e 5'utr frame-shifts)
+    m.noFrame <- match(paste0(orfsX$spliced_id), paste0(orfsY$spliced_id))
+    m[which(is.na(m))] <- m.noFrame[which(is.na(m))]
     if(any(is.na(m))){
         if(!(any(grepl("clu", orfsX$id)) | any(grepl("clu", orfsY$id)))){
             #hasASidX <- grep("[+]", orfsX$id)
@@ -270,21 +274,22 @@ orfDiff <- function(orfsX,
 #' @importFrom stats aggregate
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- list.files(system.file("extdata","whippet/",
-#' package = "GeneStructureTools"), full.names = TRUE)
-#' diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
-#' whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
-#' whippetCoords <- formatWhippetEvents(whippetDiffSplice)
+#' whippetFiles <- system.file("extdata","whippet/",
+#' package = "GeneStructureTools")
+#' wds <- readWhippetDataSet(whippetFiles)
+#' wds <- filterWhippetEvents(wds)
+#'
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
 #' gtf.exons <- gtf[gtf$type=="exon"]
 #' gtf.transcripts <- gtf[gtf$type=="transcript"]
-#' event.exonSkip <- whippetDiffSplice[which(whippetDiffSplice$type=="CE")[1],]
-#' coords.exonSkip <- whippetCoords[whippetCoords$id %in% event.exonSkip$coord]
-#' exons.exonSkip <- findExonContainingTranscripts(coords.exonSkip, gtf.exons,
-#' variableWidth=0, findIntrons=FALSE, gtf.transcripts)
-#' ExonSkippingTranscripts <- skipExonInTranscript(coords.exonSkip, exons.exonSkip, gtf.exons)
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+#'
+#' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
+#' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, gtf.exons,
+#' variableWidth=0, findIntrons=FALSE, gtf.transcripts)
+#' ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, gtf.exons)
+#'
 #' orfsSkipped <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
 #' BSgenome = g)
 #' orfsIncluded <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="included_exon"],
@@ -453,7 +458,7 @@ attrChangeAltSpliced <- function(orfsX,
                 id.x <- paste0(unlist(lapply(str_split(
                     attributeX$id[matchToGene], "[+]"),"[[",1)),"_" ,
                     attributeComparisons$orf_length_bygroup_x)
-                m1 <- match(id.x, paste0((orfsX$id), "_", orfsX$orf_length))
+                m1 <- match(id.x, paste0((orfsX$gene_id), "_", orfsX$orf_length))
             }
 
             if(all(grepl("AS", orfsY$id))){
@@ -479,7 +484,7 @@ attrChangeAltSpliced <- function(orfsX,
                 id.y <- paste0(unlist(lapply(str_split(
                     attributeY$id[matchToGene], "[+]"),"[[",1)),"_" ,
                     attributeComparisons$orf_length_bygroup_y)
-                m2 <- match(id.y, paste0((orfsY$id), "_", orfsY$orf_length))
+                m2 <- match(id.y, paste0((orfsY$gene_id), "_", orfsY$orf_length))
             }
 
             attributeComparisons$utr3_length_bygroup_x <- orfsX$utr3_length[m1]

@@ -1,5 +1,5 @@
 #' Given the location of a whole retained intron, find transcripts which splice out this intron
-#' @param eventCoords GRanges object with ranges for introns
+#' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 #' @param gtf.exons GRanges object made from a GTF with ONLY exon annotations
 #' (no gene, transcript, CDS etc.)
 #' @param match what type of matching to perform? exact = only exons which bound the intron exactly,
@@ -11,20 +11,28 @@
 #' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- list.files(system.file("extdata","whippet/",
-#' package = "GeneStructureTools"), full.names = TRUE)
-#' diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
-#' whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
-#' whippetCoords <- formatWhippetEvents(whippetDiffSplice)
+#' whippetFiles <- system.file("extdata","whippet/",
+#' package = "GeneStructureTools")
+#' wds <- readWhippetDataSet(whippetFiles)
+#' wds <- filterWhippetEvents(wds)
+#'
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
 #' gtf.exons <- gtf[gtf$type=="exon"]
-#' gtf.transcripts <- gtf[gtf$type=="transcript"]
-#' event.intronRetention <- whippetDiffSplice[which(whippetDiffSplice$type=="RI")[1],]
-#' coords.intronRetention <- whippetCoords[whippetCoords$id %in% event.intronRetention$coord]
-#' exons.intronRetention <- findIntronContainingTranscripts(coords.intronRetention, gtf.exons)
-findIntronContainingTranscripts <- function(eventCoords, gtf.exons, match="exact"){
+#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+#'
+#' wds.intronRetention <- filterWhippetEvents(wds, eventTypes="RI")
+#' exons.intronRetention <- findIntronContainingTranscripts(wds.intronRetention, gtf.exons)
+findIntronContainingTranscripts <- function(whippetDataSet, gtf.exons, match="exact"){
     moved <- FALSE
+
+    whippetDataSet <- filterWhippetEvents(whippetDataSet,
+                                                     probability = 0,
+                                                     psiDelta = 0,
+                                                     eventTypes="RI")
+
+    eventCoords <- coordinates(whippetDataSet)
+
     # remove any duplicates
     overlaps <- GenomicRanges::findOverlaps(eventCoords, type="equal")
     overlaps <- overlaps[which(overlaps@from != overlaps@to)]
@@ -165,7 +173,7 @@ findIntronContainingTranscripts <- function(eventCoords, gtf.exons, match="exact
 }
 
 #' Add a retained intron to the transcripts it is skipped by
-#' @param eventCoords GRanges object with ranges for introns
+#' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 #' @param flankingExons data.frame generataed by findIntronContainingTranscripts()
 #' @param gtf.exons GRanges object made from a GTF with ONLY exon annotations
 #' (no gene, transcript, CDS etc.)
@@ -183,25 +191,34 @@ findIntronContainingTranscripts <- function(eventCoords, gtf.exons, match="exact
 #' @importFrom rtracklayer import
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- list.files(system.file("extdata","whippet/",
-#' package = "GeneStructureTools"), full.names = TRUE)
-#' diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
-#' whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
-#' whippetCoords <- formatWhippetEvents(whippetDiffSplice)
+#' whippetFiles <- system.file("extdata","whippet/",
+#' package = "GeneStructureTools")
+#' wds <- readWhippetDataSet(whippetFiles)
+#' wds <- filterWhippetEvents(wds)
+#'
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
 #' gtf.exons <- gtf[gtf$type=="exon"]
-#' gtf.transcripts <- gtf[gtf$type=="transcript"]
-#' event.intronRetention <- whippetDiffSplice[which(whippetDiffSplice$type=="RI")[1],]
-#' coords.intronRetention <- whippetCoords[whippetCoords$id %in% event.intronRetention$coord]
-#' exons.intronRetention <- findIntronContainingTranscripts(coords.intronRetention, gtf.exons)
-#' IntronRetentionTranscripts <- addIntronInTranscript(coords.intronRetention,
+#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+#'
+#' wds.intronRetention <- filterWhippetEvents(wds, eventTypes="RI")
+#' exons.intronRetention <- findIntronContainingTranscripts(wds.intronRetention, gtf.exons)
+#' IntronRetentionTranscripts <- addIntronInTranscript(wds.intronRetention,
 #' exons.intronRetention, gtf.exons)
-addIntronInTranscript <- function(eventCoords,
+addIntronInTranscript <- function(whippetDataSet,
                                   flankingExons,
                                   gtf.exons,
                                   glueExons=TRUE,
                                   match="exact"){
+
+
+    whippetDataSet <- filterWhippetEvents(whippetDataSet,
+                                                     probability = 0,
+                                                     psiDelta = 0,
+                                                     eventTypes="RI")
+
+    eventCoords <- coordinates(whippetDataSet)
+
 
     move <- which(flankingExons$moved == TRUE)
     move.RIindex <- which(eventCoords$id %in% flankingExons$from[move])

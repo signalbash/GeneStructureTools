@@ -10,6 +10,6 @@ Encoding: UTF-8
 LazyData: true
 VignetteBuilder: knitr
 RoxygenNote: 6.0.1
-Imports: Biostrings,GenomicRanges,IRanges,data.table,plyr,stringdist,stringr,notNMD,S4Vectors,BSgenome.Mmusculus.UCSC.mm10,stats,utils,Gviz,rtracklayer
+Imports: Biostrings,GenomicRanges,IRanges,data.table,plyr,stringdist,stringr,S4Vectors,BSgenome.Mmusculus.UCSC.mm10,stats,utils,Gviz,rtracklayer
 biocViews: Software, DifferentialSplicing, FunctionalPrediction, Transcriptomics, AlternativeSplicing, RNASeq
 Suggests: BiocStyle, knitr, rmarkdown
