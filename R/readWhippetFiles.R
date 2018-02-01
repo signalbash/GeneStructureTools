@@ -170,6 +170,7 @@ formatWhippetEvents <- function(whippet){
 #' @return whippetDataSet
 #' @export
 #' @import stringr
+#' @import methods
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet/",
