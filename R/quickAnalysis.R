@@ -516,7 +516,7 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
 #' @param significantEvents  data.frame containing information from the
 #' per_intron_results.tab file output from leafcutter.
 #' @param combineGeneEvents combine clusters occuring in the same gene?
-#' Currently NOT FUNCTIONAL
+#' Currently not reccomended.
 #' @param gtf.exons GRanges gtf annotation of exons
 #' @param BSgenome BSGenome object containing the genome for the species analysed
 #' @param NMD Use NMD predictions? (Note: notNMD must be installed to use this feature)
