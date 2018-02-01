@@ -8,3 +8,6 @@ Fixes for BioC submission
 - notNMD is not required for vignettes
 - whippet files are read in as a single object
 - Fixed bug where leafcutter set creation snowballed
+
+Version 0.99.2
+- Fix for fread()'ing in gzip files on windows

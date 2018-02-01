@@ -14,8 +14,16 @@
 #' whippetJNC <- readWhippetJNCfiles(jncFiles)
 readWhippetJNCfiles <- function(files){
 
+    # check platform for windows/unix specific decompression
+    operatingSystem <- .Platform$OS.type
+    if(operatingSystem == "unix"){
+        ungzip <- "zcat < "
+    }else{ #in windows
+        ungzip <- "gzip -dc "
+    }
+
     for(f in seq_along(files)){
-        whip <- data.table::fread(paste0("zcat < ", files[f]), data.table=FALSE)
+        whip <- data.table::fread(paste0(ungzip, files[f]), data.table=FALSE)
         colnames(whip) <- c("chromosome","start","end","id","count","strand")
 
         if(exists("whip.all")){
@@ -64,8 +72,16 @@ readWhippetJNCfiles <- function(files){
 #' whippetPSI <- readWhippetPSIfiles(psiFiles)
 readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
 
+    # check platform for windows/unix specific decompression
+    operatingSystem <- .Platform$OS.type
+    if(operatingSystem == "unix"){
+        ungzip <- "zcat < "
+    }else{ #in windows
+        ungzip <- "gzip -dc "
+    }
+
     for(f in seq_along(files)){
-        whip <- data.table::fread(paste0("zcat < ", files[f]), data.table=FALSE)
+        whip <- data.table::fread(paste0(ungzip, files[f]), data.table=FALSE)
         wantedCol <- which(colnames(whip) == attribute)
 
         if(exists("whip.all")){
@@ -101,8 +117,16 @@ readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
 #' whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
 readWhippetDIFFfiles <- function(files){
 
+    # check platform for windows/unix specific decompression
+    operatingSystem <- .Platform$OS.type
+    if(operatingSystem == "unix"){
+        ungzip <- "zcat < "
+    }else{ #in windows
+        ungzip <- "gzip -dc "
+    }
+
     for(f in seq_along(files)){
-        whip <- data.table::fread(paste0("zcat < ", files[f]), data.table=FALSE, skip=1)
+        whip <- data.table::fread(paste0(ungzip, files[f]), data.table=FALSE, skip=1)
 
         #remove the NA column
         keepcol <- which(apply(whip, 2, function(x) all(!is.na(x))))
