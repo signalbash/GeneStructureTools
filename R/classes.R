@@ -5,6 +5,7 @@
 #' @name whippetDataSet-class
 #' @rdname whippetDataSet-class
 #' @exportClass whippetDataSet
+#' @imports methods
 setClass("whippetDataSet", slots=list(coordinates="GRanges",
                                       diffSplicingResults="data.frame",
                                       comparisons="character",
@@ -16,6 +17,7 @@ setClass("whippetDataSet", slots=list(coordinates="GRanges",
 #' @name diffSplicingResults
 #' @rdname diffSplicingResults-methods
 #' @exportMethod diffSplicingResults
+#' @imports methods
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 setGeneric("diffSplicingResults",
            def=function(whippetDataSet)
@@ -25,6 +27,8 @@ setGeneric("diffSplicingResults",
 )
 
 #' @rdname diffSplicingResults-methods
+#' @return differential splicing results data.frame
+#' (originally from a whippet .diff file)
 setMethod("diffSplicingResults", signature="whippetDataSet",
           definition=function(whippetDataSet)
           {
@@ -36,6 +40,7 @@ setMethod("diffSplicingResults", signature="whippetDataSet",
 #' @name readCounts
 #' @rdname readCounts-methods
 #' @exportMethod readCounts
+#' @imports methods
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 setGeneric("readCounts",
            def=function(whippetDataSet)
@@ -44,6 +49,8 @@ setGeneric("readCounts",
            }
 )
 #' @rdname readCounts-methods
+#' @return whippet read count data.frame
+#' (originally from a whippet .psi file)
 setMethod("readCounts", signature="whippetDataSet",
           definition=function(whippetDataSet)
           {
@@ -55,6 +62,7 @@ setMethod("readCounts", signature="whippetDataSet",
 #' @name junctions
 #' @rdname junctions-methods
 #' @exportMethod junctions
+#' @imports methods
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 setGeneric("junctions",
            def=function(whippetDataSet)
@@ -63,6 +71,8 @@ setGeneric("junctions",
            }
 )
 #' @rdname junctions-methods
+#' @return junctions GRanges object
+#' (originally from a whippet .jnc file)
 setMethod("junctions", signature="whippetDataSet",
           definition=function(whippetDataSet)
           {
@@ -82,6 +92,7 @@ setGeneric("coordinates",
            }
 )
 #' @rdname coordinates-methods
+#' @return whippet event coordinates GRanges
 setMethod("coordinates", signature="whippetDataSet",
           definition=function(whippetDataSet)
           {

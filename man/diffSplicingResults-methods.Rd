@@ -11,7 +11,11 @@ diffSplicingResults(whippetDataSet)
 \S4method{diffSplicingResults}{whippetDataSet}(whippetDataSet)
 }
 \arguments{
-\item{whippetDataSet}{FUUUUUUCk}
+\item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
+}
+\value{
+differential splicing results data.frame
+(originally from a whippet .diff file)
 }
 \description{
 Method diffSplicingResults

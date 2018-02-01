@@ -11,7 +11,11 @@ readCounts(whippetDataSet)
 \S4method{readCounts}{whippetDataSet}(whippetDataSet)
 }
 \arguments{
-\item{whippetDataSet}{FUUUUUUCk}
+\item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
+}
+\value{
+whippet read count data.frame
+(originally from a whippet .psi file)
 }
 \description{
 Method readCounts

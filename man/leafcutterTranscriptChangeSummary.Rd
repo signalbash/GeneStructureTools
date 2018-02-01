@@ -13,7 +13,7 @@ leafcutterTranscriptChangeSummary(significantEvents,
 per_intron_results.tab file output from leafcutter.}
 
 \item{combineGeneEvents}{combine clusters occuring in the same gene?
-Currently NOT FUNCTIONAL}
+Currently not reccomended.}
 
 \item{gtf.exons}{GRanges gtf annotation of exons}
 

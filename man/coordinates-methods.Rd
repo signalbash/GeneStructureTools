@@ -10,6 +10,12 @@ coordinates(whippetDataSet)
 
 \S4method{coordinates}{whippetDataSet}(whippetDataSet)
 }
+\arguments{
+\item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
+}
+\value{
+whippet event coordinates GRanges
+}
 \description{
 Method coordinates
 }

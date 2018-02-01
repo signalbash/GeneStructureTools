@@ -10,6 +10,13 @@ junctions(whippetDataSet)
 
 \S4method{junctions}{whippetDataSet}(whippetDataSet)
 }
+\arguments{
+\item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
+}
+\value{
+junctions GRanges object
+(originally from a whippet .jnc file)
+}
 \description{
 Method junctions
 }
