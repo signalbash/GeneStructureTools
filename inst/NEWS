@@ -1,3 +1,10 @@
 Version 0.99.0
 
 Pre-BioC submission
+
+Version 0.99.1
+
+Fixes for BioC submission
+- notNMD is not required for vignettes
+- whippet files are read in as a single object
+- Fixed bug where leafcutter set creation snowballed
