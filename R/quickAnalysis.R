@@ -6,6 +6,8 @@
 #' @param idList (optional) list of gene ids to filter for
 #' @param minCounts minumum number of counts for all replicates
 #' in at least one condition to call an event as significant
+#' @param medianCounts median count for all replicates
+#' in at least one condition to call an event as significant
 #' @param sampleTable data.frame with sample names and conditions.
 #' Only needed if filtering with counts.
 #' @return filtered whippet differential comparison data.frame
@@ -22,6 +24,7 @@ filterWhippetEvents <- function(whippetDataSet,
                                            eventTypes = "all",
                                            idList=NULL,
                                            minCounts = NA,
+                                           medianCounts = NA,
                                            sampleTable){
 
     if(eventTypes[1] == "all"){
@@ -66,8 +69,8 @@ filterWhippetEvents <- function(whippetDataSet,
         junctions(whippetDataSet)[keep,]
 
 
-    #filter by minimum read counts?
-    if(nrow(slot(whippetDataSet, "readCounts")) > 0 & !is.na(minCounts)){
+    #filter by read counts?
+    if(nrow(slot(whippetDataSet, "readCounts")) > 0 & (!is.na(minCounts) | !is.na(medianCounts))){
         m <- match(diffSplicingResults(whippetDataSet)$unique_name,
                    readCounts(whippetDataSet)$unique_name)
         n1 <- match(sampleTable$sample[sampleTable$condition %in%
@@ -80,17 +83,26 @@ filterWhippetEvents <- function(whippetDataSet,
         diffSplicingResultsTemp <- diffSplicingResults(whippetDataSet)
 
         diffSplicingResultsTemp$condition_1_counts <-
-            rowMeans(readCounts(whippetDataSet)[m,n1])
+            apply(readCounts(whippetDataSet)[m,n1], 1, median)
         diffSplicingResultsTemp$condition_2_counts <-
-            rowMeans(readCounts(whippetDataSet)[m,n2])
+            apply(readCounts(whippetDataSet)[m,n2], 1, median)
 
-        keep <- which(apply(readCounts(whippetDataSet)[m,n1], 1,
-                            function(x) all(x > minCounts)) |
-                          apply(readCounts(whippetDataSet)[m,n2], 1,
-                                function(x) all(x > minCounts)))
+        if(!is.na(minCounts)){
+            keep <- which(apply(readCounts(whippetDataSet)[m,n1], 1,
+                                function(x) all(x > minCounts)) |
+                              apply(readCounts(whippetDataSet)[m,n2], 1,
+                                    function(x) all(x > minCounts)))
+            slot(whippetDataSet, "diffSplicingResults") <-
+                diffSplicingResultsTemp[keep,]
+        }
 
-        slot(whippetDataSet, "diffSplicingResults") <-
-            diffSplicingResultsTemp[keep,]
+        if(!is.na(medianCounts)){
+            keep <- which(diffSplicingResultsTemp$condition_1_counts >= medianCounts |
+                diffSplicingResultsTemp$condition_2_counts >= medianCounts)
+            slot(whippetDataSet, "diffSplicingResults") <-
+                diffSplicingResultsTemp[keep,]
+        }
+
     }
 
     return(whippetDataSet)
