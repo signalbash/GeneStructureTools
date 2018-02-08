@@ -2,6 +2,7 @@
 #'
 #' @param DEXSeqIds vector of DEXSeq group or exon ids
 #' @param removeVersion remove the version (.xx) of the gene?
+#' @param containsE do the DEXSeq exons ids contain :E00X?
 #' @return vector of unique gene ids
 #' @export
 #' @import stringr
@@ -13,12 +14,19 @@
 #' # exonic part number in id
 #' DEXSeqIdsToGeneIds("ENSMUSG00000001017.15:E013", removeVersion=TRUE)
 #' @author Beth Signal
-DEXSeqIdsToGeneIds <- function(DEXSeqIds, removeVersion=FALSE){
-    containsExon <- grep(":E", DEXSeqIds)
+DEXSeqIdsToGeneIds <- function(DEXSeqIds, removeVersion=FALSE, containsE=TRUE){
+
+    if(containsE){
+        dexSplit <- ":E"
+    }else{
+        dexSplit <- ":"
+    }
+
+    containsExon <- grep(dexSplit, DEXSeqIds)
 
     if(length(containsExon) >0 ){
         DEXSeqIds[containsExon] <- unlist(lapply(stringr::str_split(
-            DEXSeqIds[containsExon], ":E"), "[[",1))
+            DEXSeqIds[containsExon], dexSplit), "[[",1))
     }
 
     geneIds <- unique(unlist(stringr::str_split(DEXSeqIds, "[+]")))
