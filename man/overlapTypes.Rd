@@ -19,7 +19,18 @@ overlaping types in a data.frame
 \description{
 Annotate introns and exonic parts by overlaping exon biotype
 }
+\examples{
+gtfFile <- system.file("extdata","example_gtf.gtf",
+package = "GeneStructureTools")
+DEXSeqGtfFile <- system.file("extdata","gencode.vM14.dexseq.gtf",
+package = "GeneStructureTools")
+
+gtf <- rtracklayer::import(gtfFile)
+gtf <- UTR2UTR53(gtf)
+DEXSeqGtf <- rtracklayer::import(DEXSeqGtfFile)
+
+overlapTypes(DEXSeqGtf[1:10], gtf)
+}
 \author{
 Beth Signal
 }
-\keyword{internal}

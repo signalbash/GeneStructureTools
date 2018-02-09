@@ -5,7 +5,8 @@
 \title{Filter out significant events from a whippet diff comparison}
 \usage{
 filterWhippetEvents(whippetDataSet, probability = 0.95, psiDelta = 0.1,
-  eventTypes = "all", idList = NULL, minCounts = NA, sampleTable)
+  eventTypes = "all", idList = NULL, minCounts = NA, medianCounts = NA,
+  sampleTable)
 }
 \arguments{
 \item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
@@ -19,6 +20,9 @@ filterWhippetEvents(whippetDataSet, probability = 0.95, psiDelta = 0.1,
 \item{idList}{(optional) list of gene ids to filter for}
 
 \item{minCounts}{minumum number of counts for all replicates
+in at least one condition to call an event as significant}
+
+\item{medianCounts}{median count for all replicates
 in at least one condition to call an event as significant}
 
 \item{sampleTable}{data.frame with sample names and conditions.

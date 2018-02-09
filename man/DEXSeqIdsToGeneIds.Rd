@@ -4,12 +4,14 @@
 \alias{DEXSeqIdsToGeneIds}
 \title{Convert DEXSeq ids to gene ids}
 \usage{
-DEXSeqIdsToGeneIds(DEXSeqIds, removeVersion = FALSE)
+DEXSeqIdsToGeneIds(DEXSeqIds, removeVersion = FALSE, containsE = TRUE)
 }
 \arguments{
 \item{DEXSeqIds}{vector of DEXSeq group or exon ids}
 
 \item{removeVersion}{remove the version (.xx) of the gene?}
+
+\item{containsE}{do the DEXSeq exons ids contain :E00X?}
 }
 \value{
 vector of unique gene ids
