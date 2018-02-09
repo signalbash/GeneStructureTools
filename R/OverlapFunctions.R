@@ -142,10 +142,21 @@ summariseExonTypes <- function(types){
 #' @param gtf GRanges object of the GTF annotated with exon biotypes - i.e. exon, CDS, UTR
 #' @param set which overlapping set of exon biotypes to return - to, from, and/or overlap
 #' @return overlaping types in a data.frame
-#' @keywords internal
+#' @export
 #' @import GenomicRanges
 #' @importFrom stats aggregate
 #' @author Beth Signal
+#' @examples
+#' gtfFile <- system.file("extdata","example_gtf.gtf",
+#' package = "GeneStructureTools")
+#' DEXSeqGtfFile <- system.file("extdata","gencode.vM14.dexseq.gtf",
+#' package = "GeneStructureTools")
+#'
+#' gtf <- rtracklayer::import(gtfFile)
+#' gtf <- UTR2UTR53(gtf)
+#' DEXSeqGtf <- rtracklayer::import(DEXSeqGtfFile)
+#'
+#' overlapTypes(DEXSeqGtf[1:10], gtf)
 overlapTypes <- function(queryCoords, gtf, set=c("from", "to", "overlap")){
     overlaps <- as.data.frame(GenomicRanges::findOverlaps(queryCoords, gtf))
     gtf.overlap <- gtf[overlaps$subjectHits]
@@ -168,7 +179,7 @@ overlapTypes <- function(queryCoords, gtf, set=c("from", "to", "overlap")){
                                   end(queryCoords[gtf.overlap$index])]
     }
     #keep only hits with a exon-intron-exon pair
-    if(any(set=="to") & any(set=="from")){
+    if(any(set=="to") & any(set=="from") & length(gtf.from) > 0 & length(gtf.to) >0){
         tidIndex.from <- paste0(gtf.from$transcript_id, "_",
                                  gtf.from$index)
         tidIndex.to <- paste0(gtf.to$transcript_id, "_",
@@ -216,8 +227,8 @@ overlapTypes <- function(queryCoords, gtf, set=c("from", "to", "overlap")){
             gtf.overlap$transcript_type_broad,
             "-",gtf.overlap$type)
         #remove nmd/retained introns -- these tend to be isoexons of protein coding exons
-        rm <- which(gtf.overlap$typetype == "retained_intron|exon" |
-                        gtf.overlap$transcript_type_broad == "nmd")
+        keep <- which(!(gtf.overlap$typetype == "retained_intron|exon" |
+                        gtf.overlap$transcript_type_broad == "nmd"))
 
         overlapTypes <- aggregate(type ~ index, mcols(gtf.overlap),
                               function(x) paste0(sort(unique(x)),collapse=":"))
@@ -225,7 +236,7 @@ overlapTypes <- function(queryCoords, gtf, set=c("from", "to", "overlap")){
                                          mcols(gtf.overlap),
                                          function(x) paste0(sort(unique(x)),collapse=":"))
         overlapTypeTypes <- aggregate(typetype ~ index,
-                                  mcols(gtf.overlap)[-rm,],
+                                  mcols(gtf.overlap)[keep,],
                                   function(x) paste0(sort(unique(x)),collapse=":"))
     }
 
