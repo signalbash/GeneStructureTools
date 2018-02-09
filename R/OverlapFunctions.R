@@ -126,8 +126,9 @@ summariseExonTypes <- function(types){
     types2[grep("protein_coding-stop_codon", types2)] <- "stop_codon"
     types2[grep("protein_coding-UTR5", types2)] <- "UTR5"
     types2[grep("protein_coding-UTR3", types2)] <- "UTR3"
+    types2[grep("protein_coding-UTR", types2)] <- "UTR"
     types2[grep("protein_coding-CDS", types2)] <- "CDS"
-    types2[!(types2 %in% c("start_codon", "stop_codon","UTR5","UTR3","CDS"))] <-
+    types2[!(types2 %in% c("start_codon", "stop_codon","UTR5","UTR3","CDS", "UTR")) & !is.na(types2)] <-
         "noncoding_exon"
 
     return(types2)
