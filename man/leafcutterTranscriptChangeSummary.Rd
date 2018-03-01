@@ -5,7 +5,7 @@
 \title{Compare open reading frames for whippet differentially spliced events}
 \usage{
 leafcutterTranscriptChangeSummary(significantEvents,
-  combineGeneEvents = FALSE, gtf.exons, BSgenome, NMD = FALSE,
+  combineGeneEvents = FALSE, exons, BSgenome, NMD = FALSE,
   showProgressBar = TRUE, exportGTF = NULL)
 }
 \arguments{
@@ -15,7 +15,7 @@ per_intron_results.tab file output from leafcutter.}
 \item{combineGeneEvents}{combine clusters occuring in the same gene?
 Currently not reccomended.}
 
-\item{gtf.exons}{GRanges gtf annotation of exons}
+\item{exons}{GRanges gtf annotation of exons}
 
 \item{BSgenome}{BSGenome object containing the genome for the species analysed}
 
@@ -38,10 +38,10 @@ leafcutterIntrons <- read.delim(leafcutterFiles[
 grep("intron_results", leafcutterFiles)],stringsAsFactors=FALSE)
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools"))
-gtf.exons <- gtf[gtf$type=="exon"]
+exons <- gtf[gtf$type=="exon"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 leafcutterTranscriptChangeSummary(significantEvents = leafcutterIntrons,
-gtf.exons=gtf.exons,BSgenome = g,NMD=FALSE)
+exons=exons,BSgenome = g,NMD=FALSE)
 }
 \author{
 Beth Signal

@@ -18,11 +18,11 @@ Removes structural duplicates of exons in a GRanges object
 \examples{
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools"))
-gtf.exons <- gtf[gtf$type=="exon"]
-gtf.exons.duplicated <- c(gtf.exons[1:4], gtf.exons[1:4])
-length(gtf.exons.duplicated)
-gtf.exons.deduplicated <- removeSameExon(gtf.exons.duplicated)
-length(gtf.exons.deduplicated)
+exons <- gtf[gtf$type=="exon"]
+exons.duplicated <- c(exons[1:4], exons[1:4])
+length(exons.duplicated)
+exons.deduplicated <- removeSameExon(exons.duplicated)
+length(exons.deduplicated)
 }
 \author{
 Beth Signal

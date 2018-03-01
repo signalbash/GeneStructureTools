@@ -33,8 +33,8 @@ wds <- filterWhippetEvents(wds)
 
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools"))
-gtf.exons <- gtf[gtf$type=="exon"]
-gtf.transcripts <- gtf[gtf$type=="transcript"]
+exons <- gtf[gtf$type=="exon"]
+transcripts <- gtf[gtf$type=="transcript"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
 wds.altAce <- filterWhippetEvents(wds, eventTypes="AA")

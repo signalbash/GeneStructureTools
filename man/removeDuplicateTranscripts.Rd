@@ -19,13 +19,13 @@ Note that duplicates must have different transcript ids.
 \examples{
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools"))
-gtf.exons <- gtf[gtf$type=="exon"]
-gtf.exons.altName <- gtf.exons
-gtf.exons.altName$transcript_id <- paste(gtf.exons.altName$transcript_id, "duplicated", sep="_")
-gtf.exons.duplicated <- c(gtf.exons, gtf.exons.altName)
-length(gtf.exons.duplicated)
-gtf.exons.deduplicated <- removeDuplicateTranscripts(gtf.exons.duplicated)
-length(gtf.exons.deduplicated)
+exons <- gtf[gtf$type=="exon"]
+exons.altName <- exons
+exons.altName$transcript_id <- paste(exons.altName$transcript_id, "duplicated", sep="_")
+exons.duplicated <- c(exons, exons.altName)
+length(exons.duplicated)
+exons.deduplicated <- removeDuplicateTranscripts(exons.duplicated)
+length(exons.deduplicated)
 }
 \author{
 Beth Signal

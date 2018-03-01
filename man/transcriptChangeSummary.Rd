@@ -4,7 +4,7 @@
 \alias{transcriptChangeSummary}
 \title{Compare open reading frames for two sets of paired transcripts}
 \usage{
-transcriptChangeSummary(transcriptsX, transcriptsY, BSgenome, gtf.exons,
+transcriptChangeSummary(transcriptsX, transcriptsY, BSgenome, exons,
   NMD = FALSE, compareBy = "gene", orfPrediction = "allFrames",
   compareToGene = FALSE, whippetDataSet = NULL, exportGTF = NULL)
 }
@@ -17,7 +17,7 @@ all transcripts to be compared for the 'alternative' condition}
 
 \item{BSgenome}{BSGenome object containing the genome for the species analysed}
 
-\item{gtf.exons}{GRanges object made from a GTF containing exon coordinates}
+\item{exons}{GRanges object made from a GTF containing exon coordinates}
 
 \item{NMD}{Use NMD predictions? (Note: notNMD must be installed to use this feature)}
 
@@ -25,7 +25,7 @@ all transcripts to be compared for the 'alternative' condition}
 
 \item{orfPrediction}{What type of orf predictions to return. default= \code{"allFrames"}}
 
-\item{compareToGene}{compare alternative isoforms to all normal gene isoforms (in gtf.exons)}
+\item{compareToGene}{compare alternative isoforms to all normal gene isoforms (in exons)}
 
 \item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}
 Use if PSI directionality should be taken into account when comparing isoforms.}
@@ -46,17 +46,17 @@ wds <- filterWhippetEvents(wds)
 
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools"))
-gtf.exons <- gtf[gtf$type=="exon"]
+exons <- gtf[gtf$type=="exon"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
 wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
 
-exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, gtf.exons,
-variableWidth=0, findIntrons=FALSE, gtf.transcripts)
-ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, gtf.exons)
+exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
+variableWidth=0, findIntrons=FALSE, transcripts)
+ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, exons)
 transcriptChangeSummary(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="included_exon"],
 ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
-BSgenome=g,gtf.exons)
+BSgenome=g,exons)
 }
 \author{
 Beth Signal

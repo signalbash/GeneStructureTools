@@ -114,11 +114,11 @@ filterWhippetEvents <- function(whippetDataSet,
 #' @param transcriptsY GRanges object with exon annotations for
 #' all transcripts to be compared for the 'alternative' condition
 #' @param BSgenome BSGenome object containing the genome for the species analysed
-#' @param gtf.exons GRanges object made from a GTF containing exon coordinates
+#' @param exons GRanges object made from a GTF containing exon coordinates
 #' @param NMD Use NMD predictions? (Note: notNMD must be installed to use this feature)
 #' @param orfPrediction What type of orf predictions to return. default= \code{"allFrames"}
 #' @param compareBy compare isoforms by 'transcript' id, or aggregate all changes occuring by 'gene'
-#' @param compareToGene compare alternative isoforms to all normal gene isoforms (in gtf.exons)
+#' @param compareToGene compare alternative isoforms to all normal gene isoforms (in exons)
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 #' Use if PSI directionality should be taken into account when comparing isoforms.
 #' @param exportGTF file name to export alternative isoform GTFs (default=\code{NULL})
@@ -136,21 +136,21 @@ filterWhippetEvents <- function(whippetDataSet,
 #'
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
-#' gtf.exons <- gtf[gtf$type=="exon"]
+#' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
 #'
-#' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, gtf.exons,
-#' variableWidth=0, findIntrons=FALSE, gtf.transcripts)
-#' ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, gtf.exons)
+#' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
+#' variableWidth=0, findIntrons=FALSE, transcripts)
+#' ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, exons)
 #' transcriptChangeSummary(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="included_exon"],
 #' ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
-#' BSgenome=g,gtf.exons)
+#' BSgenome=g,exons)
 transcriptChangeSummary <- function(transcriptsX,
                                     transcriptsY,
                                     BSgenome,
-                                    gtf.exons,
+                                    exons,
                                     NMD = FALSE,
                                     compareBy="gene",
                                     orfPrediction = "allFrames",
@@ -248,7 +248,7 @@ transcriptChangeSummary <- function(transcriptsX,
     if(compareToGene == TRUE){
 
       if(NMD == TRUE & notNMDInstalled){
-          orfAllGenes <- getOrfs(gtf.exons[gtf.exons$gene_id %in%
+          orfAllGenes <- getOrfs(exons[exons$gene_id %in%
                                                unique(c(transcriptsX$gene_id,
                                                         transcriptsY$gene_id))],
                             BSgenome,returnLongestOnly = TRUE)
@@ -260,10 +260,10 @@ transcriptChangeSummary <- function(transcriptsX,
           #orfAllGenes <- orfAllGenes[orfAllGenes$nmd_prob > 0.5,]
 
       }else{
-          orfAllGenes <- getOrfs(gtf.exons[gtf.exons$gene_id %in%
+          orfAllGenes <- getOrfs(exons[exons$gene_id %in%
                                                unique(c(transcriptsX$gene_id,
                                                         transcriptsY$gene_id)) &
-                                          gtf.exons$transcript_type=="protein_coding"],
+                                          exons$transcript_type=="protein_coding"],
                             BSgenome=BSgenome,returnLongestOnly = TRUE)
       }
 
@@ -324,9 +324,9 @@ if(NMD == TRUE & notNMDInstalled){
 #' Compare open reading frames for whippet differentially spliced events
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 #' @param eventTypes which event type to filter for? default = "all"
-#' @param gtf.exons GRanges gtf annotation of exons
-#' @param gtf.transcripts GRanges gtf annotation of transcripts
-#' @param gtf.all GRanges gtf annotation (can be used instead of specifying gtf.exons and gtf.transcripts)
+#' @param exons GRanges gtf annotation of exons
+#' @param transcripts GRanges gtf annotation of transcripts
+#' @param gtf.all GRanges gtf annotation (can be used instead of specifying exons and transcripts)
 #' @param BSgenome BSGenome object containing the genome for the species analysed
 #' @param NMD Use NMD predictions? (Note: notNMD must be installed to use this feature)
 #' @param exportGTF file name to export alternative isoform GTFs (default=NULL)
@@ -349,21 +349,21 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
                                            gtf.all=NULL,
                                            BSgenome,
                                            eventTypes = "all",
-                                           gtf.exons=NULL,
-                                           gtf.transcripts=NULL,
+                                           exons=NULL,
+                                           transcripts=NULL,
                                            NMD = FALSE,
                                            exportGTF = NULL){
 
 
    # diffSplicingResults(whippetDataSet)
 
-    if(is.null(gtf.exons) & !is.null(gtf.all)){
-        gtf.exons <- gtf.all[gtf.all$type=="exon"]
+    if(is.null(exons) & !is.null(gtf.all)){
+        exons <- gtf.all[gtf.all$type=="exon"]
     }
-    if(is.null(gtf.transcripts) & !is.null(gtf.all)){
-        gtf.transcripts <- gtf.all[gtf.all$type=="transcript"]
-    }else if(is.null(gtf.transcripts) & !is.null(gtf.exons)){
-        gtf.transcripts <- exonsToTranscripts(gtf.exons)
+    if(is.null(transcripts) & !is.null(gtf.all)){
+        transcripts <- gtf.all[gtf.all$type=="transcript"]
+    }else if(is.null(transcripts) & !is.null(exons)){
+        transcripts <- exonsToTranscripts(exons)
     }
 
 
@@ -384,14 +384,14 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
 
         significantEvents.ce <- diffSplicingResults(whippetDataSet.ce)
 
-        exons.ce <- findExonContainingTranscripts(whippetDataSet.ce, gtf.exons,
+        exons.ce <- findExonContainingTranscripts(whippetDataSet.ce, exons,
                                                   variableWidth=0,
                                                   findIntrons=FALSE,
-                                                  gtf.transcripts)
+                                                  transcripts)
         # make skipped exon transcripts
         skippedExonTranscripts <- skipExonInTranscript(whippetDataSet.ce,
                                                        exons.ce,
-                                                       gtf.exons,
+                                                       exons,
                                                        glueExons = TRUE)
 
         orfChanges.ce <- transcriptChangeSummary(
@@ -431,7 +431,7 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
         # end(ranges.ri) <- end(ranges.ri) +1
 
         exons.ri <- findIntronContainingTranscripts(whippetDataSet.ri,
-                                                    gtf.exons)
+                                                    exons)
 
         # find introns in the gtf that overlap whippet introns
         significantEvents.ri <-
@@ -440,7 +440,7 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
         # add the intron into transcripts
         retainedIntronTranscripts <- addIntronInTranscript(whippetDataSet.ri,
                                                            exons.ri,
-                                                           gtf.exons,
+                                                           exons,
                                                            glueExons = TRUE)
 
 
@@ -494,7 +494,7 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
             if(nrow(significantEvents.jnc) > 0){
               # make transcripts with alternative junction usage
               altTranscripts <- replaceJunction(whippetDataSet.jnc, junctionPairs,
-                                                gtf.exons, type=event)
+                                                exons, type=event)
               orfChanges.jnc <- transcriptChangeSummary(
                   transcriptsX = altTranscripts[altTranscripts$set==paste0(event, "_X")],
                   transcriptsY = altTranscripts[altTranscripts$set==paste0(event, "_Y")],
@@ -529,7 +529,7 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
 #' per_intron_results.tab file output from leafcutter.
 #' @param combineGeneEvents combine clusters occuring in the same gene?
 #' Currently not reccomended.
-#' @param gtf.exons GRanges gtf annotation of exons
+#' @param exons GRanges gtf annotation of exons
 #' @param BSgenome BSGenome object containing the genome for the species analysed
 #' @param NMD Use NMD predictions? (Note: notNMD must be installed to use this feature)
 #' @param showProgressBar show a progress bar of alternative isoform generation?
@@ -549,14 +549,14 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
 #' grep("intron_results", leafcutterFiles)],stringsAsFactors=FALSE)
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
-#' gtf.exons <- gtf[gtf$type=="exon"]
+#' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #' leafcutterTranscriptChangeSummary(significantEvents = leafcutterIntrons,
-#' gtf.exons=gtf.exons,BSgenome = g,NMD=FALSE)
+#' exons=exons,BSgenome = g,NMD=FALSE)
 
 leafcutterTranscriptChangeSummary <- function(significantEvents,
                                               combineGeneEvents=FALSE,
-                                              gtf.exons,
+                                              exons,
                                               BSgenome,
                                               NMD = FALSE,
                                               showProgressBar=TRUE,
@@ -576,7 +576,7 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
 
         altIso <- alternativeIntronUsage(significantEvents[
             significantEvents$clusterID == geneEvents$Var2[1],],
-            gtf.exons)
+            exons)
         if(showProgressBar){utils::setTxtProgressBar(pb, 1)}
 
         if(nrow(geneEvents) > 1){
@@ -585,7 +585,7 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
                     significantEvents$clusterID == geneEvents$Var2[i],]
                 altIntronLocs <- altIntronLocs[altIntronLocs$verdict=="annotated",]
                 if(nrow(altIntronLocs) > 1){
-                    altIso1 <- alternativeIntronUsage(altIntronLocs, gtf.exons)
+                    altIso1 <- alternativeIntronUsage(altIntronLocs, exons)
                     altIso <- c(altIso, altIso1)
                 }
                 if(showProgressBar){utils::setTxtProgressBar(pb, i)}
@@ -604,7 +604,7 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
 
             altIso <- alternativeIntronUsage(significantEvents[
                 significantEvents$clusterID == clusters$Var2[1],],
-                gtf.exons)
+                exons)
 
             if(nrow(clusters) > 1){
                 for(i in 2:nrow(clusters)){
@@ -612,7 +612,7 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
                         significantEvents$clusterID == clusters$Var2[i],]
                     altIntronLocs <- altIntronLocs[altIntronLocs$verdict=="annotated",]
                     if(nrow(altIntronLocs) > 1){
-                        altIso1 <- alternativeIntronUsage(altIntronLocs, c(gtf.exons, altIso))
+                        altIso1 <- alternativeIntronUsage(altIntronLocs, c(exons, altIso))
                         altIso <- c(altIso, altIso1)
                     }
 

@@ -4,14 +4,14 @@
 \alias{alternativeIntronUsage}
 \title{Create transcripts with alternative intron usage}
 \usage{
-alternativeIntronUsage(altIntronLocs, gtf.exons)
+alternativeIntronUsage(altIntronLocs, exons)
 }
 \arguments{
 \item{altIntronLocs}{data.frame containing information from the
 per_intron_results.tab file output from leafcutter.
 Note that only one cluster of alternative introns can be processed at a time.}
 
-\item{gtf.exons}{GRanges object made from a GTF with ONLY exon annotations
+\item{exons}{GRanges object made from a GTF with ONLY exon annotations
 (no gene, transcript, CDS etc.)}
 }
 \value{
@@ -28,16 +28,16 @@ leafcutterIntrons <- read.delim(leafcutterFiles[grep("intron_results",
 leafcutterFiles)],stringsAsFactors=FALSE)
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools"))
-gtf.exons <- gtf[gtf$type=="exon"]
+exons <- gtf[gtf$type=="exon"]
 # single cluster processing
 cluster <- leafcutterIntrons[leafcutterIntrons$cluster=="chr16:clu_1396",]
-altIsoforms1396 <- alternativeIntronUsage(cluster, gtf.exons)
+altIsoforms1396 <- alternativeIntronUsage(cluster, exons)
 unique(altIsoforms1396$transcript_id)
 cluster <- leafcutterIntrons[leafcutterIntrons$cluster=="chr16:clu_1395",]
-altIsoforms1395 <- alternativeIntronUsage(cluster, gtf.exons)
+altIsoforms1395 <- alternativeIntronUsage(cluster, exons)
 unique(altIsoforms1395$transcript_id)
 # multiple cluster processing
-altIsoforms1396plus1395 <- alternativeIntronUsage(cluster, c(gtf.exons, altIsoforms1396))
+altIsoforms1396plus1395 <- alternativeIntronUsage(cluster, c(exons, altIsoforms1396))
 unique(altIsoforms1396plus1395$transcript_id)
 }
 \author{

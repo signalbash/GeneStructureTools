@@ -4,10 +4,10 @@
 \alias{exonsToTranscripts}
 \title{Convert an exon-level gtf annotation to a transcript-level gtf annotation}
 \usage{
-exonsToTranscripts(gtf.exons)
+exonsToTranscripts(exons)
 }
 \arguments{
-\item{gtf.exons}{GRanges object with exons}
+\item{exons}{GRanges object with exons}
 }
 \value{
 GRanges object with transcripts
@@ -18,10 +18,10 @@ Convert an exon-level gtf annotation to a transcript-level gtf annotation
 \examples{
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools"))
-gtf.exons <- gtf[gtf$type=="exon" & gtf$transcript_id=="ENSMUST00000126412.1"]
-gtf.exons
-gtf.transcripts <- exonsToTranscripts(gtf.exons)
-gtf.transcripts
+exons <- gtf[gtf$type=="exon" & gtf$transcript_id=="ENSMUST00000126412.1"]
+exons
+transcripts <- exonsToTranscripts(exons)
+transcripts
 }
 \author{
 Beth Signal

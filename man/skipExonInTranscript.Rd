@@ -4,15 +4,15 @@
 \alias{skipExonInTranscript}
 \title{Remove and include a skipped exon from the transcripts it overlaps}
 \usage{
-skipExonInTranscript(whippetDataSet, skippedExons, gtf.exons,
-  glueExons = TRUE, match = "exact")
+skipExonInTranscript(whippetDataSet, skippedExons, exons, glueExons = TRUE,
+  match = "exact")
 }
 \arguments{
 \item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
 
 \item{skippedExons}{data.frame generataed by findExonContainingTranscripts()}
 
-\item{gtf.exons}{GRanges object made from a GTF with ONLY exon annotations
+\item{exons}{GRanges object made from a GTF with ONLY exon annotations
 (no gene, transcript, CDS etc.)}
 
 \item{glueExons}{Join together exons that are not seperated by exons?}
@@ -37,14 +37,14 @@ wds <- filterWhippetEvents(wds)
 
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools"))
-gtf.exons <- gtf[gtf$type=="exon"]
-gtf.transcripts <- gtf[gtf$type=="transcript"]
+exons <- gtf[gtf$type=="exon"]
+transcripts <- gtf[gtf$type=="transcript"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
 wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
-exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, gtf.exons,
-variableWidth=0, findIntrons=FALSE, gtf.transcripts)
-ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, gtf.exons)
+exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
+variableWidth=0, findIntrons=FALSE, transcripts)
+ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, exons)
 }
 \author{
 Beth Signal

@@ -1,10 +1,10 @@
 #' Given the location of a whole retained exon, find transcripts which can splice out this exon
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
-#' @param gtf.exons GRanges object made from a GTF containing exon coordinates
+#' @param exons GRanges object made from a GTF containing exon coordinates
 #' @param variableWidth How many nts overhang is allowed for finding matching exons
 #' (default = 0, i.e. complete match)
 #' @param findIntrons Find transcripts where the event occurs within the intron?
-#' @param gtf.transcripts GRanges object made from a GTF containing transcript coordinates
+#' @param transcripts GRanges object made from a GTF containing transcript coordinates
 #' (only required if findIntrons=TRUE)
 #' @return data.frame with all overlapping exons
 #' @export
@@ -19,18 +19,18 @@
 #'
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
-#' gtf.exons <- gtf[gtf$type=="exon"]
-#' gtf.transcripts <- gtf[gtf$type=="transcript"]
+#' exons <- gtf[gtf$type=="exon"]
+#' transcripts <- gtf[gtf$type=="transcript"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
-#' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, gtf.exons,
-#' variableWidth=0, findIntrons=FALSE, gtf.transcripts)
+#' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
+#' variableWidth=0, findIntrons=FALSE, transcripts)
 findExonContainingTranscripts <- function(whippetDataSet,
-                                          gtf.exons,
+                                          exons,
                                           variableWidth=0,
                                           findIntrons=FALSE,
-                                          gtf.transcripts){
+                                          transcripts){
     # check all are CE
     whippetDataSet <- filterWhippetEvents(whippetDataSet,
                                                      probability = 0,
@@ -53,13 +53,13 @@ findExonContainingTranscripts <- function(whippetDataSet,
 
     # whole match
     if(variableWidth == 0){
-        overlaps <- GenomicRanges::findOverlaps(eventCoords, gtf.exons, type="equal")
-        gtf.equal <- gtf.exons[overlaps@to]
+        overlaps <- GenomicRanges::findOverlaps(eventCoords, exons, type="equal")
+        gtf.equal <- exons[overlaps@to]
         gtf.equal$from <- overlaps@from
     }else{
         # find all overlaps
-        overlaps <- GenomicRanges::findOverlaps(eventCoords, gtf.exons)
-        gtf.equal <- gtf.exons[overlaps@to]
+        overlaps <- GenomicRanges::findOverlaps(eventCoords, exons)
+        gtf.equal <- exons[overlaps@to]
         gtf.equal$from <- overlaps@from
         startDiff <- abs(start(gtf.equal) - start(eventCoords[gtf.equal$from]))
         endDiff <- abs(end(gtf.equal) - end(eventCoords[gtf.equal$from]))
@@ -87,30 +87,30 @@ findExonContainingTranscripts <- function(whippetDataSet,
 
     if(findIntrons == TRUE){
         # overlaps a transcript (i.e. can overlap an intron)
-        overlaps <- GenomicRanges::findOverlaps(eventCoords, gtf.transcripts)
+        overlaps <- GenomicRanges::findOverlaps(eventCoords, transcripts)
         overlapsDF <- as.data.frame(overlaps)
         overlapsDF$from <- eventCoords$id[overlapsDF$queryHits]
-        overlapsDF$to <- gtf.transcripts$transcript_id[overlapsDF$subjectHits]
+        overlapsDF$to <- transcripts$transcript_id[overlapsDF$subjectHits]
 
         # annotate first/last exons
         # (takes ~ 2.5 sec, please do before running this function multiple times)
-         if(!("first_last" %in% colnames(mcols(gtf.exons)))){
-             t <- as.data.frame(table(gtf.exons$transcript_id))
-             gtf.exons$first_last <- NA
-             gtf.exons$first_last[gtf.exons$exon_number == 1] <- "first"
-             gtf.exons$first_last[gtf.exons$exon_number == t$Freq[match(gtf.exons$transcript_id, t$Var1)]] <- "last"
+         if(!("first_last" %in% colnames(mcols(exons)))){
+             t <- as.data.frame(table(exons$transcript_id))
+             exons$first_last <- NA
+             exons$first_last[exons$exon_number == 1] <- "first"
+             exons$first_last[exons$exon_number == t$Freq[match(exons$transcript_id, t$Var1)]] <- "last"
          }
 
         # check that skipped exon doesn't overlap the first/last exon
         overlapsExons <- GenomicRanges::findOverlaps(
-            eventCoords, gtf.exons[which(gtf.exons$first_last %in% c("first","last"))])
-        removeTranscripts <- gtf.exons$transcript_id[
-            which(gtf.exons$first_last %in% c("first","last"))][overlapsExons@to]
+            eventCoords, exons[which(exons$first_last %in% c("first","last"))])
+        removeTranscripts <- exons$transcript_id[
+            which(exons$first_last %in% c("first","last"))][overlapsExons@to]
         overlapsDF <- overlapsDF[which(!(overlapsDF$to %in% removeTranscripts)),]
 
         # gtf with ALL exons where there is an intron overlap
-        gtf.within <- gtf.exons[
-            which(gtf.exons$transcript_id %in% overlapsDF$to)]
+        gtf.within <- exons[
+            which(exons$transcript_id %in% overlapsDF$to)]
         gtf.within$from <- overlapsDF$from[
             match(gtf.within$transcript_id, overlapsDF$to)]
         gtf.within <- gtf.within[
@@ -172,7 +172,7 @@ findExonContainingTranscripts <- function(whippetDataSet,
 #' Remove and include a skipped exon from the transcripts it overlaps
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 #' @param skippedExons data.frame generataed by findExonContainingTranscripts()
-#' @param gtf.exons GRanges object made from a GTF with ONLY exon annotations
+#' @param exons GRanges object made from a GTF with ONLY exon annotations
 #' (no gene, transcript, CDS etc.)
 #' @param glueExons Join together exons that are not seperated by exons?
 #' @param match what type of match replacement should be done?
@@ -194,17 +194,17 @@ findExonContainingTranscripts <- function(whippetDataSet,
 #'
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
-#' gtf.exons <- gtf[gtf$type=="exon"]
-#' gtf.transcripts <- gtf[gtf$type=="transcript"]
+#' exons <- gtf[gtf$type=="exon"]
+#' transcripts <- gtf[gtf$type=="transcript"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
-#' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, gtf.exons,
-#' variableWidth=0, findIntrons=FALSE, gtf.transcripts)
-#' ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, gtf.exons)
+#' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
+#' variableWidth=0, findIntrons=FALSE, transcripts)
+#' ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, exons)
 skipExonInTranscript <- function(whippetDataSet,
                                  skippedExons,
-                                 gtf.exons,
+                                 exons,
                                  glueExons=TRUE,
                                  match="exact"){
 
@@ -249,7 +249,7 @@ skipExonInTranscript <- function(whippetDataSet,
 
     # transcripts containing the exon
     transcripts <- as.data.frame(table(skippedExons$transcript_id))
-    gtfTranscripts <- gtf.exons[gtf.exons$transcript_id %in% transcripts$Var1]
+    gtfTranscripts <- exons[exons$transcript_id %in% transcripts$Var1]
     m <- match(gtfTranscripts$transcript_id, eventCoords$transcript_id)
     mcols(gtfTranscripts) <- cbind(mcols(gtfTranscripts),
                                    DataFrame(new_transcript_id=paste0(
@@ -408,7 +408,7 @@ skipExonInTranscript <- function(whippetDataSet,
 }
 
 #' Reorder the exon numbers in a gtf annotation
-#' @param gtf.exons GRanges object made from a GTF with ONLY exon annotations
+#' @param exons GRanges object made from a GTF with ONLY exon annotations
 #' (no gene, transcript, CDS etc.)
 #' @param by what column are the transcripts grouped by?
 #' @return The same input GRanges, but with exon numbers reordered.
@@ -419,22 +419,22 @@ skipExonInTranscript <- function(whippetDataSet,
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
-#' gtf.exons <- gtf[gtf$type=="exon"]
-#' gtf.exons <- reorderExonNumbers(gtf.exons)
-reorderExonNumbers <- function(gtf.exons, by="transcript_id"){
-    n <- which(colnames(mcols(gtf.exons)) == by)
+#' exons <- gtf[gtf$type=="exon"]
+#' exons <- reorderExonNumbers(exons)
+reorderExonNumbers <- function(exons, by="transcript_id"){
+    n <- which(colnames(mcols(exons)) == by)
 
-    order <- order(mcols(gtf.exons)[,n], start(gtf.exons))
+    order <- order(mcols(exons)[,n], start(exons))
 
-    gtf.exons <- gtf.exons[order]
+    exons <- exons[order]
 
-    transcriptTable <- as.data.frame(table(mcols(gtf.exons)[,n]))
-    transcriptTable$strand <- as.character(strand(gtf.exons[match(transcriptTable$Var1,
-                                                                  mcols(gtf.exons)[,n])]))
+    transcriptTable <- as.data.frame(table(mcols(exons)[,n]))
+    transcriptTable$strand <- as.character(strand(exons[match(transcriptTable$Var1,
+                                                                  mcols(exons)[,n])]))
 
-    gtf.exons$exon_number <- as.numeric(unlist(apply(transcriptTable, 1,
+    exons$exon_number <- as.numeric(unlist(apply(transcriptTable, 1,
                                           function(x) if(x[3] == "+"){
                                               c(1:(x[2]))}else{c((x[2]:1))})))
-    return(gtf.exons)
+    return(exons)
 }
 

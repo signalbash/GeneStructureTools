@@ -5,21 +5,21 @@
 \title{Compare open reading frames for whippet differentially spliced events}
 \usage{
 whippetTranscriptChangeSummary(whippetDataSet, gtf.all = NULL, BSgenome,
-  eventTypes = "all", gtf.exons = NULL, gtf.transcripts = NULL,
-  NMD = FALSE, exportGTF = NULL)
+  eventTypes = "all", exons = NULL, transcripts = NULL, NMD = FALSE,
+  exportGTF = NULL)
 }
 \arguments{
 \item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
 
-\item{gtf.all}{GRanges gtf annotation (can be used instead of specifying gtf.exons and gtf.transcripts)}
+\item{gtf.all}{GRanges gtf annotation (can be used instead of specifying exons and transcripts)}
 
 \item{BSgenome}{BSGenome object containing the genome for the species analysed}
 
 \item{eventTypes}{which event type to filter for? default = "all"}
 
-\item{gtf.exons}{GRanges gtf annotation of exons}
+\item{exons}{GRanges gtf annotation of exons}
 
-\item{gtf.transcripts}{GRanges gtf annotation of transcripts}
+\item{transcripts}{GRanges gtf annotation of transcripts}
 
 \item{NMD}{Use NMD predictions? (Note: notNMD must be installed to use this feature)}
 

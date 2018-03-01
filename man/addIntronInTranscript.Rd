@@ -4,15 +4,15 @@
 \alias{addIntronInTranscript}
 \title{Add a retained intron to the transcripts it is skipped by}
 \usage{
-addIntronInTranscript(whippetDataSet, flankingExons, gtf.exons,
-  glueExons = TRUE, match = "exact")
+addIntronInTranscript(whippetDataSet, flankingExons, exons, glueExons = TRUE,
+  match = "exact")
 }
 \arguments{
 \item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
 
 \item{flankingExons}{data.frame generataed by findIntronContainingTranscripts()}
 
-\item{gtf.exons}{GRanges object made from a GTF with ONLY exon annotations
+\item{exons}{GRanges object made from a GTF with ONLY exon annotations
 (no gene, transcript, CDS etc.)}
 
 \item{glueExons}{Join together exons that are not seperated by introns?}
@@ -37,13 +37,13 @@ wds <- filterWhippetEvents(wds)
 
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools"))
-gtf.exons <- gtf[gtf$type=="exon"]
+exons <- gtf[gtf$type=="exon"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
 wds.intronRetention <- filterWhippetEvents(wds, eventTypes="RI")
-exons.intronRetention <- findIntronContainingTranscripts(wds.intronRetention, gtf.exons)
+exons.intronRetention <- findIntronContainingTranscripts(wds.intronRetention, exons)
 IntronRetentionTranscripts <- addIntronInTranscript(wds.intronRetention,
-exons.intronRetention, gtf.exons)
+exons.intronRetention, exons)
 }
 \author{
 Beth Signal

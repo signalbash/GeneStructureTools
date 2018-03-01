@@ -79,16 +79,16 @@ whippet_sampleTable <- data.frame(sample=c("A01","B01","A21","B21"),
                                   
 # read in gtf annotation
 gtf <- rtracklayer::import("~/Downloads/gencode.vM14.annotation.gtf.gz")
-gtf.exons <- gtf[gtf$type=="exon"]
-gtf.transcripts <- gtf[gtf$type=="transcript"]
+exons <- gtf[gtf$type=="exon"]
+transcripts <- gtf[gtf$type=="transcript"]
 
 # add first/last annotation (speeds up later steps)
-if(!("first_last" %in% colnames(mcols(gtf.exons)))){
-    t <- as.data.frame(table(gtf.exons$transcript_id))
-    gtf.exons$first_last <- NA
-    gtf.exons$first_last[gtf.exons$exon_number == 1] <- "first"
-    gtf.exons$first_last[gtf.exons$exon_number == 
-    t$Freq[match(gtf.exons$transcript_id, t$Var1)]] <- "last"
+if(!("first_last" %in% colnames(mcols(exons)))){
+    t <- as.data.frame(table(exons$transcript_id))
+    exons$first_last <- NA
+    exons$first_last[exons$exon_number == 1] <- "first"
+    exons$first_last[exons$exon_number == 
+    t$Freq[match(exons$transcript_id, t$Var1)]] <- "last"
 }
 
 # specify the BSGenome annotation
@@ -123,16 +123,16 @@ whippet_sampleTable <- data.frame(sample=c("A01","B01","A21","B21"),
 # read in gtf annotation
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf", 
 package = "GeneStructureTools"))
-gtf.exons <- gtf[gtf$type=="exon"]
-gtf.transcripts <- gtf[gtf$type=="transcript"]
+exons <- gtf[gtf$type=="exon"]
+transcripts <- gtf[gtf$type=="transcript"]
 
 # add first/last annotation (speeds up later steps)
-if(!("first_last" %in% colnames(mcols(gtf.exons)))){
-    t <- as.data.frame(table(gtf.exons$transcript_id))
-    gtf.exons$first_last <- NA
-    gtf.exons$first_last[gtf.exons$exon_number == 1] <- "first"
-    gtf.exons$first_last[gtf.exons$exon_number == 
-    t$Freq[match(gtf.exons$transcript_id, t$Var1)]] <- "last"
+if(!("first_last" %in% colnames(mcols(exons)))){
+    t <- as.data.frame(table(exons$transcript_id))
+    exons$first_last <- NA
+    exons$first_last[exons$exon_number == 1] <- "first"
+    exons$first_last[exons$exon_number == 
+    t$Freq[match(exons$transcript_id, t$Var1)]] <- "last"
 }
 
 # specify the BSGenome annotation
@@ -146,7 +146,7 @@ Only the file `per_intron_results.tab`, and the .gtf file used with leafcutter n
 ```{r readLeafcutter}
 # read in gtf annotation
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf", package = "GeneStructureTools"))
-gtf.exons <- gtf[gtf$type=="exon"]
+exons <- gtf[gtf$type=="exon"]
 
 # specify the BSGenome annotation
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
@@ -172,8 +172,8 @@ sampleTable = whippet_sampleTable)
 
 # check for changes in gene/transcript structure
 summary <- whippetTranscriptChangeSummary(wds,
-gtf.exons = gtf.exons,
-gtf.transcripts = gtf.transcripts,
+exons = exons,
+transcripts = transcripts,
 BSgenome = g,
 NMD = FALSE # ignore nonsense mediated decay
 )
@@ -184,7 +184,7 @@ head(summary)
 ###leafcutter
 ```{r leafcutterSummary}
 leafcutter_summary <- leafcutterTranscriptChangeSummary(intron_results, 
-                                                        gtf.exons = gtf.exons,
+                                                        exons = exons,
                                                         BSgenome = g,
                                                         NMD = FALSE,
                                                         showProgressBar = FALSE)
@@ -222,13 +222,13 @@ coordinates(wds.ce)
 ```{r findOverlapsSkipped}
 # find exons in the gtf that overlap the skipped exon event
 exons.ce <- findExonContainingTranscripts(wds.ce, 
-                                          gtf.exons = gtf.exons,
-                                          gtf.transcripts = gtf.transcripts)
+                                          exons = exons,
+                                          transcripts = transcripts)
 # make skipped and included exon transcripts
 # removes the skipped exon from all transcripts which contain it
 skippedExonTranscripts <- skipExonInTranscript(wds,
                                                skippedExons = exons.ce,
-                                               gtf.exons=gtf.exons, 
+                                               exons=exons, 
                                                match="skip")
 ```
 
@@ -239,7 +239,7 @@ skippedExonTranscripts <- skipExonInTranscript(wds,
 gtr <- GenomeAxisTrack()
 
 # all transcripts for the gene
-geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id ==
+geneModel.all <- GeneRegionTrack(makeGeneModel(exons[exons$gene_id ==
 skippedExonTranscripts$gene_id[1]]),
                                  name="Reference Gene",
                                  showId=TRUE,
@@ -286,13 +286,13 @@ diffSplicingResults(wds.ri)
 ```{r findIntron}
 # find exons pairs in the gtf that bound the retained intron event
 exons.ri <- findIntronContainingTranscripts(wds.ri, 
-                                            gtf.exons)
+                                            exons)
 
 # make retained and non-retained transcripts
 # adds the intron into all transcripts which overlap it
 retainedIntronTranscripts <- addIntronInTranscript(wds.ri,
                                                    exons.ri, 
-                                                   gtf.exons = gtf.exons, 
+                                                   exons = exons, 
                                                    glueExons = TRUE)
 
 ```
@@ -300,7 +300,7 @@ retainedIntronTranscripts <- addIntronInTranscript(wds.ri,
 ```{r gvizIntronRetention, eval=TRUE}
 ## make Gviz models
 # all transcripts for the gene
-geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id == retainedIntronTranscripts$gene_id[1]]),
+geneModel.all <- GeneRegionTrack(makeGeneModel(exons[exons$gene_id == retainedIntronTranscripts$gene_id[1]]),
                                  name="Reference Gene",
                                  showId=TRUE,
                                  transcriptAnnotation = "transcript")
@@ -355,7 +355,7 @@ junctionPairs.aa
 # make transcripts with alternative junction usage
 altTranscripts <- replaceJunction(wds.aa, 
                                   junctionPairs.aa, 
-                                  gtf.exons, 
+                                  exons, 
                                   type="AA")
 
 # make transcripts using junction X
@@ -365,7 +365,7 @@ yTranscripts <- altTranscripts[altTranscripts$set=="AA_Y"]
 ```
 
 ```{r altAceGvis}
-geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id == altTranscripts$gene_id[1]]),
+geneModel.all <- GeneRegionTrack(makeGeneModel(exons[exons$gene_id == altTranscripts$gene_id[1]]),
                                  name="Reference Gene",
                                  showId=TRUE,
                                  transcriptAnnotation = "transcript")
@@ -411,7 +411,7 @@ junctionPairs.ad <- findJunctionPairs(wds.ad, type="AD")
 # make transcripts with alternative junction usage
 altTranscripts <- replaceJunction(wds.ad, 
                                   junctionPairs.ad, 
-                                  gtf.exons, type="AD")
+                                  exons, type="AD")
 
 # make transcripts using junction X
 xTranscripts <- altTranscripts[altTranscripts$set=="AD_X"]
@@ -420,7 +420,7 @@ yTranscripts <- altTranscripts[altTranscripts$set=="AD_Y"]
 ```
 
 ```{r altDonGvis}
-geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id == altTranscripts$gene_id[1]]),
+geneModel.all <- GeneRegionTrack(makeGeneModel(exons[exons$gene_id == altTranscripts$gene_id[1]]),
                                  name="Reference Gene",
                                  showId=TRUE,
                                  transcriptAnnotation = "transcript")
@@ -473,7 +473,7 @@ junctionPairs.af <- findJunctionPairs(wds.af, type="AF")
 ```{r replaceJunctionAF}
 # make transcripts with alternative junction usage
 altTranscripts <- replaceJunction(wds.af, junctionPairs.af, 
-                                  gtf.exons,
+                                  exons,
                                   type="AF")
 
 # make transcripts using exon X
@@ -483,7 +483,7 @@ yTranscripts <- altTranscripts[altTranscripts$set=="AF_Y"]
 ```
 
 ```{r altFirstGvis}
-geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id == altTranscripts$gene_id[1]]),
+geneModel.all <- GeneRegionTrack(makeGeneModel(exons[exons$gene_id == altTranscripts$gene_id[1]]),
                                  name="Reference Gene",
                                  showId=TRUE,
                                  transcriptAnnotation = "transcript")
@@ -527,7 +527,7 @@ junctionPairs.al <- findJunctionPairs(wds.al, type="AL")
 
 # make transcripts with alternative junction usage
 altTranscripts <- replaceJunction(wds.al, junctionPairs.al, 
-                                  gtf.exons, 
+                                  exons, 
                                   type="AL")
 
 # make transcripts using junction X
@@ -537,7 +537,7 @@ yTranscripts <- altTranscripts[altTranscripts$set=="AL_Y"]
 ```
 
 ```{r altLastGvis}
-geneModel.all <- GeneRegionTrack(makeGeneModel(gtf.exons[gtf.exons$gene_id == altTranscripts$gene_id[1]]),
+geneModel.all <- GeneRegionTrack(makeGeneModel(exons[exons$gene_id == altTranscripts$gene_id[1]]),
                                  name="Reference Gene",
                                  showId=TRUE,
                                  transcriptAnnotation = "transcript")
@@ -571,7 +571,7 @@ alternativeIntronUsage() first finds transcripts which overlap each intron set, 
 cluster <- leafcutter_summary[leafcutter_summary$cluster=="chr16:clu_1396",]
 
 # generate alternative isoforms
-altIsoforms1396 <- alternativeIntronUsage(cluster, gtf.exons)
+altIsoforms1396 <- alternativeIntronUsage(cluster, exons)
 # downregulated isoforms
 altIsoforms1396_dnreg <- altIsoforms1396[grep("dnre", 
                                             altIsoforms1396$transcript_id)]
@@ -583,7 +583,7 @@ altIsoforms1396_upreg <- altIsoforms1396[grep("upre",
 gtr <- GenomeAxisTrack()
 
 geneModel.ref <- GeneRegionTrack(makeGeneModel(
-gtf.exons[gtf.exons$gene_id=="ENSMUSG00000022884.14"]),
+exons[exons$gene_id=="ENSMUSG00000022884.14"]),
                                     name="Reference Gene",
                                     showId=TRUE,
                                     transcriptAnnotation = "transcript")
@@ -613,7 +613,7 @@ In this case, the downregulated introns can overlap, so are split into two sets:
 cluster <- leafcutter_summary[leafcutter_summary$cluster=="chr17:clu_1281",]
 
 # generate alternative isoforms
-altIsoforms1281 <- alternativeIntronUsage(cluster, gtf.exons)
+altIsoforms1281 <- alternativeIntronUsage(cluster, exons)
 
 # downregulated isoforms
 altIsoforms1281_dnreg <- altIsoforms1281[grep("dnre", 
@@ -626,7 +626,7 @@ altIsoforms1281_upreg <- altIsoforms1281[grep("upre",
 gtr <- GenomeAxisTrack()
 
 geneModel.ref <- GeneRegionTrack(makeGeneModel(
-gtf.exons[gtf.exons$gene_id=="ENSMUSG00000034681.16"]),
+exons[exons$gene_id=="ENSMUSG00000034681.16"]),
                                     name="Reference Gene",
                                     showId=TRUE,
                                     transcriptAnnotation = "transcript")
@@ -656,16 +656,16 @@ event="CE", idList="ENSMUSG00000024038.16")
 
 # find exons in the gtf that overlap the skipped exon event
 exons.ce <- findExonContainingTranscripts(wds.ce, 
-                                          gtf.exons = gtf.exons,
-                                          gtf.transcripts = gtf.transcripts)
+                                          exons = exons,
+                                          transcripts = transcripts)
 # make skipped and included exon transcripts
 # removes the skipped exon from all transcripts which contain it
 skippedExonTranscripts <- skipExonInTranscript(wds,
                                                skippedExons = exons.ce,
-                                               gtf.exons=gtf.exons, 
+                                               exons=exons, 
                                                match="exact")
 # make non-skipped exon transcripts
-normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% 
+normalTranscripts <- exons[exons$transcript_id %in% 
                                         exons.ce$transcript_id]
 
 # get ORF details for each set of transcripts
@@ -741,16 +741,16 @@ event="CE", idList="ENSMUSG00000024038.16")
 
 # find exons in the gtf that overlap the skipped exon event
 exons.ce <- findExonContainingTranscripts(wds.ce, 
-                                          gtf.exons = gtf.exons,
-                                          gtf.transcripts = gtf.transcripts)
+                                          exons = exons,
+                                          transcripts = transcripts)
 # make skipped and included exon transcripts
 # removes the skipped exon from all transcripts which contain it
 skippedExonTranscripts <- skipExonInTranscript(wds,
                                                skippedExons = exons.ce,
-                                               gtf.exons=gtf.exons, 
+                                               exons=exons, 
                                                match="exact")
 # make non-skipped exon transcripts
-normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% exons.ce$transcript_id]
+normalTranscripts <- exons[exons$transcript_id %in% exons.ce$transcript_id]
 
 # get ORF details for each set of transcripts
 orfs_normal <- getOrfs(normalTranscripts, BSgenome = g, 
@@ -844,16 +844,16 @@ event="RI", idList="ENSMUSG00000018379.17")
 
 # find flanking exons
 exons.ri <- findIntronContainingTranscripts(wds.ri, 
-                                            gtf.exons)
+                                            exons)
 
 # make retained and non-retained transcripts
 # adds the intron into all transcripts which overlap it
 retainedIntronTranscripts <- addIntronInTranscript(wds.ri,
                                                    exons.ri, 
-                                                   gtf.exons = gtf.exons, 
+                                                   exons = exons, 
                                                    glueExons = TRUE)
 # make non-retained intron transcripts
-normalTranscripts <- gtf.exons[gtf.exons$transcript_id %in% 
+normalTranscripts <- exons[exons$transcript_id %in% 
                                         exons.ri$transcript_id]
 
 # get ORF details for each set of transcripts
@@ -924,8 +924,8 @@ If notNMD is installed and loaded, `NMD` can be set to `TRUE` in the `whippetTra
 ```{r notNMDsummary, eval=FALSE}
 summary <- whippetTranscriptChangeSummary(
 whippetDataSet=wds,
-gtf.exons = gtf.exons,
-gtf.transcripts = gtf.transcripts,
+exons = exons,
+transcripts = transcripts,
 BSgenome = g,
 NMD =TRUE # ignore nonsense mediated decay
 )

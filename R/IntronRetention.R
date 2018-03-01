@@ -1,6 +1,6 @@
 #' Given the location of a whole retained intron, find transcripts which splice out this intron
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
-#' @param gtf.exons GRanges object made from a GTF with ONLY exon annotations
+#' @param exons GRanges object made from a GTF with ONLY exon annotations
 #' (no gene, transcript, CDS etc.)
 #' @param match what type of matching to perform? exact = only exons which bound the intron exactly,
 #' introns = any exon pairs which overlap the intron,
@@ -18,12 +18,12 @@
 #'
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
-#' gtf.exons <- gtf[gtf$type=="exon"]
+#' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' wds.intronRetention <- filterWhippetEvents(wds, eventTypes="RI")
-#' exons.intronRetention <- findIntronContainingTranscripts(wds.intronRetention, gtf.exons)
-findIntronContainingTranscripts <- function(whippetDataSet, gtf.exons, match="exact"){
+#' exons.intronRetention <- findIntronContainingTranscripts(wds.intronRetention, exons)
+findIntronContainingTranscripts <- function(whippetDataSet, exons, match="exact"){
     moved <- FALSE
 
     whippetDataSet <- filterWhippetEvents(whippetDataSet,
@@ -48,20 +48,20 @@ findIntronContainingTranscripts <- function(whippetDataSet, gtf.exons, match="ex
     rangeRI.start <- eventCoords
     end(rangeRI.start) <- start(rangeRI.start)
 
-    overlaps <- GenomicRanges::findOverlaps(rangeRI.start, gtf.exons, type="end")
+    overlaps <- GenomicRanges::findOverlaps(rangeRI.start, exons, type="end")
 
     # catch if intron coords dont overlap the 1nt exon start/end
     if(length(overlaps) == 0){
         start(rangeRI.start) <- start(rangeRI.start) -1
         end(rangeRI.start) <- start(rangeRI.start)
-        overlaps <- GenomicRanges::findOverlaps(rangeRI.start, gtf.exons, type="end")
+        overlaps <- GenomicRanges::findOverlaps(rangeRI.start, exons, type="end")
         # fix original
         start(eventCoords) <- start(eventCoords) -1
         end(eventCoords) <- end(eventCoords) +1
         moved <- TRUE
     }
 
-    gtf.fromA <- gtf.exons[overlaps@to]
+    gtf.fromA <- exons[overlaps@to]
     gtf.fromA$from <- overlaps@from
     gtf.fromA$new_id <- paste(gtf.fromA$transcript_id, gtf.fromA$from, sep="_")
     #gtf.fromA$new_id <- with(as.data.frame(GenomicRanges::mcols(gtf.fromA)$transcript_id),
@@ -71,15 +71,15 @@ findIntronContainingTranscripts <- function(whippetDataSet, gtf.exons, match="ex
     rangeRI.end <- eventCoords
     start(rangeRI.end) <- end(rangeRI.end)
 
-    overlaps <- GenomicRanges::findOverlaps(rangeRI.end, gtf.exons, type="start")
+    overlaps <- GenomicRanges::findOverlaps(rangeRI.end, exons, type="start")
     if(length(overlaps) == 0){
         end(rangeRI.end) <- end(rangeRI.end) +1
         start(rangeRI.end) <- end(rangeRI.end)
-        overlaps <- GenomicRanges::findOverlaps(rangeRI.end, gtf.exons, type="start")
+        overlaps <- GenomicRanges::findOverlaps(rangeRI.end, exons, type="start")
         moved <- TRUE
     }
 
-    gtf.toA <- gtf.exons[overlaps@to]
+    gtf.toA <- exons[overlaps@to]
     gtf.toA$from <- overlaps@from
     gtf.toA$new_id <- paste0(gtf.toA$transcript_id, "_",gtf.toA$from)
 
@@ -102,8 +102,8 @@ findIntronContainingTranscripts <- function(whippetDataSet, gtf.exons, match="ex
     }
     if(match == "introns" | match=="all"){
         # non-exact overlaps
-        ol <- findOverlaps(eventCoords, gtf.exons)
-        gtf.overlaps <- gtf.exons[ol@to]
+        ol <- findOverlaps(eventCoords, exons)
+        gtf.overlaps <- exons[ol@to]
         gtf.overlaps$from <- ol@from
         gtf.overlaps$new_id <- paste0(gtf.overlaps$transcript_id, "_",gtf.overlaps$from)
         gtf.overlaps$exon_number <- as.numeric(gtf.overlaps$exon_number)
@@ -175,7 +175,7 @@ findIntronContainingTranscripts <- function(whippetDataSet, gtf.exons, match="ex
 #' Add a retained intron to the transcripts it is skipped by
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 #' @param flankingExons data.frame generataed by findIntronContainingTranscripts()
-#' @param gtf.exons GRanges object made from a GTF with ONLY exon annotations
+#' @param exons GRanges object made from a GTF with ONLY exon annotations
 #' (no gene, transcript, CDS etc.)
 #' @param glueExons Join together exons that are not seperated by introns?
 #' @param match what type of match replacement should be done?
@@ -198,16 +198,16 @@ findIntronContainingTranscripts <- function(whippetDataSet, gtf.exons, match="ex
 #'
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
-#' gtf.exons <- gtf[gtf$type=="exon"]
+#' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' wds.intronRetention <- filterWhippetEvents(wds, eventTypes="RI")
-#' exons.intronRetention <- findIntronContainingTranscripts(wds.intronRetention, gtf.exons)
+#' exons.intronRetention <- findIntronContainingTranscripts(wds.intronRetention, exons)
 #' IntronRetentionTranscripts <- addIntronInTranscript(wds.intronRetention,
-#' exons.intronRetention, gtf.exons)
+#' exons.intronRetention, exons)
 addIntronInTranscript <- function(whippetDataSet,
                                   flankingExons,
-                                  gtf.exons,
+                                  exons,
                                   glueExons=TRUE,
                                   match="exact"){
 
@@ -245,7 +245,7 @@ addIntronInTranscript <- function(whippetDataSet,
     eventCoords$exon_id <- eventCoords$id
 
     transcripts <- as.data.frame(table(flankingExons$transcript_id))
-    gtfTranscripts <- gtf.exons[gtf.exons$transcript_id %in% transcripts$Var1]
+    gtfTranscripts <- exons[exons$transcript_id %in% transcripts$Var1]
     m <- match(gtfTranscripts$transcript_id, eventCoords$transcript_id)
     mcols(gtfTranscripts) <-
         cbind(mcols(gtfTranscripts),

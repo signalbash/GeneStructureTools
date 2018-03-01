@@ -22,20 +22,20 @@
 #'
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
-#' gtf.exons <- gtf[gtf$type=="exon"]
-#' gtf.transcripts <- gtf[gtf$type=="transcript"]
+#' exons <- gtf[gtf$type=="exon"]
+#' transcripts <- gtf[gtf$type=="transcript"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
-#' orfsProteinCoding <- getOrfs(gtf.exons[gtf.exons$gene_name=="Prex2" &
-#' gtf.exons$transcript_type=="protein_coding"], BSgenome = g)
-#' orfsNMD <- getOrfs(gtf.exons[gtf.exons$gene_name=="Prex2" &
-#' gtf.exons$transcript_type=="nonsense_mediated_decay"], BSgenome = g)
+#' orfsProteinCoding <- getOrfs(exons[exons$gene_name=="Prex2" &
+#' exons$transcript_type=="protein_coding"], BSgenome = g)
+#' orfsNMD <- getOrfs(exons[exons$gene_name=="Prex2" &
+#' exons$transcript_type=="nonsense_mediated_decay"], BSgenome = g)
 #' orfDiff(orfsProteinCoding, orfsNMD, filterNMD=FALSE)
 #'
 #' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
-#' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, gtf.exons,
-#' variableWidth=0, findIntrons=FALSE, gtf.transcripts)
-#' ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, gtf.exons)
+#' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
+#' variableWidth=0, findIntrons=FALSE, transcripts)
+#' ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, exons)
 #'
 #' orfsSkipped <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
 #' BSgenome = g)
@@ -281,14 +281,14 @@ orfDiff <- function(orfsX,
 #'
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
-#' gtf.exons <- gtf[gtf$type=="exon"]
-#' gtf.transcripts <- gtf[gtf$type=="transcript"]
+#' exons <- gtf[gtf$type=="exon"]
+#' transcripts <- gtf[gtf$type=="transcript"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
-#' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, gtf.exons,
-#' variableWidth=0, findIntrons=FALSE, gtf.transcripts)
-#' ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, gtf.exons)
+#' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
+#' variableWidth=0, findIntrons=FALSE, transcripts)
+#' ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, exons)
 #'
 #' orfsSkipped <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
 #' BSgenome = g)

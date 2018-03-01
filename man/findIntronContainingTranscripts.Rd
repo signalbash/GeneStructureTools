@@ -4,12 +4,12 @@
 \alias{findIntronContainingTranscripts}
 \title{Given the location of a whole retained intron, find transcripts which splice out this intron}
 \usage{
-findIntronContainingTranscripts(whippetDataSet, gtf.exons, match = "exact")
+findIntronContainingTranscripts(whippetDataSet, exons, match = "exact")
 }
 \arguments{
 \item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
 
-\item{gtf.exons}{GRanges object made from a GTF with ONLY exon annotations
+\item{exons}{GRanges object made from a GTF with ONLY exon annotations
 (no gene, transcript, CDS etc.)}
 
 \item{match}{what type of matching to perform? exact = only exons which bound the intron exactly,
@@ -30,11 +30,11 @@ wds <- filterWhippetEvents(wds)
 
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools"))
-gtf.exons <- gtf[gtf$type=="exon"]
+exons <- gtf[gtf$type=="exon"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
 wds.intronRetention <- filterWhippetEvents(wds, eventTypes="RI")
-exons.intronRetention <- findIntronContainingTranscripts(wds.intronRetention, gtf.exons)
+exons.intronRetention <- findIntronContainingTranscripts(wds.intronRetention, exons)
 }
 \author{
 Beth Signal

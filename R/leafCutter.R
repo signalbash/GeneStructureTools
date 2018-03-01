@@ -87,11 +87,11 @@ addSets <- function(clusterGRanges){
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
-#' gtf.exons <- gtf[gtf$type=="exon"]
-#' gtf.exons.duplicated <- c(gtf.exons[1:4], gtf.exons[1:4])
-#' length(gtf.exons.duplicated)
-#' gtf.exons.deduplicated <- removeSameExon(gtf.exons.duplicated)
-#' length(gtf.exons.deduplicated)
+#' exons <- gtf[gtf$type=="exon"]
+#' exons.duplicated <- c(exons[1:4], exons[1:4])
+#' length(exons.duplicated)
+#' exons.deduplicated <- removeSameExon(exons.duplicated)
+#' length(exons.deduplicated)
 removeSameExon <- function(exons){
     samesies <- findOverlaps(exons, type = "equal")
     samesies <- samesies[samesies@from > samesies@to]
@@ -107,7 +107,7 @@ removeSameExon <- function(exons){
 #' @param altIntronLocs data.frame containing information from the
 #' per_intron_results.tab file output from leafcutter.
 #' Note that only one cluster of alternative introns can be processed at a time.
-#' @param gtf.exons GRanges object made from a GTF with ONLY exon annotations
+#' @param exons GRanges object made from a GTF with ONLY exon annotations
 #' (no gene, transcript, CDS etc.)
 #' @return GRanges object with all potential alternative isoforms skipping the
 #' introns specified in either the upregulated or downregulated locations
@@ -123,19 +123,19 @@ removeSameExon <- function(exons){
 #' leafcutterFiles)],stringsAsFactors=FALSE)
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
-#' gtf.exons <- gtf[gtf$type=="exon"]
+#' exons <- gtf[gtf$type=="exon"]
 #' # single cluster processing
 #' cluster <- leafcutterIntrons[leafcutterIntrons$cluster=="chr16:clu_1396",]
-#' altIsoforms1396 <- alternativeIntronUsage(cluster, gtf.exons)
+#' altIsoforms1396 <- alternativeIntronUsage(cluster, exons)
 #' unique(altIsoforms1396$transcript_id)
 #' cluster <- leafcutterIntrons[leafcutterIntrons$cluster=="chr16:clu_1395",]
-#' altIsoforms1395 <- alternativeIntronUsage(cluster, gtf.exons)
+#' altIsoforms1395 <- alternativeIntronUsage(cluster, exons)
 #' unique(altIsoforms1395$transcript_id)
 #' # multiple cluster processing
-#' altIsoforms1396plus1395 <- alternativeIntronUsage(cluster, c(gtf.exons, altIsoforms1396))
+#' altIsoforms1396plus1395 <- alternativeIntronUsage(cluster, c(exons, altIsoforms1396))
 #' unique(altIsoforms1396plus1395$transcript_id)
 
-alternativeIntronUsage <- function(altIntronLocs, gtf.exons){
+alternativeIntronUsage <- function(altIntronLocs, exons){
     clusterGRanges <- GRanges(seqnames=S4Vectors::Rle(altIntronLocs$chr),
                               ranges=IRanges::IRanges(start=as.numeric(altIntronLocs$start),
                                                       end=as.numeric(altIntronLocs$end)),
@@ -143,22 +143,22 @@ alternativeIntronUsage <- function(altIntronLocs, gtf.exons){
                               id=altIntronLocs$clusterID,
                               direction=ifelse(altIntronLocs$deltapsi >0, "+","-"))
 
-    m <- match(altIntronLocs$ensemblID, gtf.exons$gene_id)
-    strand(clusterGRanges)[which(!is.na(m))] <- strand(gtf.exons)[m][which(!is.na(m))]
+    m <- match(altIntronLocs$ensemblID, exons$gene_id)
+    strand(clusterGRanges)[which(!is.na(m))] <- strand(exons)[m][which(!is.na(m))]
     # maximum spanning region
     clusterGRanges.max <- clusterGRanges
     #start(clusterGRanges.max) <- min(start(clusterGRanges.max))
     #end(clusterGRanges.max) <- max(end(clusterGRanges.max))
 
     #find overlaps -- for when range overlaps multiple genes
-    olExons <- as.data.frame(findOverlaps(clusterGRanges.max, gtf.exons))
-    gtf.transcripts <- exonsToTranscripts(gtf.exons[gtf.exons$gene_id %in%
-                                                        gtf.exons$gene_id[olExons$subjectHits]])
+    olExons <- as.data.frame(findOverlaps(clusterGRanges.max, exons))
+    transcripts <- exonsToTranscripts(exons[exons$gene_id %in%
+                                                        exons$gene_id[olExons$subjectHits]])
     # find transcripts which contain the cluster region
-    olTrans <- as.data.frame(findOverlaps(clusterGRanges.max, gtf.transcripts, type = "within"))
-    clusterTranscripts <- gtf.transcripts[unique(olTrans$subjectHits)]
-    #transcript_exons <- gtf.exons[gtf.exons$transcript_id %in% clusterTranscripts$transcript_id,]
-    clusterExons <- gtf.exons[gtf.exons$transcript_id %in% clusterTranscripts$transcript_id,]
+    olTrans <- as.data.frame(findOverlaps(clusterGRanges.max, transcripts, type = "within"))
+    clusterTranscripts <- transcripts[unique(olTrans$subjectHits)]
+    #transcript_exons <- exons[exons$transcript_id %in% clusterTranscripts$transcript_id,]
+    clusterExons <- exons[exons$transcript_id %in% clusterTranscripts$transcript_id,]
 
 
     # add sets to cluster introns
@@ -275,7 +275,7 @@ alternativeIntronUsage <- function(altIntronLocs, gtf.exons){
 
 #' Convert an exon-level gtf annotation to a transcript-level gtf annotation
 #'
-#' @param gtf.exons GRanges object with exons
+#' @param exons GRanges object with exons
 #' @return GRanges object with transcripts
 #' @export
 #' @import GenomicRanges
@@ -285,27 +285,27 @@ alternativeIntronUsage <- function(altIntronLocs, gtf.exons){
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
-#' gtf.exons <- gtf[gtf$type=="exon" & gtf$transcript_id=="ENSMUST00000126412.1"]
-#' gtf.exons
-#' gtf.transcripts <- exonsToTranscripts(gtf.exons)
-#' gtf.transcripts
-exonsToTranscripts <- function(gtf.exons){
-    gtf.transcripts <- gtf.exons[!duplicated(gtf.exons$transcript_id)]
+#' exons <- gtf[gtf$type=="exon" & gtf$transcript_id=="ENSMUST00000126412.1"]
+#' exons
+#' transcripts <- exonsToTranscripts(exons)
+#' transcripts
+exonsToTranscripts <- function(exons){
+    transcripts <- exons[!duplicated(exons$transcript_id)]
 
     minStarts <- aggregate(start ~ transcript_id,
-                           as.data.frame(gtf.exons), min)
+                           as.data.frame(exons), min)
     maxEnds <- aggregate(end ~ transcript_id,
-                         as.data.frame(gtf.exons), max)
+                         as.data.frame(exons), max)
 
 
-    ranges(gtf.transcripts) <-
+    ranges(transcripts) <-
         IRanges::IRanges(start=as.numeric(
-            minStarts$start[match(gtf.transcripts$transcript_id,
+            minStarts$start[match(transcripts$transcript_id,
                                   minStarts$transcript_id)]),
             end=as.numeric(
-                maxEnds$end[match(gtf.transcripts$transcript_id,
+                maxEnds$end[match(transcripts$transcript_id,
                                   maxEnds$transcript_id)]))
 
 
-    return(gtf.transcripts)
+    return(transcripts)
 }

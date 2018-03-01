@@ -4,10 +4,10 @@
 \alias{reorderExonNumbers}
 \title{Reorder the exon numbers in a gtf annotation}
 \usage{
-reorderExonNumbers(gtf.exons, by = "transcript_id")
+reorderExonNumbers(exons, by = "transcript_id")
 }
 \arguments{
-\item{gtf.exons}{GRanges object made from a GTF with ONLY exon annotations
+\item{exons}{GRanges object made from a GTF with ONLY exon annotations
 (no gene, transcript, CDS etc.)}
 
 \item{by}{what column are the transcripts grouped by?}
@@ -21,8 +21,8 @@ Reorder the exon numbers in a gtf annotation
 \examples{
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools"))
-gtf.exons <- gtf[gtf$type=="exon"]
-gtf.exons <- reorderExonNumbers(gtf.exons)
+exons <- gtf[gtf$type=="exon"]
+exons <- reorderExonNumbers(exons)
 }
 \author{
 Beth Signal

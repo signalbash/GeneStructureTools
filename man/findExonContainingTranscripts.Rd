@@ -4,20 +4,20 @@
 \alias{findExonContainingTranscripts}
 \title{Given the location of a whole retained exon, find transcripts which can splice out this exon}
 \usage{
-findExonContainingTranscripts(whippetDataSet, gtf.exons, variableWidth = 0,
-  findIntrons = FALSE, gtf.transcripts)
+findExonContainingTranscripts(whippetDataSet, exons, variableWidth = 0,
+  findIntrons = FALSE, transcripts)
 }
 \arguments{
 \item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
 
-\item{gtf.exons}{GRanges object made from a GTF containing exon coordinates}
+\item{exons}{GRanges object made from a GTF containing exon coordinates}
 
 \item{variableWidth}{How many nts overhang is allowed for finding matching exons
 (default = 0, i.e. complete match)}
 
 \item{findIntrons}{Find transcripts where the event occurs within the intron?}
 
-\item{gtf.transcripts}{GRanges object made from a GTF containing transcript coordinates
+\item{transcripts}{GRanges object made from a GTF containing transcript coordinates
 (only required if findIntrons=TRUE)}
 }
 \value{
@@ -34,13 +34,13 @@ wds <- filterWhippetEvents(wds)
 
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 package = "GeneStructureTools"))
-gtf.exons <- gtf[gtf$type=="exon"]
-gtf.transcripts <- gtf[gtf$type=="transcript"]
+exons <- gtf[gtf$type=="exon"]
+transcripts <- gtf[gtf$type=="transcript"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
 wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
-exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, gtf.exons,
-variableWidth=0, findIntrons=FALSE, gtf.transcripts)
+exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
+variableWidth=0, findIntrons=FALSE, transcripts)
 }
 \author{
 Beth Signal
