@@ -46,6 +46,8 @@ maxLocation <- function(startSite, stopSite, longest = 1){
 #' @param returnLongestOnly only return longest ORF?
 #' @param allFrames return longest ORF for all 3 frames?
 #' @param longest return x longest ORFs (regardless of frames)
+#' @param exportFasta export a .fa.gz file with nucleotide sequences for each transcript?
+#' @param fastaFile file name for .fa.gz export
 #' @param uORFs get uORF summaries?
 #' @return data.frame with longest orf details
 #' @export
@@ -73,6 +75,8 @@ getOrfs <- function(transcripts,
                     returnLongestOnly=TRUE,
                     allFrames=FALSE,
                     longest=1,
+                    exportFasta=FALSE,
+                    fastaFile=NULL,
                     uORFs=FALSE){
 
     if (allFrames == TRUE) {
@@ -96,6 +100,21 @@ getOrfs <- function(transcripts,
         aggregate(seq ~ transcript_id, mcols(transcripts), function(x)
             (paste(x, collapse = "")))
     ids <- as.character(seqCat$transcript_id)
+
+    if(exportFasta & !is.null(fastaFile)){
+        fastaFile <- ifelse(stringr::str_sub(fastaFile, -3,-1) == ".gz",
+                            fastaFile, paste0(fastaFile,".gz"))
+        fa <- seqCat
+        fa$transcript_id <- paste0("> ", fa$transcript_id)
+
+        # gzip files to save some space
+        gz <- gzfile(fastaFile, "w")
+        write.table(fa, gz, col.names = F, row.names = F, quote=F, sep="\n")
+        close(gz)
+    }else if(exportFasta & is.null(fastaFile)){
+        message("skipping writing .fa file; please specify a file name for export")
+    }
+
     seqCat <- seqCat$seq
     rm <- which(grepl("N", seqCat))
 
