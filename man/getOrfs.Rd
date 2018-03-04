@@ -5,7 +5,8 @@
 \title{Get open reading frames for transcripts}
 \usage{
 getOrfs(transcripts, BSgenome = NULL, returnLongestOnly = TRUE,
-  allFrames = FALSE, longest = 1)
+  allFrames = FALSE, longest = 1, exportFasta = FALSE, fastaFile = NULL,
+  uORFs = FALSE)
 }
 \arguments{
 \item{transcripts}{GRanges object with ONLY exon annotations
@@ -18,6 +19,12 @@ getOrfs(transcripts, BSgenome = NULL, returnLongestOnly = TRUE,
 \item{allFrames}{return longest ORF for all 3 frames?}
 
 \item{longest}{return x longest ORFs (regardless of frames)}
+
+\item{exportFasta}{export a .fa.gz file with nucleotide sequences for each transcript?}
+
+\item{fastaFile}{file name for .fa.gz export}
+
+\item{uORFs}{get uORF summaries?}
 }
 \value{
 data.frame with longest orf details

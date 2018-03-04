@@ -5,8 +5,9 @@
 \title{Compare open reading frames for two sets of paired transcripts}
 \usage{
 transcriptChangeSummary(transcriptsX, transcriptsY, BSgenome, exons,
-  NMD = FALSE, compareBy = "gene", orfPrediction = "allFrames",
-  compareToGene = FALSE, whippetDataSet = NULL, exportGTF = NULL)
+  NMD = FALSE, NMDModel = NULL, compareBy = "gene",
+  orfPrediction = "allFrames", compareToGene = FALSE,
+  whippetDataSet = NULL, exportGTF = NULL)
 }
 \arguments{
 \item{transcriptsX}{GRanges object with exon annotations for
@@ -20,6 +21,8 @@ all transcripts to be compared for the 'alternative' condition}
 \item{exons}{GRanges object made from a GTF containing exon coordinates}
 
 \item{NMD}{Use NMD predictions? (Note: notNMD must be installed to use this feature)}
+
+\item{NMDModel}{Use the "base" or "lncRNA" NMD model?}
 
 \item{compareBy}{compare isoforms by 'transcript' id, or aggregate all changes occuring by 'gene'}
 
