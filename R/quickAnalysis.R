@@ -116,6 +116,7 @@ filterWhippetEvents <- function(whippetDataSet,
 #' @param BSgenome BSGenome object containing the genome for the species analysed
 #' @param exons GRanges object made from a GTF containing exon coordinates
 #' @param NMD Use NMD predictions? (Note: notNMD must be installed to use this feature)
+#' @param NMDModel Use the "base" or "lncRNA" NMD model?
 #' @param orfPrediction What type of orf predictions to return. default= \code{"allFrames"}
 #' @param compareBy compare isoforms by 'transcript' id, or aggregate all changes occuring by 'gene'
 #' @param compareToGene compare alternative isoforms to all normal gene isoforms (in exons)
@@ -152,6 +153,7 @@ transcriptChangeSummary <- function(transcriptsX,
                                     BSgenome,
                                     exons,
                                     NMD = FALSE,
+                                    NMDModel = NULL,
                                     compareBy="gene",
                                     orfPrediction = "allFrames",
                                     compareToGene = FALSE,
@@ -198,11 +200,11 @@ transcriptChangeSummary <- function(transcriptsX,
     }
 
     if(orfPrediction == "allFrames"){
-        orfsX <- getOrfs(transcriptsX, BSgenome,returnLongestOnly = FALSE, allFrames = TRUE)
-        orfsY <- getOrfs(transcriptsY, BSgenome,returnLongestOnly = FALSE, allFrames = TRUE)
+        orfsX <- getOrfs(transcriptsX, BSgenome,returnLongestOnly = FALSE, allFrames = TRUE, uORFs = TRUE)
+        orfsY <- getOrfs(transcriptsY, BSgenome,returnLongestOnly = FALSE, allFrames = TRUE, uORFs = TRUE)
     }else{
-        orfsX <- getOrfs(transcriptsX, BSgenome,returnLongestOnly = TRUE)
-        orfsY <- getOrfs(transcriptsY, BSgenome,returnLongestOnly = TRUE)
+        orfsX <- getOrfs(transcriptsX, BSgenome,returnLongestOnly = TRUE, uORFs = TRUE)
+        orfsY <- getOrfs(transcriptsY, BSgenome,returnLongestOnly = TRUE, uORFs = TRUE)
     }
 
     if(all(!grepl("[+]", orfsX$id))){
@@ -224,11 +226,16 @@ transcriptChangeSummary <- function(transcriptsX,
     # manual NMD
     notNMDInstalled <- "notNMD" %in% rownames(utils::installed.packages())
 
-  if(NMD == TRUE){
+    if(NMD == TRUE){
 
+        if(is.null(NMDModel)){
+            useModel <- "base"
+        }else{
+            useModel <- NMDModel
+        }
 
       if(notNMDInstalled){
-      save(orfsX, orfsY, BSgenome, file="temp_ORFs.Rdata")
+      save(orfsX, orfsY, BSgenome, useModel, file="temp_ORFs.Rdata")
 
       #### run notnmd
       scriptLoc <- system.file("extdata","NMD_from_object.R",package = "notNMD")
@@ -267,7 +274,7 @@ transcriptChangeSummary <- function(transcriptsX,
                             BSgenome=BSgenome,returnLongestOnly = TRUE)
       }
 
-      orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "gene",
+        orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "gene",
                            geneSimilarity = TRUE,allORFs = orfAllGenes,compareUTR = TRUE)
     }else{
         orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "gene",
@@ -294,25 +301,25 @@ transcriptChangeSummary <- function(transcriptsX,
         orfsY$nmd_prob_manual[orfsY$nmd_class_manual == "not_nmd"] <- 0
 
     }
-if(NMD == TRUE & notNMDInstalled){
-  nmdChange <- attrChangeAltSpliced(orfsX,
-                                    orfsY,
-                                    attribute="nmd_prob",
-                                    compareBy="gene",
-                                    useMax=FALSE)
-  m <- match(orfChange$id, nmdChange$id)
-  orfChange <- cbind(orfChange, nmdChange[m,-1])
+    if(NMD == TRUE & notNMDInstalled){
+      nmdChange <- attrChangeAltSpliced(orfsX,
+                                        orfsY,
+                                        attribute="nmd_prob",
+                                        compareBy="gene",
+                                        useMax=FALSE)
+      m <- match(orfChange$id, nmdChange$id)
+      orfChange <- cbind(orfChange, nmdChange[m,-1])
 
-  nmdChangeMan <- attrChangeAltSpliced(orfsX,
-                                    orfsY,
-                                    attribute="nmd_prob_manual",
-                                    compareBy="gene",
-                                    useMax=FALSE)
-  m <- match(orfChange$id, nmdChangeMan$id)
-  orfChange <- cbind(orfChange, nmdChangeMan[m,-1])
+      nmdChangeMan <- attrChangeAltSpliced(orfsX,
+                                        orfsY,
+                                        attribute="nmd_prob_manual",
+                                        compareBy="gene",
+                                        useMax=FALSE)
+      m <- match(orfChange$id, nmdChangeMan$id)
+      orfChange <- cbind(orfChange, nmdChangeMan[m,-1])
 
 
-}
+    }
   if(!is.null(whippetDataSet)){
       m <- match(orfChange$id, whippetEvents$coord)
       orfChange <- cbind(whippetEvents[m,], orfChange)
