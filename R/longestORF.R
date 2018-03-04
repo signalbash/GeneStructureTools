@@ -46,6 +46,7 @@ maxLocation <- function(startSite, stopSite, longest = 1){
 #' @param returnLongestOnly only return longest ORF?
 #' @param allFrames return longest ORF for all 3 frames?
 #' @param longest return x longest ORFs (regardless of frames)
+#' @param uORFs get uORF summaries?
 #' @return data.frame with longest orf details
 #' @export
 #' @import GenomicRanges
@@ -71,7 +72,8 @@ getOrfs <- function(transcripts,
                     BSgenome = NULL,
                     returnLongestOnly=TRUE,
                     allFrames=FALSE,
-                    longest=1){
+                    longest=1,
+                    uORFs=FALSE){
 
     if (allFrames == TRUE) {
         returnLongestOnly = FALSE
@@ -220,7 +222,7 @@ getOrfs <- function(transcripts,
             orfDF$start_site_nt[which(is.infinite(orfDF$min_dist_to_junction_a))]
         orfDF$exon_a_from_start <-
             (apply(diffs, 2, function(x)
-                length(x[x > 0 & !is.na(x)]))) - 1
+                length(x[x > 0 & !is.na(x)])))
 
         orfDF$min_dist_to_junction_b <-
             suppressWarnings((apply(diffs, 2, function(x)
@@ -257,6 +259,56 @@ getOrfs <- function(transcripts,
     orfDF$gene_id <- transcripts$gene_id[m]
     orfDF <- orfDF[,c(1, ncol(orfDF), 2:(ncol(orfDF)-1))]
 
+    if(uORFs == TRUE){
+        upstreamORFs <- getUOrfs(transcripts=transcripts,
+                                 BSgenome = BSgenome,
+                                 orfs = orfDF,
+                                 findExonB = TRUE)
+
+        uORFS.bytranscript <- aggregate(overlaps_main_ORF ~ id, upstreamORFs,
+                                        function(x) length(x))
+        colnames(uORFS.bytranscript)[2] <- "total_uorfs"
+
+        uORFS.bytranscript.newVal <- aggregate(overlaps_main_ORF ~ id,
+                                               upstreamORFs, function(x)
+                                                   length(x[which(x=="upstream")]))
+        uORFS.bytranscript$upstream_count <-
+            uORFS.bytranscript.newVal[match(uORFS.bytranscript$id,
+                                            uORFS.bytranscript.newVal$id),2]
+
+        uORFS.bytranscript.newVal <- aggregate(overlaps_main_ORF ~ id,
+                                               upstreamORFs, function(x)
+                                                   length(x[which(x=="downstream")]))
+        uORFS.bytranscript$downstream_count <-
+            uORFS.bytranscript.newVal[match(uORFS.bytranscript$id,
+                                            uORFS.bytranscript.newVal$id),2]
+
+        uORFS.bytranscript.newVal <- aggregate(uorf_length ~ id,
+                                               upstreamORFs, function(x) max(x))
+        uORFS.bytranscript$max_uorf <-
+            uORFS.bytranscript.newVal[match(uORFS.bytranscript$id,
+                                            uORFS.bytranscript.newVal$id),2]
+
+        uORFS.bytranscript.newVal <-
+            aggregate(min_dist_to_junction_b ~ id,
+                      upstreamORFs[upstreamORFs$exon_b_from_final !=0,],
+                      function(x) max(x))
+        uORFS.bytranscript$uorf_maxb <-
+            uORFS.bytranscript.newVal[match(uORFS.bytranscript$id,
+                                            uORFS.bytranscript.newVal$id),2]
+
+        m <- match(orfDF$id, uORFS.bytranscript$id)
+        orfDF <- cbind(orfDF, uORFS.bytranscript[m,-c(1)])
+
+        # replace any non-matching uorf summaries with 0
+        for(i in 17:ncol(orfDF)){
+            orfDF[which(is.na(orfDF[,i])),i] <- 0
+        }
+
+
+    }
+
+    rownames(orfDF) <- NULL
     return(orfDF)
 }
 
@@ -385,7 +437,7 @@ getUOrfs <- function(transcripts,
 
     upstreamORFs <- data.frame(id=maxLoc.id, frame=maxLoc.frame, t(maxLoc))
     colnames(upstreamORFs)[3:4] <- c("start","stop")
-    m <- match(upstreamORFs$id, orfs$id)
+    m <- match(paste0(upstreamORFs$id, upstreamORFs$frame), paste0(orfs$id, orfs$frame))
     upstreamORFs$dist_to_start <- orfs$start_site[m] - upstreamORFs$stop
     upstreamORFs$overlaps_main_ORF <- ifelse(upstreamORFs$dist_to_start > 0, "upstream", "downstream")
     upstreamORFs <- upstreamORFs[!is.na(upstreamORFs$start),]
@@ -394,13 +446,16 @@ getUOrfs <- function(transcripts,
     upstreamORFs$start_site_nt <-
         (upstreamORFs$start * 3)- 3 + upstreamORFs$frame
     upstreamORFs$stop_site_nt <- (upstreamORFs$uorf_length * 3) + upstreamORFs$start_site_nt + 3
-    m <- match(upstreamORFs$id, orfs$id)
+    m <- match(paste0(upstreamORFs$id, upstreamORFs$frame), paste0(orfs$id, orfs$frame))
     upstreamORFs$dist_to_start_nt <- orfs$start_site_nt[m] - upstreamORFs$stop_site_nt
+    upstreamORFs <- upstreamORFs[which((upstreamORFs$start_site_nt - orfs$start_site_nt[m]) < 0),]
 
-    if(findExonB == TRUE){
+    if(findExonB == TRUE & nrow(upstreamORFs) > 0){
 
         upstreamORFs$utr3_length <-
-            (orfs$seq_length_nt[match(upstreamORFs$id, orfs$id)] - upstreamORFs$stop_site_nt) + 1
+            (orfs$seq_length_nt[match(paste0(upstreamORFs$id, upstreamORFs$frame),
+                                      paste0(orfs$id, orfs$frame))] -
+                 upstreamORFs$stop_site_nt) + 1
 
         widths <- data.frame(w = width(transcripts),
                              id = transcripts$transcript_id)
