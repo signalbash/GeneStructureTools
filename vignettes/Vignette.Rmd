@@ -171,13 +171,13 @@ minCounts = 100, # mean of at least 100 counts in one condition
 sampleTable = whippet_sampleTable)
 
 # check for changes in gene/transcript structure
-summary <- whippetTranscriptChangeSummary(wds,
+whippet_summary <- whippetTranscriptChangeSummary(wds,
 exons = exons,
 transcripts = transcripts,
 BSgenome = g,
 NMD = FALSE # ignore nonsense mediated decay
 )
-head(summary)
+head(whippet_summary)
 
 ```
 
