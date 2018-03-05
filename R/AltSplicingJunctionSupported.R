@@ -41,9 +41,9 @@ findJunctionPairs <- function(whippetDataSet, jncCoords, type=NA){
 
 
     whippetDataSet <- filterWhippetEvents(whippetDataSet,
-                                                     probability = 0,
-                                                     psiDelta = 0,
-                                                     eventTypes=type)
+                                          probability = 0,
+                                          psiDelta = 0,
+                                          eventTypes=type)
 
     eventCoords <- coordinates(whippetDataSet)
     jncCoords <- junctions(whippetDataSet)
@@ -51,10 +51,14 @@ findJunctionPairs <- function(whippetDataSet, jncCoords, type=NA){
     eventCoords$type <- type
     # search for alternatives to the left or the right?
     eventCoords$search <- "right"
-    eventCoords$search[(eventCoords$type=="AA" & as.logical(strand(eventCoords) == '+'))|
-                          (eventCoords$type=="AD" & as.logical(strand(eventCoords) == '-'))|
-                          (eventCoords$type=="AF" & as.logical(strand(eventCoords) == '-'))|
-                          (eventCoords$type=="AL" & as.logical(strand(eventCoords) == '+'))] <-
+    eventCoords$search[(eventCoords$type=="AA" &
+                            as.logical(strand(eventCoords) == '+'))|
+                           (eventCoords$type=="AD" &
+                                as.logical(strand(eventCoords) == '-'))|
+                           (eventCoords$type=="AF" &
+                                as.logical(strand(eventCoords) == '-'))|
+                           (eventCoords$type=="AL" &
+                                as.logical(strand(eventCoords) == '+'))] <-
         "left"
 
     junctionSJA.right <- eventCoords[eventCoords$search=="right"]
@@ -72,14 +76,14 @@ findJunctionPairs <- function(whippetDataSet, jncCoords, type=NA){
         }
         olA.right <- findOverlaps(junctionSJA.right, jncCoords, type="start")
         olA.from <- append(olA.from,
-                            as.character(junctionSJA.right$id[olA.right@from]))
+                           as.character(junctionSJA.right$id[olA.right@from]))
         junctionsA <- jncCoords[olA.right@to]
     }
     if(length(junctionSJA.left) > 0){
         end(junctionSJA.left) <- start(junctionSJA.left)
         olA.left <- findOverlaps(junctionSJA.left, jncCoords, type="end")
         olA.from <- append(olA.from,
-                            as.character(junctionSJA.left$id[olA.left@from]))
+                           as.character(junctionSJA.left$id[olA.left@from]))
         if(exists("junctionsA")){
             junctionsA <- c(junctionsA, jncCoords[olA.left@to])
         }else{
@@ -88,7 +92,8 @@ findJunctionPairs <- function(whippetDataSet, jncCoords, type=NA){
     }
 
     junctionsA$whippet_id <- olA.from
-    junctionsA$search <- eventCoords$search[match(junctionsA$whippet_id, eventCoords$id)]
+    junctionsA$search <- eventCoords$search[match(junctionsA$whippet_id,
+                                                  eventCoords$id)]
     junctionsA$set <- "A"
 
     if(type %in% c("AA","AD")){
@@ -101,9 +106,11 @@ findJunctionPairs <- function(whippetDataSet, jncCoords, type=NA){
         olB.from <- vector()
         if(length(junctionSJB.right) > 0){
             start(junctionSJB.right) <- end(junctionSJB.right)
-            olB.right <- findOverlaps(junctionSJB.right, jncCoords, type="start")
+            olB.right <- findOverlaps(junctionSJB.right, jncCoords,
+                                      type="start")
             olB.from <- append(olB.from,
-                                as.character(junctionSJB.right$id[olB.right@from]))
+                               as.character(
+                                   junctionSJB.right$id[olB.right@from]))
             junctionsB <- jncCoords[olB.right@to]
         }
         if(length(junctionSJB.left) > 0){
@@ -111,7 +118,7 @@ findJunctionPairs <- function(whippetDataSet, jncCoords, type=NA){
             start(junctionSJB.left) <- end(junctionSJB.left)
             olB.left <- findOverlaps(junctionSJB.left, jncCoords, type="end")
             olB.from <- append(olB.from,
-                                as.character(junctionSJB.left$id[olB.left@from]))
+                               as.character(junctionSJB.left$id[olB.left@from]))
             if(exists("junctionsB")){
                 junctionsB <- c(junctionsB, jncCoords[olB.left@to])
             }else{
@@ -119,7 +126,8 @@ findJunctionPairs <- function(whippetDataSet, jncCoords, type=NA){
             }
         }
         junctionsB$whippet_id <- olB.from
-        junctionsB$search <- eventCoords$search[match(junctionsB$whippet_id, eventCoords$id)]
+        junctionsB$search <- eventCoords$search[match(junctionsB$whippet_id,
+                                                      eventCoords$id)]
         junctionsB$set <- "B"
         junctions <- c(junctionsA, junctionsB)
     }
@@ -132,7 +140,8 @@ findJunctionPairs <- function(whippetDataSet, jncCoords, type=NA){
             end(junctionsA.left) <- start(junctionsA.left)
             olC.left <- findOverlaps(junctionsA.left, jncCoords, type="start")
             junctionsC.left <- jncCoords[olC.left@to]
-            junctionsC.left$whippet_id <- junctionsA.left$whippet_id[olC.left@from]
+            junctionsC.left$whippet_id <-
+                junctionsA.left$whippet_id[olC.left@from]
             junctionsC.left$search <- junctionsA.left$search[olC.left@from]
             ol <- findOverlaps(junctionsC.left, junctionsA, type="equal")
             if(length(ol) > 0){
@@ -144,7 +153,8 @@ findJunctionPairs <- function(whippetDataSet, jncCoords, type=NA){
             start(junctionsA.right) <- end(junctionsA.right)
             olC.right <- findOverlaps(junctionsA.right, jncCoords, type="end")
             junctionsC.right <- jncCoords[olC.right@to]
-            junctionsC.right$whippet_id <- junctionsA.right$whippet_id[olC.right@from]
+            junctionsC.right$whippet_id <-
+                junctionsA.right$whippet_id[olC.right@from]
             junctionsC.right$search <- junctionsA.right$search[olC.right@from]
             ol <- findOverlaps(junctionsC.right, junctionsA, type="equal")
             if(length(ol) > 0){
@@ -165,10 +175,14 @@ findJunctionPairs <- function(whippetDataSet, jncCoords, type=NA){
 
     # replace junction codes
     if(type %in% c("AA", "AD")){
-        junctions$set[which((junctions$set=="A" & as.logical(strand(junctions) == "+")) |
-                            (junctions$set=="B" & as.logical(strand(junctions) == "-"))  )] <- "X"
-        junctions$set[which((junctions$set=="A" & as.logical(strand(junctions) == "-")) |
-                             junctions$set=="B" & as.logical(strand(junctions) == "+") )] <- "Y"
+        junctions$set[which((junctions$set=="A" &
+                                 as.logical(strand(junctions) == "+")) |
+                                (junctions$set=="B" &
+                                as.logical(strand(junctions) == "-")))] <- "X"
+        junctions$set[which((junctions$set=="A" &
+                                 as.logical(strand(junctions) == "-")) |
+                                (junctions$set=="B" &
+                                as.logical(strand(junctions) == "+")))] <- "Y"
     }
     if(type %in% c("AF", "AL")){
         junctions$set[which(junctions$set=="A")] <- "X"
@@ -231,8 +245,10 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
 
     if(type %in% c("AA", "AD")){
         ## find exons that use/overlap the junction - at the side where it's alternative
-        end(range)[which(range$search=="right")] <- start(range)[which(range$search=="right")]
-        start(range)[which(range$search=="left")] <- end(range)[which(range$search=="left")]
+        end(range)[which(range$search=="right")] <-
+            start(range)[which(range$search=="right")]
+        start(range)[which(range$search=="left")] <-
+            end(range)[which(range$search=="left")]
 
         ol.junction <- findOverlaps(range, exons)
         ol.junction <- cbind(as.data.frame(ol.junction),
@@ -240,15 +256,18 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
 
         ## table of transcripts overlapping the junction
         # tid: transcript id
-        tidTable <- as.data.frame(table(ol.junction$queryHits, ol.junction$transcript_id))
+        tidTable <- as.data.frame(table(ol.junction$queryHits,
+                                        ol.junction$transcript_id))
         tidTable <- tidTable[tidTable$Freq > 0,]
         colnames(tidTable)[1:2] <- c("from_index","to_transcript_id")
         tids <- unique(tidTable$to_transcript_id)
 
         #all combinations of transcripts + junctions
-        tidTable <- data.frame(from_index=rep(1:length(junctionPairs), each=length(tids)),
-                                to_transcript_id=rep(tids, length(junctionPairs)),
-                                Freq=1)
+        tidTable <- data.frame(from_index=rep(1:length(junctionPairs),
+                                              each=length(tids)),
+                               to_transcript_id=rep(tids,
+                                                    length(junctionPairs)),
+                               Freq=1)
 
         tidTable$junction_id <- range$id[tidTable$from_index]
         ## new transcript id:
@@ -258,23 +277,26 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
 
         ## all transcripts for structural altercations
         gtfTranscripts <- exons[exons$transcript_id %in% tids]
-        mcols(gtfTranscripts) <- mcols(gtfTranscripts)[,c('gene_id','transcript_id',
-                                                          'transcript_type','exon_id',
-                                                          'exon_number')]
+        mcols(gtfTranscripts) <-
+            mcols(gtfTranscripts)[,c('gene_id','transcript_id',
+                                     'transcript_type','exon_id',
+                                     'exon_number')]
         m <- match(gtfTranscripts$transcript_id, tidTable$to_transcript_id)
         # add new transcript id
         gtfTranscripts$new_transcript_id <-
-            paste0(gtfTranscripts$transcript_id,"+AS ",range$id[tidTable$from_index[m]])
-        gtfTranscripts$new_transcript_id_exnum <- paste0(gtfTranscripts$new_transcript_id,
-                                                         "_",
-                                                         as.numeric(gtfTranscripts$exon_number))
+            paste0(gtfTranscripts$transcript_id,"+AS ",
+                   range$id[tidTable$from_index[m]])
+        gtfTranscripts$new_transcript_id_exnum <-
+            paste0(gtfTranscripts$new_transcript_id,"_",
+                   as.numeric(gtfTranscripts$exon_number))
 
         # duplicate core transcripts if needed
         needsDuplicated <- which(!(tidTable$new_transcript_id %in%
                                        gtfTranscripts$new_transcript_id))
         if(length(needsDuplicated) > 0){
-            gtfTranscripts.add <- gtfTranscripts[gtfTranscripts$transcript_id %in%
-                                                     tidTable$to_transcript_id[needsDuplicated]]
+            gtfTranscripts.add <- gtfTranscripts[
+                gtfTranscripts$transcript_id %in%
+                    tidTable$to_transcript_id[needsDuplicated]]
         }
         while(length(needsDuplicated) > 0){
             gtfTranscripts.add <- gtfTranscripts.add[
@@ -309,7 +331,8 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
         # fix the end of the left transcript exons
         exons.left <- gtfTranscripts[ol.left$subjectHits]
 
-        keep <- which(start(exons.left) < start(junctionPairs[ol.left$queryHits]))
+        keep <- which(start(exons.left) <
+                          start(junctionPairs[ol.left$queryHits]))
         end(exons.left)[keep] <- start(junctionPairs[ol.left$queryHits])[keep]
         exons.left <- exons.left[keep]
 
@@ -354,33 +377,41 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
         gtfTranscripts.altered <- gtfTranscripts.altered[-unique(ol$subjectHits)]
 
         # add together
-        gtfTranscripts.altered <- c(gtfTranscripts.altered, gtfTranscripts.replacement)
+        gtfTranscripts.altered <- c(gtfTranscripts.altered,
+                                    gtfTranscripts.replacement)
         gtfTranscripts.altered <- gtfTranscripts.altered[order(
-            gtfTranscripts.altered$new_transcript_id,start(gtfTranscripts.altered))]
+            gtfTranscripts.altered$new_transcript_id,
+            start(gtfTranscripts.altered))]
 
-        gtfTranscripts.altered$set <- range$set[match(gtfTranscripts.altered$from, range$id)]
+        gtfTranscripts.altered$set <-
+            range$set[match(gtfTranscripts.altered$from, range$id)]
         gtfTranscripts.altered$whippet_id <- junctionPairs$whippet_id[
             match(gtfTranscripts.altered$from, junctionPairs$id)]
         gtfTranscripts.altered$transcript_id <-
             paste0(gtfTranscripts.altered$transcript_id,
                    "+AS",type,gtfTranscripts.altered$set," ",
                    gtfTranscripts.altered$whippet_id)
-        gtfTranscripts.altered$set <- paste0(type, "_",gtfTranscripts.altered$set)
+        gtfTranscripts.altered$set <- paste0(type, "_",
+                                             gtfTranscripts.altered$set)
 
 
     }else if(type %in% c("AF", "AL")){
-        end(range)[which(range$search=="right")] <- start(range)[which(range$search=="right")]
-        start(range)[which(range$search=="left")] <- end(range)[which(range$search=="left")]
+        end(range)[which(range$search=="right")] <-
+            start(range)[which(range$search=="right")]
+        start(range)[which(range$search=="left")] <-
+            end(range)[which(range$search=="left")]
 
         olFirstLast.left <- findOverlaps(range, exons, type="start")
         olFirstLast.right <- findOverlaps(range, exons, type="end")
-        olFirstLast.left <- cbind(as.data.frame(olFirstLast.left),
-                                   transcript_id=exons$transcript_id[olFirstLast.left@to])
+        olFirstLast.left <-
+            cbind(as.data.frame(olFirstLast.left),
+                  transcript_id=exons$transcript_id[olFirstLast.left@to])
         olFirstLast.left <- olFirstLast.left[
             which(range$search[olFirstLast.left$queryHits] == "left"),]
 
-        olFirstLast.right <- cbind(as.data.frame(olFirstLast.right),
-                                    transcript_id=exons$transcript_id[olFirstLast.right@to])
+        olFirstLast.right <-
+            cbind(as.data.frame(olFirstLast.right),
+                  transcript_id=exons$transcript_id[olFirstLast.right@to])
         olFirstLast.right <- olFirstLast.right[
             which(range$search[olFirstLast.right$queryHits] == "right"),]
 
@@ -388,20 +419,19 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
 
         olFirstLast$search <- range$search[olFirstLast$queryHits]
 
-
         exonsFirstLast <- exons[olFirstLast$subjectHits]
         exonsFirstLast$set <- range$set[olFirstLast$queryHits]
         exonsFirstLast$search <- range$search[olFirstLast$queryHits]
 
         exonsFirstLast$junction_id <- range$id[olFirstLast$queryHits]
         newId.left <- paste0(seqnames(exonsFirstLast),":",
+                             start(junctionPairs)[olFirstLast$queryHits],"-",
+                             end(junctionPairs)[olFirstLast$queryHits],"+",
+                             end(exonsFirstLast))
+        newId.right <- paste0(seqnames(exonsFirstLast),":",
                               start(junctionPairs)[olFirstLast$queryHits],"-",
                               end(junctionPairs)[olFirstLast$queryHits],"+",
-                              end(exonsFirstLast))
-        newId.right <- paste0(seqnames(exonsFirstLast),":",
-                               start(junctionPairs)[olFirstLast$queryHits],"-",
-                               end(junctionPairs)[olFirstLast$queryHits],"+",
-                               start(exonsFirstLast))
+                              start(exonsFirstLast))
         exonsFirstLast$new_id <- NA
         exonsFirstLast$new_id[which(exonsFirstLast$search=="left")] <-
             newId.left[which(exonsFirstLast$search=="left")]
@@ -412,8 +442,10 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
         junctionPairs <- junctionPairs[m]
         range <- junctionPairs
         range$id <- exonsFirstLast$new_id
-        end(range)[which(range$search=="left")] <- start(range)[which(range$search=="left")]
-        start(range)[which(range$search=="right")] <- end(range)[which(range$search=="right")]
+        end(range)[which(range$search=="left")] <-
+            start(range)[which(range$search=="left")]
+        start(range)[which(range$search=="right")] <-
+            end(range)[which(range$search=="right")]
 
         ol.junction <- findOverlaps(range, exons)
         ol.junction <- cbind(as.data.frame(ol.junction),
@@ -421,7 +453,8 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
 
         ## table of transcripts overlapping the junction
         # tid: transcript id
-        tidTable <- as.data.frame(table(ol.junction$queryHits, ol.junction$transcript_id))
+        tidTable <- as.data.frame(table(ol.junction$queryHits,
+                                        ol.junction$transcript_id))
         tidTable <- tidTable[tidTable$Freq > 0,]
         colnames(tidTable)[1:2] <- c("from_index","to_transcript_id")
         tids <- unique(tidTable$to_transcript_id)
@@ -429,26 +462,31 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
         tidTable$junction_id <- range$id[tidTable$from_index]
         ## new transcript id --
         ## unique if different junctions are going to be used in same transcript base
-        tidTable$new_transcript_id <- paste0(tidTable$to_transcript_id,"+AS ",tidTable$junction_id)
+        tidTable$new_transcript_id <- paste0(tidTable$to_transcript_id,"+AS ",
+                                             tidTable$junction_id)
         ## all transcripts for structural altercations
         gtfTranscripts <- exons[exons$transcript_id %in% tids]
-        mcols(gtfTranscripts) <- mcols(gtfTranscripts)[,c('gene_id','transcript_id',
-                                                          'transcript_type','exon_id',
-                                                          'exon_number')]
+        mcols(gtfTranscripts) <-
+            mcols(gtfTranscripts)[,c('gene_id','transcript_id',
+                                     'transcript_type','exon_id',
+                                     'exon_number')]
         m <- match(gtfTranscripts$transcript_id, tidTable$to_transcript_id)
         # add new transcript id
         gtfTranscripts$new_transcript_id <-
-            paste0(gtfTranscripts$transcript_id,"+AS ",range$id[tidTable$from_index[m]])
-        gtfTranscripts$new_transcript_id_exnum <- paste0(gtfTranscripts$new_transcript_id,
-                                                         "_",
-                                                         as.numeric(gtfTranscripts$exon_number))
+            paste0(gtfTranscripts$transcript_id,"+AS ",
+                   range$id[tidTable$from_index[m]])
+        gtfTranscripts$new_transcript_id_exnum <-
+            paste0(gtfTranscripts$new_transcript_id,
+                   "_",
+                   as.numeric(gtfTranscripts$exon_number))
 
         # duplicate core transcripts if needed
         needsDuplicated <- which(!(tidTable$new_transcript_id %in%
                                        gtfTranscripts$new_transcript_id))
         if(length(needsDuplicated) > 0){
-            gtfTranscripts.add <- gtfTranscripts[gtfTranscripts$transcript_id %in%
-                                                     tidTable$to_transcript_id[needsDuplicated]]
+            gtfTranscripts.add <-
+                gtfTranscripts[gtfTranscripts$transcript_id %in%
+                                   tidTable$to_transcript_id[needsDuplicated]]
         }
         while(length(needsDuplicated) > 0){
             gtfTranscripts.add <- gtfTranscripts.add[
@@ -471,15 +509,18 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
 
         gtfTranscripts <- gtfTranscripts[gtfTranscripts$transcript_id %in%
                                              exonsFirstLast$transcript_id]
-        gtfTranscripts$new_transcript_id_exnum <- paste0(gtfTranscripts$new_transcript_id, "_",
-                                                         as.numeric(gtfTranscripts$exon_number))
+        gtfTranscripts$new_transcript_id_exnum <-
+            paste0(gtfTranscripts$new_transcript_id, "_",
+                   as.numeric(gtfTranscripts$exon_number))
 
         range <- junctionPairs
         range$id <- exonsFirstLast$new_id
 
         ## find exons that use/overlap the junction - at the side where it's alternative
-        end(range)[which(range$search=="left")] <- start(range)[which(range$search=="left")]
-        start(range)[which(range$search=="right")] <- end(range)[which(range$search=="right")]
+        end(range)[which(range$search=="left")] <-
+            start(range)[which(range$search=="left")]
+        start(range)[which(range$search=="right")] <-
+            end(range)[which(range$search=="right")]
 
         ### Same used junction replacement
         ol.left <- as.data.frame(findOverlaps(range, gtfTranscripts))
@@ -496,19 +537,22 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
         ol.right$from_id <- range$id[ol.right$queryHits]
         ol.right$to_id <- gtfTranscripts$from[ol.right$subjectHits]
         ol.right <- ol.right[ol.right$from_id == ol.right$to_id,]
-        ol.right <- ol.right[which(range$search[ol.right$queryHits] == "right"),]
+        ol.right <-
+            ol.right[which(range$search[ol.right$queryHits] == "right"),]
 
         # fix the end of the right transcript exons
         exons.right <- gtfTranscripts[ol.right$subjectHits]
         start(exons.right) <- start(range[ol.right$queryHits])
 
         junctionReplacementExons <- c(exons.left, exons.right)
-        junctionReplacementExons$set <- range$set[match(junctionReplacementExons$from, range$id)]
+        junctionReplacementExons$set <-
+            range$set[match(junctionReplacementExons$from, range$id)]
 
         keep <- which(gtfTranscripts$new_transcript_id %in%
                           junctionReplacementExons$new_transcript_id)
         gtfTranscripts.altered <- gtfTranscripts[keep]
-        gtfTranscripts.altered$set <- range$set[match(gtfTranscripts.altered$from, range$id)]
+        gtfTranscripts.altered$set <-
+            range$set[match(gtfTranscripts.altered$from, range$id)]
 
         ### First/last exon replacement
 
@@ -525,13 +569,15 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
             ids <- gtfTranscripts.altered$new_transcript_id[n]
             exonNumbers <- as.numeric(gtfTranscripts.altered$exon_number[n])
             altTidExNum <- paste0(ids, "_", exonNumbers-back)
-            m <- match(altTidExNum, gtfTranscripts.altered$new_transcript_id_exnum)
+            m <- match(altTidExNum,
+                       gtfTranscripts.altered$new_transcript_id_exnum)
             m <- m[!is.na(m)]
             while(length(m) > 0){
                 gtfTranscripts.altered <- gtfTranscripts.altered[-m]
                 back <- back + 1
                 altTidExNum <- paste0(ids, "_", exonNumbers-back)
-                m <- match(altTidExNum, gtfTranscripts.altered$new_transcript_id_exnum)
+                m <- match(altTidExNum,
+                           gtfTranscripts.altered$new_transcript_id_exnum)
                 m <- m[!is.na(m)]
             }
         }
@@ -542,13 +588,15 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
             ids <- gtfTranscripts.altered$new_transcript_id[n]
             exonNumbers <- as.numeric(gtfTranscripts.altered$exon_number[n])
             altTidExNum <- paste0(ids, "_", exonNumbers+fwd)
-            m <- match(altTidExNum, gtfTranscripts.altered$new_transcript_id_exnum)
+            m <- match(altTidExNum,
+                       gtfTranscripts.altered$new_transcript_id_exnum)
             m <- m[!is.na(m)]
             while(length(m) > 0){
                 gtfTranscripts.altered <- gtfTranscripts.altered[-m]
                 fwd <- fwd + 1
                 altTidExNum <- paste0(ids, "_", exonNumbers+fwd)
-                m <- match(altTidExNum, gtfTranscripts.altered$new_transcript_id_exnum)
+                m <- match(altTidExNum,
+                           gtfTranscripts.altered$new_transcript_id_exnum)
                 m <- m[!is.na(m)]
             }
         }
@@ -556,9 +604,9 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
         # remove overlapping exons
         longRange <- replacementExonsFirstLast
         rangeDF <- data.frame(start_1 = start(replacementExonsFirstLast),
-                               start_2 = start(junctionReplacementExons),
-                               end_1 = end(replacementExonsFirstLast),
-                               end_2 = end(junctionReplacementExons))
+                              start_2 = start(junctionReplacementExons),
+                              end_1 = end(replacementExonsFirstLast),
+                              end_2 = end(junctionReplacementExons))
         start(longRange) <- apply(rangeDF[,1:2], 1, min)
         end(longRange) <- apply(rangeDF[,3:4], 1, max)
 
@@ -567,25 +615,30 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
         ol$to_id <- gtfTranscripts.altered$new_transcript_id[ol$subjectHits]
         ol <- ol[which(ol$from_id == ol$to_id),]
         if(dim(ol)[1] > 0){
-            gtfTranscripts.altered <- (gtfTranscripts.altered[-unique(ol$subjectHits)])
+            gtfTranscripts.altered <-
+                (gtfTranscripts.altered[-unique(ol$subjectHits)])
         }
         gtfTranscripts.altered <- c(gtfTranscripts.altered,
-                                     junctionReplacementExons,
-                                     replacementExonsFirstLast)
+                                    junctionReplacementExons,
+                                    replacementExonsFirstLast)
 
         #redo exon numbering
         gtfTranscripts.altered <- gtfTranscripts.altered[
-            order(gtfTranscripts.altered$new_transcript_id,start(gtfTranscripts.altered))]
+            order(gtfTranscripts.altered$new_transcript_id,
+                  start(gtfTranscripts.altered))]
         tab <- as.data.frame(table(gtfTranscripts.altered$new_transcript_id))
         tab$strand <- as.character(strand(gtfTranscripts.altered[
             match(tab$Var1,gtfTranscripts.altered$new_transcript_id)]))
-        gtfTranscripts.altered$exon_number <- unlist(
-            apply(tab, 1, function(x) if(x[3] == "-"){c(x[2]:1)}else{c(1:x[2])}))
+        gtfTranscripts.altered$exon_number <-
+            unlist(apply(tab, 1, function(x)
+                if(x[3] == "-"){c(x[2]:1)}else{c(1:x[2])}))
 
         gtfTranscripts.altered <- gtfTranscripts.altered[
-            order(gtfTranscripts.altered$new_transcript_id,start(gtfTranscripts.altered))]
+            order(gtfTranscripts.altered$new_transcript_id,
+                  start(gtfTranscripts.altered))]
 
-        gtfTranscripts.altered$set <- range$set[match(gtfTranscripts.altered$from, range$id)]
+        gtfTranscripts.altered$set <- range$set[
+            match(gtfTranscripts.altered$from, range$id)]
         mcols(gtfTranscripts.altered) <- mcols(gtfTranscripts.altered)[
             ,match(c('gene_id','transcript_id',
                      'transcript_type','exon_id',
@@ -598,15 +651,16 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
             gtfTranscripts.altered$transcript_id,
             "+AS",type,gtfTranscripts.altered$set," ",
             gtfTranscripts.altered$whippet_id)
-        gtfTranscripts.altered$set <- paste0(type, "_",gtfTranscripts.altered$set)
+        gtfTranscripts.altered$set <- paste0(type, "_",
+                                             gtfTranscripts.altered$set)
 
     }
 
-    #gtfTranscripts.altered$transcript_id <- gtfTranscripts.altered$new_transcript_id
-    mcols(gtfTranscripts.altered) <- mcols(gtfTranscripts.altered)[,c('gene_id','transcript_id',
-                                                                      'transcript_type','exon_id',
-                                                                      'exon_number',
-                                                                      'set','whippet_id')]
+    mcols(gtfTranscripts.altered) <-
+        mcols(gtfTranscripts.altered)[,c('gene_id','transcript_id',
+                                         'transcript_type','exon_id',
+                                         'exon_number',
+                                         'set','whippet_id')]
     gtfTranscripts.altered <- removeDuplicateTranscripts(gtfTranscripts.altered)
 
     return(gtfTranscripts.altered)
@@ -638,7 +692,8 @@ removeDuplicateTranscripts <- function(transcripts){
     transcriptRangePaste <- aggregate(startend ~ transcript_id, transcriptDF,
                                       function(x) paste0(x, collapse="+"))
 
-    keep <- transcriptRangePaste$transcript_id[which(!duplicated(transcriptRangePaste$startend))]
+    keep <- transcriptRangePaste$transcript_id[
+        which(!duplicated(transcriptRangePaste$startend))]
     transcriptsFiltered <- transcripts[transcripts$transcript_id %in% keep]
     return(transcriptsFiltered)
 }

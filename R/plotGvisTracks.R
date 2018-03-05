@@ -19,9 +19,10 @@ annotateGeneModel <- function(transcripts, orfs){
 
     # location to site wise-point
     transcriptsLocation <- as.data.frame(transcripts)
-    transcriptsLocation <- transcriptsLocation[,c("start","end","width",
-                                                  "strand","exon_id",
-                                                  "transcript_id","exon_number")]
+    transcriptsLocation <-
+        transcriptsLocation[,c("start","end","width",
+                               "strand","exon_id",
+                               "transcript_id","exon_number")]
 
     strand <- unique(transcriptsLocation$strand)
 
@@ -32,14 +33,18 @@ annotateGeneModel <- function(transcripts, orfs){
         loctionsAll <- apply(transcriptsLocation, 1, function(x) x[2]:x[1])
     }
     # add exon/transcript annoations
-    loctionsAll.exon <- apply(transcriptsLocation, 1, function(x) rep(x[5], x[3]))
-    loctionsAll.transcript <- apply(transcriptsLocation, 1, function(x) rep(x[6], x[3]))
-    loctionsAll.exonNum <- apply(transcriptsLocation, 1, function(x) rep(x[7], x[3]))
+    loctionsAll.exon <- apply(transcriptsLocation, 1,
+                              function(x) rep(x[5], x[3]))
+    loctionsAll.transcript <- apply(transcriptsLocation, 1,
+                                    function(x) rep(x[6], x[3]))
+    loctionsAll.exonNum <- apply(transcriptsLocation, 1,
+                                 function(x) rep(x[7], x[3]))
 
-    transcriptsLocation.bySite <- data.frame(`loc`=unlist(loctionsAll),
-                                         `exon`=unlist(loctionsAll.exon),
-                                         `transcript`=unlist(loctionsAll.transcript),
-                                         `exon_number`=unlist(loctionsAll.exonNum))
+    transcriptsLocation.bySite <-
+        data.frame(`loc`=unlist(loctionsAll),
+                   `exon`=unlist(loctionsAll.exon),
+                   `transcript`=unlist(loctionsAll.transcript),
+                   `exon_number`=unlist(loctionsAll.exonNum))
     # add relative sites
     if(strand == "+"){
         transcriptsLocation.bySite <- transcriptsLocation.bySite[
@@ -50,9 +55,10 @@ annotateGeneModel <- function(transcripts, orfs){
             order(transcriptsLocation.bySite$transcript,
                   plyr::desc(transcriptsLocation.bySite$loc)),]
     }
-    transcriptsLocation.bySite$site <- unlist(lapply(aggregate(width ~ transcript_id,
-                                                               transcriptsLocation, sum)[,2],
-                                                     function(x) 1:x))
+    transcriptsLocation.bySite$site <-
+        unlist(lapply(aggregate(width ~ transcript_id,
+                                transcriptsLocation, sum)[,2],
+                      function(x) 1:x))
 
     # run through each transcript individually
     transcriptIds <- unique(transcriptsLocation.bySite$transcript)
@@ -64,7 +70,8 @@ annotateGeneModel <- function(transcripts, orfs){
 
         orfs.t <- orfs[orfs$id == transcriptIds[t],]
         transcriptsLocation.bySite.t <-
-            transcriptsLocation.bySite[transcriptsLocation.bySite$transcript == transcriptIds[t],]
+            transcriptsLocation.bySite[
+                transcriptsLocation.bySite$transcript == transcriptIds[t],]
 
         #utr5/3 exon number
         utr5.exon <- as.numeric(as.character(
@@ -110,22 +117,26 @@ annotateGeneModel <- function(transcripts, orfs){
         utr$type[!(utr$type %in% c("utr3","utr5"))] <- "CDS"
 
         if(strand == "+"){
-            start(ranges(utr))[as.numeric(utr$exon_number) == utr5.exon & utr$type=="CDS"] <-
+            start(ranges(utr))[as.numeric(utr$exon_number) ==
+                                   utr5.exon & utr$type=="CDS"] <-
                 transcriptsLocation.bySite.t$loc[
                     transcriptsLocation.bySite.t$site ==
                         orfs.t$start_site_nt[which.max(orfs.t$orf_length)]] + 1
 
-            end(ranges(utr))[as.numeric(utr$exon_number) == utr3.exon & utr$type=="CDS"] <-
+            end(ranges(utr))[as.numeric(utr$exon_number) ==
+                                 utr3.exon & utr$type=="CDS"] <-
                 transcriptsLocation.bySite.t$loc[
                     transcriptsLocation.bySite.t$site ==
                         orfs.t$stop_site_nt[which.max(orfs.t$orf_length)]] - 1
         }else{
-            end(ranges(utr))[as.numeric(utr$exon_number) == utr5.exon & utr$type=="CDS"] <-
+            end(ranges(utr))[as.numeric(utr$exon_number) ==
+                                 utr5.exon & utr$type=="CDS"] <-
                 transcriptsLocation.bySite.t$loc[
                     transcriptsLocation.bySite.t$site ==
                         orfs.t$start_site_nt[which.max(orfs.t$orf_length)]] + 1
 
-            start(ranges(utr))[as.numeric(utr$exon_number) == utr3.exon & utr$type=="CDS"] <-
+            start(ranges(utr))[as.numeric(utr$exon_number) ==
+                                   utr3.exon & utr$type=="CDS"] <-
                 transcriptsLocation.bySite.t$loc[
                     transcriptsLocation.bySite.t$site ==
                         orfs.t$stop_site_nt[which.max(orfs.t$orf_length)]] - 1
@@ -191,7 +202,7 @@ makeGeneModel <- function(transcript){
     }
 
     colnames(transcript) <- c("chromosome", "start","end","width","strand",
-                             "feature","gene","exon","transcript","symbol")
+                              "feature","gene","exon","transcript","symbol")
     if(replace){
         transcript$feature <- "protein_coding"
         transcript$exon <- exonId

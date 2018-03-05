@@ -93,10 +93,10 @@ readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
 
     colnames(whip.all)[-(1:5)] <- gsub(".psi.gz","", basename(files))
 
-    whip.all$na_count <- apply(whip.all[,-c(1:5)], 1, function(x) length(which(is.na(x))))
+    whip.all$na_count <- apply(whip.all[,-c(1:5)], 1, function(x)
+        length(which(is.na(x))))
     whip.all$unique_name <- paste(whip.all$Gene,whip.all$Coord,
                                   whip.all$Type,whip.all$Node, sep="_")
-    #whip.all$unique_name <- with(whip.all, paste0(Gene,"_",Coord,"_",Type,"_",Node))
     if(!is.na(maxNA)){
         keep <- which(whip.all$na_count <= maxNA)
         whip.all <- whip.all[keep,]
@@ -126,17 +126,18 @@ readWhippetDIFFfiles <- function(files){
     }
 
     for(f in seq_along(files)){
-        whip <- data.table::fread(paste0(ungzip, files[f]), data.table=FALSE, skip=1)
+        whip <- data.table::fread(paste0(ungzip, files[f]),
+                                  data.table=FALSE, skip=1)
 
         #remove the NA column
         keepcol <- which(apply(whip, 2, function(x) all(!is.na(x))))
         whip <- whip[,keepcol]
 
         colnames(whip) <- c("gene", "node","coord","strand","type",
-                                 "psi_a","psi_b","psi_delta",
-                                 "probability","complexity","entropy")
-        whip$unique_name <- paste(whip$gene,whip$coord,whip$type,whip$node, sep="_")
-        #whip$unique_name <- with(whip, paste0(gene,"_",coord,"_",type,"_",node))
+                            "psi_a","psi_b","psi_delta",
+                            "probability","complexity","entropy")
+        whip$unique_name <- paste(whip$gene,whip$coord,whip$type,
+                                  whip$node, sep="_")
         whip$comparison <- gsub(".diff.gz","", basename(files[f]))
         conditions <- unique(whip$comparison)
         conditionsSplit <- stringr::str_split(conditions, "_")
@@ -183,9 +184,9 @@ formatWhippetEvents <- function(whippet){
     end <- unlist(lapply(stringr::str_split(range,"-"), "[[",2))
 
     eventCoords <- GRanges(seqnames=S4Vectors::Rle(chromosome),
-                          ranges=IRanges::IRanges(start=as.numeric(start),
-                                         end=as.numeric(end)),
-                          strand=whippet$strand, id=whippet$coord)
+                           ranges=IRanges::IRanges(start=as.numeric(start),
+                                                   end=as.numeric(end)),
+                           strand=whippet$strand, id=whippet$coord)
     return(eventCoords)
 }
 
@@ -206,21 +207,26 @@ readWhippetDataSet <- function(filePath="."){
     wds <- new("whippetDataSet", filePath=filePath)
     filesDiff <- fileNames[grep(".diff.gz", fileNames)]
     if(length(filesDiff) > 0){
-        slot(wds, "diffSplicingResults") <- readWhippetDIFFfiles(paste0(filePath, "/", filesDiff))
+        slot(wds, "diffSplicingResults") <- readWhippetDIFFfiles(
+            paste0(filePath, "/", filesDiff))
         slot(wds, "comparisons") <- unique(diffSplicingResults(wds)$comparison)
-        slot(wds, "coordinates") <- formatWhippetEvents(diffSplicingResults(wds))
+        slot(wds, "coordinates") <-
+            formatWhippetEvents(diffSplicingResults(wds))
         m <- match(diffSplicingResults(wds)$coord, coordinates(wds)$id)
-        slot(wds, "diffSplicingResults") <- cbind(diffSplicingResults(wds), coord_match=m)
+        slot(wds, "diffSplicingResults") <-
+            cbind(diffSplicingResults(wds), coord_match=m)
     }
 
     filesJnc <- fileNames[grep(".jnc.gz", fileNames)]
     if(length(filesJnc) > 0){
-        slot(wds, "junctions") <- readWhippetJNCfiles(paste0(filePath, "/", filesJnc))
+        slot(wds, "junctions") <-
+            readWhippetJNCfiles(paste0(filePath, "/", filesJnc))
     }
 
     filesPsi <- fileNames[grep(".psi.gz", fileNames)]
     if(length(filesPsi) > 0){
-        slot(wds, "readCounts") <- readWhippetPSIfiles(paste0(filePath, "/", filesPsi))
+        slot(wds, "readCounts") <-
+            readWhippetPSIfiles(paste0(filePath, "/", filesPsi))
     }
 
     return(wds)

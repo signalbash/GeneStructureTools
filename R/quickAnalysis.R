@@ -20,13 +20,13 @@
 #' wds <- readWhippetDataSet(whippetFiles)
 #' wds <- filterWhippetEvents(wds)
 filterWhippetEvents <- function(whippetDataSet,
-                                           probability = 0.95,
-                                           psiDelta = 0.1,
-                                           eventTypes = "all",
-                                           idList=NULL,
-                                           minCounts = NA,
-                                           medianCounts = NA,
-                                           sampleTable){
+                                probability = 0.95,
+                                psiDelta = 0.1,
+                                eventTypes = "all",
+                                idList=NULL,
+                                minCounts = NA,
+                                medianCounts = NA,
+                                sampleTable){
 
     if(eventTypes[1] == "all"){
         eventTypes <- unique(diffSplicingResults(whippetDataSet)$type)
@@ -54,31 +54,37 @@ filterWhippetEvents <- function(whippetDataSet,
     slot(whippetDataSet, "diffSplicingResults") <-
         diffSplicingResults(whippetDataSet)[significantEventsIndex,]
 
-    m <- match(diffSplicingResults(whippetDataSet)$coord, coordinates(whippetDataSet)$id)
+    m <- match(diffSplicingResults(whippetDataSet)$coord,
+               coordinates(whippetDataSet)$id)
 
     slot(whippetDataSet, "coordinates") <-
         coordinates(whippetDataSet)[unique(m),]
 
-    keep <- which(readCounts(whippetDataSet)$Gene %in% diffSplicingResults(whippetDataSet)$gene)
+    keep <- which(readCounts(whippetDataSet)$Gene %in%
+                      diffSplicingResults(whippetDataSet)$gene)
 
     slot(whippetDataSet, "readCounts") <-
         readCounts(whippetDataSet)[keep,]
 
-    keep <- which(junctions(whippetDataSet)$gene %in% diffSplicingResults(whippetDataSet)$gene)
+    keep <- which(junctions(whippetDataSet)$gene %in%
+                      diffSplicingResults(whippetDataSet)$gene)
 
     slot(whippetDataSet, "junctions") <-
         junctions(whippetDataSet)[keep,]
 
 
     #filter by read counts?
-    if(nrow(slot(whippetDataSet, "readCounts")) > 0 & (!is.na(minCounts) | !is.na(medianCounts))){
+    if(nrow(slot(whippetDataSet, "readCounts")) > 0 & (!is.na(minCounts) |
+                                                       !is.na(medianCounts))){
         m <- match(diffSplicingResults(whippetDataSet)$unique_name,
                    readCounts(whippetDataSet)$unique_name)
-        n1 <- match(sampleTable$sample[sampleTable$condition %in%
-            unique(diffSplicingResults(whippetDataSet)$condition_1)],
+        n1 <- match(sampleTable$sample[
+            sampleTable$condition %in%
+                unique(diffSplicingResults(whippetDataSet)$condition_1)],
                     colnames(readCounts(whippetDataSet)))
-        n2 <- match(sampleTable$sample[sampleTable$condition %in%
-            unique(diffSplicingResults(whippetDataSet)$condition_2)],
+        n2 <- match(sampleTable$sample[
+            sampleTable$condition %in%
+                unique(diffSplicingResults(whippetDataSet)$condition_2)],
                     colnames(readCounts(whippetDataSet)))
 
         diffSplicingResultsTemp <- diffSplicingResults(whippetDataSet)
@@ -98,8 +104,10 @@ filterWhippetEvents <- function(whippetDataSet,
         }
 
         if(!is.na(medianCounts)){
-            keep <- which(diffSplicingResultsTemp$condition_1_counts >= medianCounts |
-                diffSplicingResultsTemp$condition_2_counts >= medianCounts)
+            keep <- which(diffSplicingResultsTemp$condition_1_counts >=
+                              medianCounts |
+                              diffSplicingResultsTemp$condition_2_counts >=
+                              medianCounts)
             slot(whippetDataSet, "diffSplicingResults") <-
                 diffSplicingResultsTemp[keep,]
         }
@@ -169,8 +177,9 @@ transcriptChangeSummary <- function(transcriptsX,
         type <- gsub("skipped_exon", "CE", gsub("included_exon","CE", type))
         type <- gsub("retained_intron", "RI", gsub("spliced_intron","RI", type))
 
-        m <- match(paste0(allTranscripts$whippet_id,"_",type), paste0(whippetEvents$coord,"_",
-                                                                      whippetEvents$type))
+        m <- match(paste0(allTranscripts$whippet_id,"_",type),
+                   paste0(whippetEvents$coord,"_",
+                          whippetEvents$type))
         # A -- psi in condition 1 (A) is higher (i.e. included -- > skipped)
         normA <- which(whippetEvents$psi_a > whippetEvents$psi_b)
         # B -- psi in condition 2 (B) is higher (i.e. skipped -- > included)
@@ -181,11 +190,13 @@ transcriptChangeSummary <- function(transcriptsX,
         #sets for Y (+B)
         setsY <- c(paste0(unique(type), "_X"), "skipped_exon","spliced_intron")
 
-        transcriptsX <- allTranscripts[which((m %in% normA & allTranscripts$set %in% setsX) |
-                                                 (m %in% normB & allTranscripts$set %in% setsY))]
+        transcriptsX <- allTranscripts[
+            which((m %in% normA & allTranscripts$set %in% setsX) |
+                      (m %in% normB & allTranscripts$set %in% setsY))]
 
-        transcriptsY <- allTranscripts[which((m %in% normA & allTranscripts$set %in% setsY) |
-                                                 (m %in% normB & allTranscripts$set %in% setsX))]
+        transcriptsY <- allTranscripts[
+            which((m %in% normA & allTranscripts$set %in% setsY) |
+                      (m %in% normB & allTranscripts$set %in% setsX))]
 
     }
 
@@ -201,11 +212,15 @@ transcriptChangeSummary <- function(transcriptsX,
     }
 
     if(orfPrediction == "allFrames"){
-        orfsX <- getOrfs(transcriptsX, BSgenome,returnLongestOnly = FALSE, allFrames = TRUE, uORFs = TRUE)
-        orfsY <- getOrfs(transcriptsY, BSgenome,returnLongestOnly = FALSE, allFrames = TRUE, uORFs = TRUE)
+        orfsX <- getOrfs(transcriptsX, BSgenome,returnLongestOnly = FALSE,
+                         allFrames = TRUE, uORFs = TRUE)
+        orfsY <- getOrfs(transcriptsY, BSgenome,returnLongestOnly = FALSE,
+                         allFrames = TRUE, uORFs = TRUE)
     }else{
-        orfsX <- getOrfs(transcriptsX, BSgenome,returnLongestOnly = TRUE, uORFs = TRUE)
-        orfsY <- getOrfs(transcriptsY, BSgenome,returnLongestOnly = TRUE, uORFs = TRUE)
+        orfsX <- getOrfs(transcriptsX, BSgenome,returnLongestOnly = TRUE,
+                         uORFs = TRUE)
+        orfsY <- getOrfs(transcriptsY, BSgenome,returnLongestOnly = TRUE,
+                         uORFs = TRUE)
     }
 
     if(all(!grepl("[+]", orfsX$id))){
@@ -216,7 +231,8 @@ transcriptChangeSummary <- function(transcriptsX,
             Xid.withFrame <- paste0(orfsX$id,"_", orfsX$frame)
             m <- match(Yid.withFrame, Xid.withFrame)
         }else{
-            m <- match(unlist(lapply(str_split(orfsY$id, "[+]"),"[[",1)), orfsX$id)
+            m <- match(unlist(lapply(str_split(orfsY$id, "[+]"),"[[",1)),
+                       orfsX$id)
         }
 
         orfsX<- orfsX[m,]
@@ -235,51 +251,55 @@ transcriptChangeSummary <- function(transcriptsX,
             useModel <- NMDModel
         }
 
-      if(notNMDInstalled){
-      save(orfsX, orfsY, BSgenome, useModel, file="temp_ORFs.Rdata")
+        if(notNMDInstalled){
+            save(orfsX, orfsY, BSgenome, useModel, file="temp_ORFs.Rdata")
 
-      #### run notnmd
-      scriptLoc <- system.file("extdata","NMD_from_object.R",package = "notNMD")
-      system(paste0("Rscript ", scriptLoc, " temp_ORFs.Rdata"))
+            #### run notnmd
+            scriptLoc <- system.file("extdata","NMD_from_object.R",
+                                     package = "notNMD")
+            system(paste0("Rscript ", scriptLoc, " temp_ORFs.Rdata"))
 
-      load("temp_ORFs.Rdata")
-      system("rm -f temp_ORFs.Rdata")
+            load("temp_ORFs.Rdata")
+            system("rm -f temp_ORFs.Rdata")
 
-      }else{
-          message("package notNMD is not installed. Skipping NMD calculations")
-      }
-  }
+        }else{
+            message("package notNMD is not installed")
+            message("Skipping NMD calculations")
+        }
+    }
 
-  orfsX <- orfsX[which(!is.na(orfsX$orf_length)),]
-  orfsY <- orfsY[which(!is.na(orfsY$orf_length)),]
+    orfsX <- orfsX[which(!is.na(orfsX$orf_length)),]
+    orfsY <- orfsY[which(!is.na(orfsY$orf_length)),]
 
     if(compareToGene == TRUE){
 
-      if(NMD == TRUE & notNMDInstalled){
-          orfAllGenes <- getOrfs(exons[exons$gene_id %in%
-                                               unique(c(transcriptsX$gene_id,
-                                                        transcriptsY$gene_id))],
-                            BSgenome,returnLongestOnly = TRUE)
+        if(NMD == TRUE & notNMDInstalled){
+            orfAllGenes <- getOrfs(exons[exons$gene_id %in%
+                                             unique(c(transcriptsX$gene_id,
+                                                      transcriptsY$gene_id))],
+                                   BSgenome,returnLongestOnly = TRUE)
 
-          save(orfAllGenes, BSgenome, file="temp_ORFs.Rdata")
-          system(paste0("Rscript ", scriptLoc, " temp_ORFs.Rdata"))
-          load("temp_ORFs.Rdata")
-          system("rm -f temp_ORFs.Rdata")
-          #orfAllGenes <- orfAllGenes[orfAllGenes$nmd_prob > 0.5,]
+            save(orfAllGenes, BSgenome, file="temp_ORFs.Rdata")
+            system(paste0("Rscript ", scriptLoc, " temp_ORFs.Rdata"))
+            load("temp_ORFs.Rdata")
+            system("rm -f temp_ORFs.Rdata")
+            #orfAllGenes <- orfAllGenes[orfAllGenes$nmd_prob > 0.5,]
 
-      }else{
-          orfAllGenes <- getOrfs(exons[exons$gene_id %in%
-                                               unique(c(transcriptsX$gene_id,
-                                                        transcriptsY$gene_id)) &
-                                          exons$transcript_type=="protein_coding"],
-                            BSgenome=BSgenome,returnLongestOnly = TRUE)
-      }
+        }else{
+            orfAllGenes <- getOrfs(
+                exons[exons$gene_id %in%
+                          unique(c(transcriptsX$gene_id,
+                                   transcriptsY$gene_id)) &
+                          exons$transcript_type=="protein_coding"],
+                BSgenome=BSgenome,returnLongestOnly = TRUE)
+        }
 
         orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "gene",
-                           geneSimilarity = TRUE,allORFs = orfAllGenes,compareUTR = TRUE)
+                             geneSimilarity = TRUE,
+                             allORFs = orfAllGenes,compareUTR = TRUE)
     }else{
         orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "gene",
-                           compareUTR = TRUE)
+                             compareUTR = TRUE)
     }
 
 
@@ -288,7 +308,8 @@ transcriptChangeSummary <- function(transcriptsX,
         orfsX$nmd_class_manual <- "nonsense_mediated_decay"
         orfsX$nmd_class_manual[orfsX$orf_length > 50 &
                                    (orfsX$min_dist_to_junction_b < 50 |
-                                        orfsX$exon_b_from_final == 0)] <- "not_nmd"
+                                        orfsX$exon_b_from_final == 0)] <-
+            "not_nmd"
 
         orfsX$nmd_prob_manual <- 1
         orfsX$nmd_prob_manual[orfsX$nmd_class_manual == "not_nmd"] <- 0
@@ -296,36 +317,37 @@ transcriptChangeSummary <- function(transcriptsX,
         orfsY$nmd_class_manual <- "nonsense_mediated_decay"
         orfsY$nmd_class_manual[orfsY$orf_length > 50 &
                                    (orfsY$min_dist_to_junction_b < 50 |
-                                        orfsY$exon_b_from_final == 0)] <- "not_nmd"
+                                        orfsY$exon_b_from_final == 0)] <-
+            "not_nmd"
 
         orfsY$nmd_prob_manual <- 1
         orfsY$nmd_prob_manual[orfsY$nmd_class_manual == "not_nmd"] <- 0
 
     }
     if(NMD == TRUE & notNMDInstalled){
-      nmdChange <- attrChangeAltSpliced(orfsX,
-                                        orfsY,
-                                        attribute="nmd_prob",
-                                        compareBy="gene",
-                                        useMax=FALSE)
-      m <- match(orfChange$id, nmdChange$id)
-      orfChange <- cbind(orfChange, nmdChange[m,-1])
+        nmdChange <- attrChangeAltSpliced(orfsX,
+                                          orfsY,
+                                          attribute="nmd_prob",
+                                          compareBy="gene",
+                                          useMax=FALSE)
+        m <- match(orfChange$id, nmdChange$id)
+        orfChange <- cbind(orfChange, nmdChange[m,-1])
 
-      nmdChangeMan <- attrChangeAltSpliced(orfsX,
-                                        orfsY,
-                                        attribute="nmd_prob_manual",
-                                        compareBy="gene",
-                                        useMax=FALSE)
-      m <- match(orfChange$id, nmdChangeMan$id)
-      orfChange <- cbind(orfChange, nmdChangeMan[m,-1])
+        nmdChangeMan <- attrChangeAltSpliced(orfsX,
+                                             orfsY,
+                                             attribute="nmd_prob_manual",
+                                             compareBy="gene",
+                                             useMax=FALSE)
+        m <- match(orfChange$id, nmdChangeMan$id)
+        orfChange <- cbind(orfChange, nmdChangeMan[m,-1])
 
 
     }
-  if(!is.null(whippetDataSet)){
-      m <- match(orfChange$id, whippetEvents$coord)
-      orfChange <- cbind(whippetEvents[m,], orfChange)
-  }
-  return(orfChange)
+    if(!is.null(whippetDataSet)){
+        m <- match(orfChange$id, whippetEvents$coord)
+        orfChange <- cbind(whippetEvents[m,], orfChange)
+    }
+    return(orfChange)
 
 }
 
@@ -363,7 +385,7 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
                                            exportGTF = NULL){
 
 
-   # diffSplicingResults(whippetDataSet)
+    # diffSplicingResults(whippetDataSet)
 
     if(is.null(exons) & !is.null(gtf.all)){
         exons <- gtf.all[gtf.all$type=="exon"]
@@ -386,9 +408,9 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
 
 
         whippetDataSet.ce <- filterWhippetEvents(whippetDataSet,
-                                                            probability = 0,
-                                                            psiDelta = 0,
-                                                            eventTypes="CE")
+                                                 probability = 0,
+                                                 psiDelta = 0,
+                                                 eventTypes="CE")
 
         significantEvents.ce <- diffSplicingResults(whippetDataSet.ce)
 
@@ -417,16 +439,17 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
             SignificantEvents.withORF <- significantEvents.ce
         }
         if(!is.null(exportGTF)){
-            exportedTranscripts <- c(exportedTranscripts, skippedExonTranscripts)
+            exportedTranscripts <- c(exportedTranscripts,
+                                     skippedExonTranscripts)
         }
     }
     if(any(eventTypes == "RI") & any(diffSplicingResults(whippetDataSet)$type ==
                                      "RI")){
 
         whippetDataSet.ri <- filterWhippetEvents(whippetDataSet,
-                                                            probability = 0,
-                                                            psiDelta = 0,
-                                                            eventTypes="RI")
+                                                 probability = 0,
+                                                 psiDelta = 0,
+                                                 eventTypes="RI")
 
         significantEvents.ri <- diffSplicingResults(whippetDataSet.ri)
 
@@ -453,8 +476,10 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
 
 
         orfChanges.ri <- transcriptChangeSummary(
-            retainedIntronTranscripts[retainedIntronTranscripts$set=="spliced_intron"],
-            retainedIntronTranscripts[retainedIntronTranscripts$set=="retained_intron"],
+            retainedIntronTranscripts[retainedIntronTranscripts$set==
+                                          "spliced_intron"],
+            retainedIntronTranscripts[retainedIntronTranscripts$set==
+                                          "retained_intron"],
             BSgenome = BSgenome,NMD = NMD, whippetDataSet=whippetDataSet.ri)
         # add to significantEvents.ce
         m <- match(significantEvents.ri$coord, orfChanges.ri$id)
@@ -467,11 +492,13 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
             SignificantEvents.withORF <- significantEvents.ri
         }
         if(!is.null(exportGTF)){
-            exportedTranscripts <- c(exportedTranscripts, retainedIntronTranscripts)
+            exportedTranscripts <- c(exportedTranscripts,
+                                     retainedIntronTranscripts)
         }
     }
     if(any(eventTypes %in% c("AA","AD","AF","AL")) &
-       any(diffSplicingResults(whippetDataSet)$type %in% c("AA","AD","AF","AL"))){
+       any(diffSplicingResults(whippetDataSet)$type %in%
+           c("AA","AD","AF","AL"))){
 
         events.junctions <- eventTypes[eventTypes %in% c("AA","AD","AF","AL")]
         events.significant <- unique(diffSplicingResults(whippetDataSet)$type)
@@ -483,9 +510,9 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
             event <- events.significant[e]
 
             whippetDataSet.jnc <- filterWhippetEvents(whippetDataSet,
-                                                                 probability = 0,
-                                                                 psiDelta = 0,
-                                                                 eventTypes=event)
+                                                      probability = 0,
+                                                      psiDelta = 0,
+                                                      eventTypes=event)
 
             significantEvents.jnc <- diffSplicingResults(whippetDataSet.jnc)
 
@@ -493,41 +520,51 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
 
             # check for pairs
             ids.x <- unique(junctionPairs$whippet_id[junctionPairs$set=="X"])
-            ids.x <- ids.x[ids.x %in% unique(junctionPairs$whippet_id[junctionPairs$set=="Y"])]
+            ids.x <- ids.x[ids.x %in% unique(
+                junctionPairs$whippet_id[junctionPairs$set=="Y"])]
 
-            significantEvents.jnc <-significantEvents.jnc[which(significantEvents.jnc$coord %in%
-                                                                    ids.x),]
-            junctionPairs <- junctionPairs[which(junctionPairs$whippet_id %in% ids.x),]
+            significantEvents.jnc <-significantEvents.jnc[
+                which(significantEvents.jnc$coord %in% ids.x),]
+            junctionPairs <- junctionPairs[
+                which(junctionPairs$whippet_id %in% ids.x),]
 
             if(nrow(significantEvents.jnc) > 0){
-              # make transcripts with alternative junction usage
-              altTranscripts <- replaceJunction(whippetDataSet.jnc, junctionPairs,
-                                                exons, type=event)
-              orfChanges.jnc <- transcriptChangeSummary(
-                  transcriptsX = altTranscripts[altTranscripts$set==paste0(event, "_X")],
-                  transcriptsY = altTranscripts[altTranscripts$set==paste0(event, "_Y")],
-                  BSgenome = BSgenome,NMD = NMD, whippetDataSet=whippetDataSet.jnc)
+                # make transcripts with alternative junction usage
+                altTranscripts <- replaceJunction(whippetDataSet.jnc,
+                                                  junctionPairs,
+                                                  exons, type=event)
+                orfChanges.jnc <- transcriptChangeSummary(
+                    transcriptsX = altTranscripts[
+                        altTranscripts$set==paste0(event, "_X")],
+                    transcriptsY = altTranscripts[
+                        altTranscripts$set==paste0(event, "_Y")],
+                    BSgenome = BSgenome,NMD = NMD,
+                    whippetDataSet=whippetDataSet.jnc)
 
-              # add to significantEvents
-              m <- match(significantEvents.jnc$coord, orfChanges.jnc$id)
-              significantEvents.jnc <- cbind(significantEvents.jnc, orfChanges.jnc[m,-1])
+                # add to significantEvents
+                m <- match(significantEvents.jnc$coord, orfChanges.jnc$id)
+                significantEvents.jnc <- cbind(significantEvents.jnc,
+                                               orfChanges.jnc[m,-1])
 
-              if(exists("SignificantEvents.withORF")){
-                  SignificantEvents.withORF <- rbind(SignificantEvents.withORF,
-                                                     significantEvents.jnc)
-              }else{
-                  SignificantEvents.withORF <- significantEvents.jnc
-              }
-              if(!is.null(exportGTF)){
-                  exportedTranscripts <- c(exportedTranscripts, altTranscripts)
-              }
+                if(exists("SignificantEvents.withORF")){
+                    SignificantEvents.withORF <-
+                        rbind(SignificantEvents.withORF,
+                              significantEvents.jnc)
+                }else{
+                    SignificantEvents.withORF <- significantEvents.jnc
+                }
+                if(!is.null(exportGTF)){
+                    exportedTranscripts <- c(exportedTranscripts,
+                                             altTranscripts)
+                }
             }
         }
 
     }
     if(!is.null(exportGTF)){
         exportedTranscripts <- do.call("c", exportedTranscripts)
-        rtracklayer::export.gff(exportedTranscripts, con=exportGTF, format="gtf")
+        rtracklayer::export.gff(exportedTranscripts, con=exportGTF,
+                                format="gtf")
     }
 
     return(SignificantEvents.withORF)
@@ -579,7 +616,8 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
         if(showProgressBar){
             message(paste0("Generating alternative isoforms for ",
                            nrow(geneEvents), " clusters:"))
-            pb <- utils::txtProgressBar(min = 0, max = nrow(geneEvents), style = 3)
+            pb <- utils::txtProgressBar(min = 0, max = nrow(geneEvents),
+                                        style = 3)
         }
 
         altIso <- alternativeIntronUsage(significantEvents[
@@ -591,7 +629,8 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
             for(i in 2:nrow(geneEvents)){
                 altIntronLocs = significantEvents[
                     significantEvents$clusterID == geneEvents$Var2[i],]
-                altIntronLocs <- altIntronLocs[altIntronLocs$verdict=="annotated",]
+                altIntronLocs <- altIntronLocs[altIntronLocs$verdict==
+                                                   "annotated",]
                 if(nrow(altIntronLocs) > 1){
                     altIso1 <- alternativeIntronUsage(altIntronLocs, exons)
                     altIso <- c(altIso, altIso1)
@@ -618,9 +657,11 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
                 for(i in 2:nrow(clusters)){
                     altIntronLocs = significantEvents[
                         significantEvents$clusterID == clusters$Var2[i],]
-                    altIntronLocs <- altIntronLocs[altIntronLocs$verdict=="annotated",]
+                    altIntronLocs <- altIntronLocs[altIntronLocs$verdict==
+                                                       "annotated",]
                     if(nrow(altIntronLocs) > 1){
-                        altIso1 <- alternativeIntronUsage(altIntronLocs, c(exons, altIso))
+                        altIso1 <- alternativeIntronUsage(altIntronLocs,
+                                                          c(exons, altIso))
                         altIso <- c(altIso, altIso1)
                     }
 

@@ -23,13 +23,15 @@
 #'
 #' wds.intronRetention <- filterWhippetEvents(wds, eventTypes="RI")
 #' exons.intronRetention <- findIntronContainingTranscripts(wds.intronRetention, exons)
-findIntronContainingTranscripts <- function(whippetDataSet, exons, match="exact"){
+findIntronContainingTranscripts <- function(whippetDataSet,
+                                            exons,
+                                            match="exact"){
     moved <- FALSE
 
     whippetDataSet <- filterWhippetEvents(whippetDataSet,
-                                                     probability = 0,
-                                                     psiDelta = 0,
-                                                     eventTypes="RI")
+                                          probability = 0,
+                                          psiDelta = 0,
+                                          eventTypes="RI")
 
     eventCoords <- coordinates(whippetDataSet)
 
@@ -54,7 +56,8 @@ findIntronContainingTranscripts <- function(whippetDataSet, exons, match="exact"
     if(length(overlaps) == 0){
         start(rangeRI.start) <- start(rangeRI.start) -1
         end(rangeRI.start) <- start(rangeRI.start)
-        overlaps <- GenomicRanges::findOverlaps(rangeRI.start, exons, type="end")
+        overlaps <- GenomicRanges::findOverlaps(rangeRI.start,
+                                                exons, type="end")
         # fix original
         start(eventCoords) <- start(eventCoords) -1
         end(eventCoords) <- end(eventCoords) +1
@@ -64,8 +67,6 @@ findIntronContainingTranscripts <- function(whippetDataSet, exons, match="exact"
     gtf.fromA <- exons[overlaps@to]
     gtf.fromA$from <- overlaps@from
     gtf.fromA$new_id <- paste(gtf.fromA$transcript_id, gtf.fromA$from, sep="_")
-    #gtf.fromA$new_id <- with(as.data.frame(GenomicRanges::mcols(gtf.fromA)$transcript_id),
-    #                         paste0(transcript_id, "_",from))
 
     # end of intron // start of exon b
     rangeRI.end <- eventCoords
@@ -75,7 +76,8 @@ findIntronContainingTranscripts <- function(whippetDataSet, exons, match="exact"
     if(length(overlaps) == 0){
         end(rangeRI.end) <- end(rangeRI.end) +1
         start(rangeRI.end) <- end(rangeRI.end)
-        overlaps <- GenomicRanges::findOverlaps(rangeRI.end, exons, type="start")
+        overlaps <- GenomicRanges::findOverlaps(rangeRI.end,
+                                                exons, type="start")
         moved <- TRUE
     }
 
@@ -83,7 +85,8 @@ findIntronContainingTranscripts <- function(whippetDataSet, exons, match="exact"
     gtf.toA$from <- overlaps@from
     gtf.toA$new_id <- paste0(gtf.toA$transcript_id, "_",gtf.toA$from)
 
-    keep.from <- which(gtf.fromA@elementMetadata$new_id %in% gtf.toA@elementMetadata$new_id)
+    keep.from <- which(gtf.fromA@elementMetadata$new_id %in%
+                           gtf.toA@elementMetadata$new_id)
     gtf.fromA <- gtf.fromA[keep.from]
 
     m <- match(gtf.fromA$new_id, gtf.toA$new_id)
@@ -98,41 +101,54 @@ findIntronContainingTranscripts <- function(whippetDataSet, exons, match="exact"
     if(length(gtf.toA) > 0){
         mcols(gtf.toA)$overlaps <- "intron"
     }else{
-        mcols(gtf.toA) <- cbind(mcols(gtf.toA), S4Vectors::DataFrame(overlaps=character()))
+        mcols(gtf.toA) <- cbind(mcols(gtf.toA),
+                                S4Vectors::DataFrame(overlaps=character()))
     }
     if(match == "introns" | match=="all"){
         # non-exact overlaps
         ol <- findOverlaps(eventCoords, exons)
         gtf.overlaps <- exons[ol@to]
         gtf.overlaps$from <- ol@from
-        gtf.overlaps$new_id <- paste0(gtf.overlaps$transcript_id, "_",gtf.overlaps$from)
+        gtf.overlaps$new_id <- paste0(gtf.overlaps$transcript_id,
+                                      "_",gtf.overlaps$from)
         gtf.overlaps$exon_number <- as.numeric(gtf.overlaps$exon_number)
         # remove perfect match pairs
-        gtf.overlaps <- gtf.overlaps[which(!(gtf.overlaps$new_id %in% gtf.toA$new_id))]
+        gtf.overlaps <- gtf.overlaps[which(!(gtf.overlaps$new_id %in%
+                                                 gtf.toA$new_id))]
 
         transcriptTable <- as.data.frame(table(gtf.overlaps$new_id))
-        gtf.overlapsPairs <- gtf.overlaps[gtf.overlaps$new_id %in%
-                                              transcriptTable$Var1[transcriptTable$Freq == 2]]
-        startPair <- gtf.overlapsPairs$new_id[start(gtf.overlapsPairs) <
-                                                  start(eventCoords[gtf.overlapsPairs$from])]
-        endPair <- gtf.overlapsPairs$new_id[end(gtf.overlapsPairs) >
-                                                end(eventCoords[gtf.overlapsPairs$from])]
+        gtf.overlapsPairs <-
+            gtf.overlaps[gtf.overlaps$new_id %in%
+                             transcriptTable$Var1[transcriptTable$Freq == 2]]
+        startPair <-
+            gtf.overlapsPairs$new_id[
+                start(gtf.overlapsPairs) <
+                    start(eventCoords[gtf.overlapsPairs$from])]
+        endPair <-
+            gtf.overlapsPairs$new_id[
+                end(gtf.overlapsPairs) >
+                    end(eventCoords[gtf.overlapsPairs$from])]
         keep <- startPair[startPair %in% endPair]
-        gtf.overlapsPairs <- gtf.overlapsPairs[gtf.overlapsPairs$new_id %in% keep]
+        gtf.overlapsPairs <-
+            gtf.overlapsPairs[gtf.overlapsPairs$new_id %in% keep]
 
         if(length(gtf.overlapsPairs) > 0){
             exon_numbers <- aggregate(exon_number ~ new_id,
-                                                 mcols(gtf.overlapsPairs), mean)
+                                      mcols(gtf.overlapsPairs), mean)
             gtf.overlapsPairs$intron_exon_number <-
                 exon_numbers$exon_number[match(gtf.overlapsPairs$new_id,
                                                exon_numbers$new_id)]
-            gtf.overlapsPairs <- gtf.overlapsPairs[!duplicated(gtf.overlapsPairs$new_id)]
-            gtf.overlapsPairs$from_exon_number <- gtf.overlapsPairs$intron_exon_number - 0.5
-            gtf.overlapsPairs$to_exon_number <- gtf.overlapsPairs$intron_exon_number + 0.5
+            gtf.overlapsPairs <-
+                gtf.overlapsPairs[!duplicated(gtf.overlapsPairs$new_id)]
+            gtf.overlapsPairs$from_exon_number <-
+                gtf.overlapsPairs$intron_exon_number - 0.5
+            gtf.overlapsPairs$to_exon_number <-
+                gtf.overlapsPairs$intron_exon_number + 0.5
             gtf.overlapsPairs$overlaps <- "nonexact"
             mcols(gtf.overlapsPairs) <-
                 mcols(gtf.overlapsPairs[,match(colnames(mcols(gtf.toA)),
-                                               colnames(mcols(gtf.overlapsPairs)))])
+                                               colnames(mcols(
+                                                   gtf.overlapsPairs)))])
 
             gtf.toA <- c(gtf.toA, gtf.overlapsPairs)
         }
@@ -141,8 +157,10 @@ findIntronContainingTranscripts <- function(whippetDataSet, exons, match="exact"
         # overlaps an exon
         gtf.overlaps <- gtf.overlaps[which(!(gtf.overlaps$new_id %in%
                                                  gtf.overlapsPairs$new_id))]
-        keep <- which(start(gtf.overlaps) <= start(eventCoords[gtf.overlaps$from]) &
-                          end(gtf.overlaps) >= end(eventCoords[gtf.overlaps$from]))
+        keep <- which(start(gtf.overlaps) <=
+                          start(eventCoords[gtf.overlaps$from]) &
+                          end(gtf.overlaps) >=
+                          end(eventCoords[gtf.overlaps$from]))
         gtf.overlaps <- gtf.overlaps[keep]
         if(length(gtf.overlaps) > 0){
             gtf.overlaps$intron_exon_number <- gtf.overlaps$exon_number
@@ -158,11 +176,12 @@ findIntronContainingTranscripts <- function(whippetDataSet, exons, match="exact"
 
     if(length(gtf.toA) > 0){
         flankingExons <-
-            as.data.frame(GenomicRanges::mcols(gtf.toA)[,c('gene_id','transcript_id',
-                                                           'transcript_type',
-                                                           'from','from_exon_number',
-                                                           'intron_exon_number',
-                                                           'to_exon_number','overlaps')])
+            as.data.frame(GenomicRanges::mcols(
+                gtf.toA)[,c('gene_id','transcript_id',
+                            'transcript_type',
+                            'from','from_exon_number',
+                            'intron_exon_number',
+                            'to_exon_number','overlaps')])
 
         flankingExons$from <- eventCoords$id[flankingExons$from]
         flankingExons$moved <- moved
@@ -213,9 +232,9 @@ addIntronInTranscript <- function(whippetDataSet,
 
 
     whippetDataSet <- filterWhippetEvents(whippetDataSet,
-                                                     probability = 0,
-                                                     psiDelta = 0,
-                                                     eventTypes="RI")
+                                          probability = 0,
+                                          psiDelta = 0,
+                                          eventTypes="RI")
 
     eventCoords <- coordinates(whippetDataSet)
 
@@ -249,33 +268,33 @@ addIntronInTranscript <- function(whippetDataSet,
     m <- match(gtfTranscripts$transcript_id, eventCoords$transcript_id)
     mcols(gtfTranscripts) <-
         cbind(mcols(gtfTranscripts),
-              S4Vectors::DataFrame(new_transcript_id=paste0(gtfTranscripts$transcript_id,
-                                                 "+AS ", eventCoords$exon_id[m])))
+              S4Vectors::DataFrame(
+                  new_transcript_id=paste0(gtfTranscripts$transcript_id,
+                                           "+AS ", eventCoords$exon_id[m])))
     mcols(eventCoords) <-
         cbind(mcols(eventCoords),
-              S4Vectors::DataFrame(new_transcript_id = paste0(eventCoords$transcript_id,
-                                                   "+AS ", eventCoords$exon_id)))
+              S4Vectors::DataFrame(
+                  new_transcript_id = paste0(eventCoords$transcript_id,
+                                             "+AS ", eventCoords$exon_id)))
     flankingExons$new_transcript_id <- paste0(flankingExons$transcript_id,
                                               "+AS ", flankingExons$from)
 
-    #mcols(gtfTranscripts)$new_transcript_id <- paste0(gtfTranscripts$transcript_id,"+AS ",
-    # eventCoords$exon_id[m])
-    #mcols(eventCoords)$new_transcript_id <- paste0(eventCoords$transcript_id,"+AS ",
-    # eventCoords$exon_id)
-
-    mcols(gtfTranscripts) <- mcols(gtfTranscripts)[,c('gene_id','transcript_id',
-                                                      'transcript_type','exon_id',
-                                                      'exon_number','new_transcript_id')]
-    mcols(eventCoords) <- mcols(eventCoords)[,c('gene_id','transcript_id',
-                                                'transcript_type','exon_id',
-                                                'exon_number','new_transcript_id')]
+    mcols(gtfTranscripts) <- mcols(
+        gtfTranscripts)[,c('gene_id','transcript_id',
+                           'transcript_type','exon_id',
+                           'exon_number','new_transcript_id')]
+    mcols(eventCoords) <- mcols(
+        eventCoords)[,c('gene_id','transcript_id',
+                        'transcript_type','exon_id',
+                        'exon_number','new_transcript_id')]
 
     needsDuplicated <- which(!(eventCoords$new_transcript_id %in%
                                    gtfTranscripts$new_transcript_id))
 
     if(length(needsDuplicated) > 0){
-        gtfTranscripts.add <- gtfTranscripts[gtfTranscripts$transcript_id %in%
-                                                 eventCoords$transcript_id[needsDuplicated]]
+        gtfTranscripts.add <- gtfTranscripts[
+            gtfTranscripts$transcript_id %in%
+                eventCoords$transcript_id[needsDuplicated]]
     }
 
     while(length(needsDuplicated) > 0){
@@ -295,26 +314,32 @@ addIntronInTranscript <- function(whippetDataSet,
     ##########################
     # fix starts/ends of introns
     gtfTranscripts$new_id_ex <-
-        paste0(gtfTranscripts$new_transcript_id, "_", gtfTranscripts$exon_number)
+        paste0(gtfTranscripts$new_transcript_id, "_",
+               gtfTranscripts$exon_number)
     flankingExons$from_ex <-
-        paste0(flankingExons$new_transcript_id, "_", flankingExons$from_exon_number)
+        paste0(flankingExons$new_transcript_id, "_",
+               flankingExons$from_exon_number)
     flankingExons$to_ex <-
-        paste0(flankingExons$new_transcript_id, "_", flankingExons$to_exon_number)
+        paste0(flankingExons$new_transcript_id, "_",
+               flankingExons$to_exon_number)
 
     if(match == "replace"){
         wi <- which(flankingExons$overlaps == "nonexact")
         wi.pos <-
-            wi[as.character(strand(gtfTranscripts[match(flankingExons$from_ex[wi],
-                                                        gtfTranscripts$new_id_ex)])) == "+"]
+            wi[as.character(strand(gtfTranscripts[
+                match(flankingExons$from_ex[wi],
+                      gtfTranscripts$new_id_ex)])) == "+"]
         wi.neg <-
-            wi[as.character(strand(gtfTranscripts[match(flankingExons$from_ex[wi],
-                                                        gtfTranscripts$new_id_ex)])) == "-"]
+            wi[as.character(strand(gtfTranscripts[
+                match(flankingExons$from_ex[wi],
+                      gtfTranscripts$new_id_ex)])) == "-"]
 
         if(length(wi.pos) > 0){
             end(gtfTranscripts)[match(flankingExons$from_ex[wi.pos],
                                       gtfTranscripts$new_id_ex)] <-
-                start(eventCoords)[match(flankingExons$new_transcript_id[wi.pos],
-                                         eventCoords$new_transcript_id)]
+                start(eventCoords)[
+                    match(flankingExons$new_transcript_id[wi.pos],
+                          eventCoords$new_transcript_id)]
             start(gtfTranscripts)[match(flankingExons$to_ex[wi.pos],
                                         gtfTranscripts$new_id_ex)] <-
                 end(eventCoords)[match(flankingExons$new_transcript_id[wi.pos],
@@ -323,8 +348,9 @@ addIntronInTranscript <- function(whippetDataSet,
         if(length(wi.neg) > 0){
             end(gtfTranscripts)[match(flankingExons$to_ex[wi.neg],
                                       gtfTranscripts$new_id_ex)] <-
-                start(eventCoords)[match(flankingExons$new_transcript_id[wi.neg],
-                                         eventCoords$new_transcript_id)]
+                start(eventCoords)[
+                    match(flankingExons$new_transcript_id[wi.neg],
+                          eventCoords$new_transcript_id)]
             start(gtfTranscripts)[match(flankingExons$from_ex[wi.neg],
                                         gtfTranscripts$new_id_ex)] <-
                 end(eventCoords)[match(flankingExons$new_transcript_id[wi.neg],
@@ -337,14 +363,18 @@ addIntronInTranscript <- function(whippetDataSet,
     if(length(we) > 0){
         replace <- match(flankingExons$from_ex[we],gtfTranscripts$new_id_ex)
         start.replacement <- gtfTranscripts[replace]
-        end(start.replacement) <- start(eventCoords)[match(flankingExons$new_transcript_id[we],
-                                                           eventCoords$new_transcript_id)]
+        end(start.replacement) <- start(eventCoords)[
+            match(flankingExons$new_transcript_id[we],
+                  eventCoords$new_transcript_id)]
         end.replacement <- gtfTranscripts[replace]
-        start(end.replacement) <- end(eventCoords)[match(flankingExons$new_transcript_id[we],
-                                                         eventCoords$new_transcript_id)]
-        gtfTranscripts <- c(gtfTranscripts[-replace], start.replacement, end.replacement)
+        start(end.replacement) <- end(eventCoords)[
+            match(flankingExons$new_transcript_id[we],
+                  eventCoords$new_transcript_id)]
+        gtfTranscripts <- c(gtfTranscripts[-replace],
+                            start.replacement, end.replacement)
     }
-    gtfTranscripts <- reorderExonNumbers(gtfTranscripts, by="new_transcript_id")
+    gtfTranscripts <- reorderExonNumbers(gtfTranscripts,
+                                         by="new_transcript_id")
     gtfTranscripts$new_id_ex <- NULL
 
     gtfTranscripts.withIntron <- c(gtfTranscripts, eventCoords)
@@ -352,8 +382,9 @@ addIntronInTranscript <- function(whippetDataSet,
                                                     by="new_transcript_id")
 
     mcols(gtfTranscripts.withIntron) <-
-        mcols(gtfTranscripts.withIntron)[,c('gene_id','new_transcript_id',
-                                            'transcript_type','exon_id','exon_number')]
+        mcols(gtfTranscripts.withIntron)[,c(
+            'gene_id','new_transcript_id',
+            'transcript_type','exon_id','exon_number')]
     colnames(mcols(gtfTranscripts.withIntron))[2] <- "transcript_id"
 
     mcols(gtfTranscripts) <-
@@ -361,7 +392,8 @@ addIntronInTranscript <- function(whippetDataSet,
                                  'transcript_type','exon_id','exon_number')]
     colnames(mcols(gtfTranscripts))[2] <- "transcript_id"
 
-    gtfTranscripts.withIntron$exon_number <- as.numeric(gtfTranscripts.withIntron$exon_number)
+    gtfTranscripts.withIntron$exon_number <-
+        as.numeric(gtfTranscripts.withIntron$exon_number)
     order <- order(gtfTranscripts.withIntron$transcript_id,
                    gtfTranscripts.withIntron$exon_number)
     gtfTranscripts.withIntron <- gtfTranscripts.withIntron[order]
@@ -403,8 +435,10 @@ addIntronInTranscript <- function(whippetDataSet,
             -length(gtfTranscripts.withIntron)] ==
                 start(ranges(gtfTranscripts.withIntron[-1])))
         gtfTranscripts.withIntron <- gtfTranscripts.withIntron
-        GenomicRanges::start(GenomicRanges::ranges(gtfTranscripts.withIntron))[w+1] <-
-            GenomicRanges::start(GenomicRanges::ranges(gtfTranscripts.withIntron))[w]
+        GenomicRanges::start(GenomicRanges::ranges(
+            gtfTranscripts.withIntron))[w+1] <-
+            GenomicRanges::start(GenomicRanges::ranges(
+                gtfTranscripts.withIntron))[w]
 
         # remove exons that cover now redundant regions
         overlaps <- findOverlaps(gtfTranscripts.withIntron, type="within")
@@ -418,8 +452,10 @@ addIntronInTranscript <- function(whippetDataSet,
         overlaps <- findOverlaps(gtfTranscripts.withIntron)
         overlaps <- overlaps[overlaps@from==overlaps@to +1]
 
-        GenomicRanges::end(GenomicRanges::ranges(gtfTranscripts.withIntron))[overlaps@to] <-
-            GenomicRanges::end(GenomicRanges::ranges(gtfTranscripts.withIntron))[overlaps@from]
+        GenomicRanges::end(GenomicRanges::ranges(
+            gtfTranscripts.withIntron))[overlaps@to] <-
+            GenomicRanges::end(GenomicRanges::ranges(
+                gtfTranscripts.withIntron))[overlaps@from]
 
         # remove exons that cover now redundant regions
         overlaps <- findOverlaps(gtfTranscripts.withIntron, type="within")

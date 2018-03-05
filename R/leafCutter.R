@@ -21,12 +21,16 @@ addSets <- function(clusterGRanges){
         tab <- as.data.frame(table(ol$queryHits))
         tab <- tab[order(plyr::desc(tab$Freq)),]
 
-        clusterGRanges$set[as.numeric(as.character(tab$Var1[1]))] <- max(clusterGRanges$set) + 1
+        clusterGRanges$set[as.numeric(as.character(tab$Var1[1]))] <-
+            max(clusterGRanges$set) + 1
 
-        olSet <- findOverlaps(clusterGRanges[clusterGRanges$set == max(clusterGRanges$set)],
-                              clusterGRanges[clusterGRanges$set != max(clusterGRanges$set)])
+        olSet <- findOverlaps(clusterGRanges[clusterGRanges$set ==
+                                                 max(clusterGRanges$set)],
+                              clusterGRanges[clusterGRanges$set !=
+                                                 max(clusterGRanges$set)])
 
-        line <- clusterGRanges[clusterGRanges$set!= max(clusterGRanges$set)][-olSet@to]
+        line <- clusterGRanges[clusterGRanges$set!=
+                                   max(clusterGRanges$set)][-olSet@to]
         line <- line[!duplicated(ranges(line))]
 
         if(length(line) == 1){
@@ -35,31 +39,32 @@ addSets <- function(clusterGRanges){
 
             # if theres multiple options for additions...
         }else if(length(line) > 1){
-          # find if any of the options overlap each other
-          olLine <- as.data.frame(findOverlaps(line))
-          olLine <- olLine[olLine$queryHits != olLine$subjectHits,]
-          counter <- 1
-          originalCoords <- clusterGRanges[clusterGRanges$set== max(clusterGRanges$set)]
-
-          while(nrow(olLine) > 0){
-            # make a new set with a non-overlapping part
-            tab <- as.data.frame(table(olLine$queryHits))
-            tab <- tab[order(plyr::desc(tab$Freq)),]
-            rm <- olLine$subjectHits[olLine$queryHits == tab$Var1[1]]
-            line.part <- line[-rm]
-            line.part$set <- max(originalCoords$set)
-            line.part <- c(originalCoords,line.part)
-            line.part$set <- max(line.part$set) + counter
-
-            clusterGRanges <- c(clusterGRanges ,line.part)
-
-            counter <- counter + 1
-            line <- line[rm]
+            # find if any of the options overlap each other
             olLine <- as.data.frame(findOverlaps(line))
             olLine <- olLine[olLine$queryHits != olLine$subjectHits,]
-          }
-          line$set <- max(originalCoords$set)
-          clusterGRanges <- c(clusterGRanges, line)
+            counter <- 1
+            originalCoords <- clusterGRanges[clusterGRanges$set==
+                                                 max(clusterGRanges$set)]
+
+            while(nrow(olLine) > 0){
+                # make a new set with a non-overlapping part
+                tab <- as.data.frame(table(olLine$queryHits))
+                tab <- tab[order(plyr::desc(tab$Freq)),]
+                rm <- olLine$subjectHits[olLine$queryHits == tab$Var1[1]]
+                line.part <- line[-rm]
+                line.part$set <- max(originalCoords$set)
+                line.part <- c(originalCoords,line.part)
+                line.part$set <- max(line.part$set) + counter
+
+                clusterGRanges <- c(clusterGRanges ,line.part)
+
+                counter <- counter + 1
+                line <- line[rm]
+                olLine <- as.data.frame(findOverlaps(line))
+                olLine <- olLine[olLine$queryHits != olLine$subjectHits,]
+            }
+            line$set <- max(originalCoords$set)
+            clusterGRanges <- c(clusterGRanges, line)
 
         }
         ol <- as.data.frame(findOverlaps(clusterGRanges))
@@ -136,15 +141,17 @@ removeSameExon <- function(exons){
 #' unique(altIsoforms1396plus1395$transcript_id)
 
 alternativeIntronUsage <- function(altIntronLocs, exons){
-    clusterGRanges <- GRanges(seqnames=S4Vectors::Rle(altIntronLocs$chr),
-                              ranges=IRanges::IRanges(start=as.numeric(altIntronLocs$start),
-                                                      end=as.numeric(altIntronLocs$end)),
-                              strand="*",
-                              id=altIntronLocs$clusterID,
-                              direction=ifelse(altIntronLocs$deltapsi >0, "+","-"))
+    clusterGRanges <-
+        GRanges(seqnames=S4Vectors::Rle(altIntronLocs$chr),
+                ranges=IRanges::IRanges(start=as.numeric(altIntronLocs$start),
+                                        end=as.numeric(altIntronLocs$end)),
+                strand="*",
+                id=altIntronLocs$clusterID,
+                direction=ifelse(altIntronLocs$deltapsi >0, "+","-"))
 
     m <- match(altIntronLocs$ensemblID, exons$gene_id)
-    strand(clusterGRanges)[which(!is.na(m))] <- strand(exons)[m][which(!is.na(m))]
+    strand(clusterGRanges)[which(!is.na(m))] <-
+        strand(exons)[m][which(!is.na(m))]
     # maximum spanning region
     clusterGRanges.max <- clusterGRanges
     #start(clusterGRanges.max) <- min(start(clusterGRanges.max))
@@ -152,19 +159,26 @@ alternativeIntronUsage <- function(altIntronLocs, exons){
 
     #find overlaps -- for when range overlaps multiple genes
     olExons <- as.data.frame(findOverlaps(clusterGRanges.max, exons))
-    transcripts <- exonsToTranscripts(exons[exons$gene_id %in%
-                                                        exons$gene_id[olExons$subjectHits]])
+    transcripts <-
+        exonsToTranscripts(exons[exons$gene_id %in%
+                                     exons$gene_id[olExons$subjectHits]])
     # find transcripts which contain the cluster region
-    olTrans <- as.data.frame(findOverlaps(clusterGRanges.max, transcripts, type = "within"))
+    olTrans <- as.data.frame(findOverlaps(clusterGRanges.max,
+                                          transcripts, type = "within"))
     clusterTranscripts <- transcripts[unique(olTrans$subjectHits)]
-    #transcript_exons <- exons[exons$transcript_id %in% clusterTranscripts$transcript_id,]
-    clusterExons <- exons[exons$transcript_id %in% clusterTranscripts$transcript_id,]
+    #transcript_exons <- exons[exons$transcript_id %in%
+    # clusterTranscripts$transcript_id,]
+    clusterExons <- exons[exons$transcript_id %in%
+                              clusterTranscripts$transcript_id,]
 
 
     # add sets to cluster introns
-    clusterGRanges.dnre <- addSets(clusterGRanges[clusterGRanges$direction=="-"])
-    clusterGRanges.upre <- addSets(clusterGRanges[clusterGRanges$direction=="+"])
-    clusterGRanges.upre$set <- clusterGRanges.upre$set + max(clusterGRanges.dnre$set)
+    clusterGRanges.dnre <-
+        addSets(clusterGRanges[clusterGRanges$direction=="-"])
+    clusterGRanges.upre <-
+        addSets(clusterGRanges[clusterGRanges$direction=="+"])
+    clusterGRanges.upre$set <-
+        clusterGRanges.upre$set + max(clusterGRanges.dnre$set)
     clusterGRanges <- c(clusterGRanges.upre, clusterGRanges.dnre)
 
     overlaps <- as.data.frame(findOverlaps(clusterGRanges, clusterExons))
@@ -176,7 +190,8 @@ alternativeIntronUsage <- function(altIntronLocs, exons){
 
     for(i in seq_along(unique(clusterGRanges$set))){
 
-        clusterGRanges.max <- clusterGRanges.intron[clusterGRanges.intron$set==i]
+        clusterGRanges.max <-
+            clusterGRanges.intron[clusterGRanges.intron$set==i]
         start(clusterGRanges.max) <- min(start(clusterGRanges.max))
         end(clusterGRanges.max) <- max(end(clusterGRanges.max))
 
@@ -191,11 +206,13 @@ alternativeIntronUsage <- function(altIntronLocs, exons){
         #overlaps start of the intron
         clusterGRanges.start <- clusterGRanges[clusterGRanges$set==i]
         end(clusterGRanges.start) <- start(clusterGRanges.start)
-        overlapsStart <- findOverlaps(clusterGRanges.start, rmExons, type = "end")
+        overlapsStart <-
+            findOverlaps(clusterGRanges.start, rmExons, type = "end")
         #overlaps end of the intron
         clusterGRanges.end <- clusterGRanges[clusterGRanges$set==i]
         start(clusterGRanges.end) <- end(clusterGRanges.end)
-        overlapsEnd <- findOverlaps(clusterGRanges.end, rmExons, type = "start")
+        overlapsEnd <-
+            findOverlaps(clusterGRanges.end, rmExons, type = "start")
 
         exonsStart <- rmExons[overlapsStart@to]
         exonsStart <- removeSameExon(exonsStart)
@@ -216,33 +233,44 @@ alternativeIntronUsage <- function(altIntronLocs, exons){
         overlapsExonEnd <- findOverlaps(clusterGRanges.end,
                                         clusterExonsBounding, type = "start")
 
-        keepTranscriptIds <- clusterExonsBounding$transcript_id[overlapsExonStart@to]
-        keepTranscriptIds <- keepTranscriptIds[clusterExonsBounding$transcript_id[overlapsExonStart@to] %in%
-                                                   clusterExonsBounding$transcript_id[overlapsExonEnd@to]]
+        keepTranscriptIds <-
+            clusterExonsBounding$transcript_id[overlapsExonStart@to]
+        keepTranscriptIds <-
+            keepTranscriptIds[clusterExonsBounding$transcript_id[
+                overlapsExonStart@to] %in%
+                    clusterExonsBounding$transcript_id[overlapsExonEnd@to]]
 
         if(length(keepTranscriptIds) > 0){
 
-          if(any(grepl("_dnre_", keepTranscriptIds) | grepl("_upre_", keepTranscriptIds))){
-              # direction to to remove
-              # if upre, remove dnre isforms
-              removeDirection <- ifelse(clusterGRanges$direction[match(i, clusterGRanges$set)[1]] == "+", "dnre", "upre")
-              keepTranscriptIds <- keepTranscriptIds[!grepl(removeDirection, keepTranscriptIds)]
-          }
+            if(any(grepl("_dnre_", keepTranscriptIds) |
+                   grepl("_upre_", keepTranscriptIds))){
+                # direction to to remove
+                # if upre, remove dnre isforms
+                removeDirection <- ifelse(clusterGRanges$direction[
+                    match(i, clusterGRanges$set)[1]] == "+", "dnre", "upre")
+                keepTranscriptIds <- keepTranscriptIds[
+                    !grepl(removeDirection, keepTranscriptIds)]
+            }
 
-          clusterExonsBounding <- clusterExonsBounding[clusterExonsBounding$transcript_id %in% keepTranscriptIds]
+            clusterExonsBounding <- clusterExonsBounding[
+                clusterExonsBounding$transcript_id %in% keepTranscriptIds]
 
-          InternalExons.reps <- InternalExons[rep(seq_along(InternalExons), length(unique(keepTranscriptIds)))]
-          InternalExons.reps$transcript_id <- rep(unique(keepTranscriptIds), each=length(InternalExons))
+            InternalExons.reps <-
+                InternalExons[rep(seq_along(InternalExons),
+                                  length(unique(keepTranscriptIds)))]
+            InternalExons.reps$transcript_id <-
+                rep(unique(keepTranscriptIds), each=length(InternalExons))
 
-          clusterExonsBounding <- c(clusterExonsBounding, InternalExons.reps)
-          clusterExonsBounding <- reorderExonNumbers(clusterExonsBounding)
-          clusterExonsBounding$set <- as.numeric(i)
+            clusterExonsBounding <- c(clusterExonsBounding, InternalExons.reps)
+            clusterExonsBounding <- reorderExonNumbers(clusterExonsBounding)
+            clusterExonsBounding$set <- as.numeric(i)
 
-          if(!exists("clusterExons.allSets")){
-          clusterExons.allSets <- clusterExonsBounding
-          }else{
-              clusterExons.allSets <- c(clusterExons.allSets, clusterExonsBounding)
-          }
+            if(!exists("clusterExons.allSets")){
+                clusterExons.allSets <- clusterExonsBounding
+            }else{
+                clusterExons.allSets <- c(clusterExons.allSets,
+                                          clusterExonsBounding)
+            }
         }
 
     }

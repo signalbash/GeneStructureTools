@@ -51,31 +51,34 @@ orfDiff <- function(orfsX,
                     allORFs=NULL){
     if(filterNMD == TRUE){
         orfChanges <- attrChangeAltSpliced(orfsX[which(orfsX$nmd_prob < 0.5),],
-                                            orfsY[which(orfsY$nmd_prob < 0.5),],
-                                            attribute = "orf_length",
-                                            compareBy = compareBy,
+                                           orfsY[which(orfsY$nmd_prob < 0.5),],
+                                           attribute = "orf_length",
+                                           compareBy = compareBy,
                                            useMax = TRUE,
                                            compareUTR = compareUTR)
 
-        orfChanges.filterx <- attrChangeAltSpliced(orfsX[which(orfsX$nmd_prob < 0.5),],
-                                                    orfsY,
-                                                    attribute = "orf_length",
-                                                   compareBy = compareBy,
-                                                   useMax = TRUE,
-                                                   compareUTR = compareUTR)
-        orfChanges.filtery <- attrChangeAltSpliced(orfsX,
-                                                    orfsY[which(orfsY$nmd_prob < 0.5),],
-                                                    attribute = "orf_length",
-                                                   compareBy = compareBy,
-                                                   useMax = TRUE,
-                                                   compareUTR = compareUTR)
+        orfChanges.filterx <- attrChangeAltSpliced(
+            orfsX[which(orfsX$nmd_prob < 0.5),],
+            orfsY,
+            attribute = "orf_length",
+            compareBy = compareBy,
+            useMax = TRUE,
+            compareUTR = compareUTR)
+        orfChanges.filtery <-
+            attrChangeAltSpliced(orfsX,
+                                 orfsY[which(orfsY$nmd_prob < 0.5),],
+                                 attribute = "orf_length",
+                                 compareBy = compareBy,
+                                 useMax = TRUE,
+                                 compareUTR = compareUTR)
 
-        orfChanges.nofilter <- attrChangeAltSpliced(orfsX,
-                                                     orfsY,
-                                                     attribute = "orf_length",
-                                                    compareBy = compareBy,
-                                                    useMax = TRUE,
-                                                    compareUTR = compareUTR)
+        orfChanges.nofilter <-
+            attrChangeAltSpliced(orfsX,
+                                 orfsY,
+                                 attribute = "orf_length",
+                                 compareBy = compareBy,
+                                 useMax = TRUE,
+                                 compareUTR = compareUTR)
 
         if(nrow(orfChanges) > 0){
             orfChanges$filtered <- "both"
@@ -111,7 +114,8 @@ orfDiff <- function(orfsX,
         unlist(lapply(str_split(orfsX$id[hasASidX], " "), '[[', 2))
     orfsX$transcript_id[hasASidX] <-
         unlist(lapply(str_split(orfsX$id[hasASidX], "[+]"), '[[', 1))
-    orfsX$spliced_id[hasLeafIdX] <- gsub("dnre_","", orfsX$spliced_id[hasLeafIdX])
+    orfsX$spliced_id[hasLeafIdX] <- gsub("dnre_","",
+                                         orfsX$spliced_id[hasLeafIdX])
     orfsX$spliced_id[hasLeafIdX] <-
         stringr::str_sub(gsub("\\-[^]]\\:*", ":",
                               paste0(orfsX$spliced_id[hasLeafIdX], ":")), 1, -2)
@@ -123,13 +127,15 @@ orfDiff <- function(orfsX,
         unlist(lapply(str_split(orfsY$id[hasASidY], " "), '[[', 2))
     orfsY$transcript_id[hasASidY] <-
         unlist(lapply(str_split(orfsY$id[hasASidY], "[+]"), '[[', 1))
-    orfsY$spliced_id[hasLeafIdY] <- gsub("upre_","", orfsY$spliced_id[hasLeafIdY])
+    orfsY$spliced_id[hasLeafIdY] <- gsub("upre_","",
+                                         orfsY$spliced_id[hasLeafIdY])
     orfsY$spliced_id[hasLeafIdY] <-
         stringr::str_sub(gsub("\\-[^]]\\:*", ":",
                               paste0(orfsY$spliced_id[hasLeafIdY], ":")), 1, -2)
 
 
-    m <- match(paste0(orfsX$spliced_id,"_", orfsX$frame), paste0(orfsY$spliced_id,"_",orfsY$frame))
+    m <- match(paste0(orfsX$spliced_id,"_", orfsX$frame),
+               paste0(orfsY$spliced_id,"_",orfsY$frame))
     # check that there are matches if we ignore the frame (i.e 5'utr frame-shifts)
     m.noFrame <- match(paste0(orfsX$spliced_id), paste0(orfsY$spliced_id))
     m[which(is.na(m))] <- m.noFrame[which(is.na(m))]
@@ -137,7 +143,8 @@ orfDiff <- function(orfsX,
         if(!(any(grepl("clu", orfsX$id)) | any(grepl("clu", orfsY$id)))){
             #hasASidX <- grep("[+]", orfsX$id)
             if(length(hasASidX) > 0){
-                m2 <- match(paste0(orfsX$transcript_id[hasASidX],"_", orfsX$frame),
+                m2 <- match(paste0(orfsX$transcript_id[hasASidX],"_",
+                                   orfsX$frame),
                             paste0(orfsY$transcript_id,"_", orfsY$frame))
                 orfsY2 <- orfsY[m2,]
                 orfsY2$id <- orfsX$id[hasASidX]
@@ -146,7 +153,8 @@ orfDiff <- function(orfsX,
             }
             #hasASidY <- grep("[+]", orfsY$id)
             if(length(hasASidY) > 0){
-                m2 <- match(paste0(orfsY$transcript_id[hasASidY],"_", orfsY$frame),
+                m2 <- match(paste0(orfsY$transcript_id[hasASidY],"_",
+                                   orfsY$frame),
                             paste0(orfsX$transcript_id,"_", orfsX$frame))
                 orfsX2 <- orfsX[m2,]
                 orfsX2$id <- orfsY$id[hasASidY]
@@ -167,11 +175,13 @@ orfDiff <- function(orfsX,
     }
 
     orfsY$id_with_len <- paste0(orfsY$spliced_id, "_", orfsY$orf_length)
-    orfChanges$id_orf_length_y <- paste0(orfChanges$id, "_",orfChanges$orf_length_bygroup_y)
+    orfChanges$id_orf_length_y <- paste0(orfChanges$id, "_",
+                                         orfChanges$orf_length_bygroup_y)
     my <- match(orfChanges$id_orf_length_y, orfsY$id_with_len)
 
     orfsX$id_with_len <- paste0(orfsX$spliced_id, "_", orfsX$orf_length)
-    orfChanges$id_orf_length_x <- paste0(orfChanges$id, "_",orfChanges$orf_length_bygroup_x)
+    orfChanges$id_orf_length_x <- paste0(orfChanges$id, "_",
+                                         orfChanges$orf_length_bygroup_x)
     mx <- match(orfChanges$id_orf_length_x, orfsX$id_with_len)
 
     x <- as.numeric(mapply(function(x,y) orfSimilarity(x,y),
@@ -180,65 +190,61 @@ orfDiff <- function(orfsX,
 
     orfChanges$percent_orf_shared <- x
 
-    maxLength <- apply(orfChanges[,c('orf_length_bygroup_y','orf_length_bygroup_x')], 1, max)
+    maxLength <- apply(orfChanges[,c('orf_length_bygroup_y',
+                                     'orf_length_bygroup_x')], 1, max)
 
-    orfChanges$max_percent_orf_shared <- (maxLength - abs(orfChanges$orf_length_bygroup_x -
-                                                              orfChanges$orf_length_bygroup_y)) /
-        maxLength
+    orfChanges$max_percent_orf_shared <-
+        (maxLength - abs(orfChanges$orf_length_bygroup_x -
+                             orfChanges$orf_length_bygroup_y)) / maxLength
 
     orfLengthShared <- orfChanges$percent_orf_shared * maxLength
 
-    orfChanges$orf_percent_kept_x <- orfLengthShared / orfChanges$orf_length_bygroup_x
-    orfChanges$orf_percent_kept_y <- orfLengthShared / orfChanges$orf_length_bygroup_y
+    orfChanges$orf_percent_kept_x <- orfLengthShared /
+        orfChanges$orf_length_bygroup_x
+    orfChanges$orf_percent_kept_y <- orfLengthShared /
+        orfChanges$orf_length_bygroup_y
 
 
     if(geneSimilarity == TRUE & !is.null(allORFs)){
 
-        orfChanges$gene_id <- orfsX$gene_id[match(orfChanges$id, orfsX$spliced_id)]
+        orfChanges$gene_id <- orfsX$gene_id[match(orfChanges$id,
+                                                  orfsX$spliced_id)]
         geneMatches <- lapply(orfChanges$gene_id,
-                              function(x) which(!is.na(match(allORFs$gene_id, x))))
+                              function(x)
+                                  which(!is.na(match(allORFs$gene_id, x))))
         geneMatches <- unlist(geneMatches)
 
-        idMatches <- mapply(function(x,y) rep(x,length(y)) ,(1:length(orfChanges$gene_id)),
-                            geneMatches)
+        idMatches <- mapply(function(x,y)
+            rep(x,length(y)) ,(1:length(orfChanges$gene_id)),
+            geneMatches)
 
-        idMatches.y  <- match(orfChanges$id_orf_length_y[idMatches], orfsY$id_with_len)
-        idMatches.x  <- match(orfChanges$id_orf_length_x[idMatches], orfsX$id_with_len)
+        idMatches.y  <- match(orfChanges$id_orf_length_y[idMatches],
+                              orfsY$id_with_len)
+        idMatches.x  <- match(orfChanges$id_orf_length_x[idMatches],
+                              orfsX$id_with_len)
 
         orfSimBygene.y <- as.numeric(mapply(function(x,y) orfSimilarity(x,y),
-                                      allORFs$orf_sequence[geneMatches],
-                                      orfsY$orf_sequence[idMatches.y]))
+                                            allORFs$orf_sequence[geneMatches],
+                                            orfsY$orf_sequence[idMatches.y]))
 
         orfSimBygene.x <- as.numeric(mapply(function(x,y) orfSimilarity(x,y),
-                                        allORFs$orf_sequence[geneMatches],
-                                        orfsX$orf_sequence[idMatches.x]))
+                                            allORFs$orf_sequence[geneMatches],
+                                            orfsX$orf_sequence[idMatches.x]))
 
-        orfSimilarity.bygene <- data.frame(gene_id=allORFs$gene_id[geneMatches],
-                                           spliced_id_x=orfsX$spliced_id[idMatches.x],
-                                           spliced_id_y=orfsY$spliced_id[idMatches.y],
-                                           similarity_x=orfSimBygene.x,
-                                           similarity_y=orfSimBygene.y,
-                                           length_gene=allORFs$orf_length[geneMatches],
-                                           length_x=orfsX$orf_length[idMatches.x],
-                                           length_y=orfsY$orf_length[idMatches.y])
-
-        # orfLengthKept <- orfSimilarity.bygene$similarity * orfSimilarity.bygene$length_x
-        # orfSimilarity.bygene$orf_percent_new <- 1 - orfLengthKept / orfSimilarity.bygene$length_y
-        #
-        # orfSimilarity.bygeneAgg <- aggregate(similarity ~ spliced_id,
-        # orfSimilarity.bygene, max)
-        # m <- match(orfChanges$id, orfSimilarity.bygeneAgg$spliced_id)
-        # orfChanges$max_orf_similarity_bygene <- orfSimilarity.bygeneAgg$similarity[m]
-        #
-        # orfNew.bygeneAgg <- aggregate(orf_percent_new ~ spliced_id,
-        # orfSimilarity.bygene, min)
-        # m <- match(orfChanges$id, orfNew.bygeneAgg$spliced_id)
-        # orfChanges$new_orfBygene <- orfNew.bygeneAgg$orf_percent_new[m]
+        orfSimilarity.bygene <-
+            data.frame(gene_id=allORFs$gene_id[geneMatches],
+                       spliced_id_x=orfsX$spliced_id[idMatches.x],
+                       spliced_id_y=orfsY$spliced_id[idMatches.y],
+                       similarity_x=orfSimBygene.x,
+                       similarity_y=orfSimBygene.y,
+                       length_gene=allORFs$orf_length[geneMatches],
+                       length_x=orfsX$orf_length[idMatches.x],
+                       length_y=orfsY$orf_length[idMatches.y])
 
         orfSimilarity.bygeneAggX <- aggregate(similarity_x ~ spliced_id_x,
-                                                         orfSimilarity.bygene, max)
+                                              orfSimilarity.bygene, max)
         orfSimilarity.bygeneAggY <- aggregate(similarity_y ~ spliced_id_y,
-                                                         orfSimilarity.bygene, max)
+                                              orfSimilarity.bygene, max)
 
         orfChanges$gene_similarity_x <-
             orfSimilarity.bygeneAggX$similarity_x[
@@ -339,7 +345,8 @@ attrChangeAltSpliced <- function(orfsX,
             gsub("dnre_","",attributeX$id[hasLeafIdX])
         attributeX$id[hasLeafIdX] <-
             stringr::str_sub(gsub("\\-[^]]\\:*", ":",
-                                  paste0(attributeX$id[hasLeafIdX], ":")), 1, -2)
+                                  paste0(attributeX$id[hasLeafIdX], ":")),
+                             1, -2)
         attributeX$as_group[hasASidX] <-
             unlist(lapply(str_split(attributeX$id[hasASidX], " "), '[[', 2))
 
@@ -359,7 +366,8 @@ attrChangeAltSpliced <- function(orfsX,
             gsub("upre_","",attributeY$id[hasLeafIdY])
         attributeY$id[hasLeafIdY] <-
             stringr::str_sub(gsub("\\-[^]]\\:*", ":",
-                                  paste0(attributeY$id[hasLeafIdY], ":")), 1, -2)
+                                  paste0(attributeY$id[hasLeafIdY], ":")),
+                             1, -2)
         attributeY$as_group[hasASidY] <-
             unlist(lapply(str_split(attributeY$id[hasASidY], " "), '[[', 2))
 
@@ -390,8 +398,8 @@ attrChangeAltSpliced <- function(orfsX,
                     attributeX <- rbind(attributeX, attributeX2)
                 }
                 if(length(hasASidY) == 0 & length(hasASidX) == 0){
-                        attributeX$id <- attributeX$gene_id
-                        attributeY$id <- attributeY$gene_id
+                    attributeX$id <- attributeX$gene_id
+                    attributeY$id <- attributeY$gene_id
 
                 }else{
                     m2 <- match(attributeX$id, attributeY$id)
@@ -407,19 +415,23 @@ attrChangeAltSpliced <- function(orfsX,
 
         if(compareBy == "transcript"){
             m <- match(attributeX$id, attributeY$id)
-            attributeComparisons <- data.frame(id=attributeX$id,
-                                     attr_bygroup_x=attributeX$attr,
-                                     attr_bygroup_y=attributeY$attr[m])
+            attributeComparisons <-
+                data.frame(id=attributeX$id,
+                           attr_bygroup_x=attributeX$attr,
+                           attr_bygroup_y=attributeY$attr[m])
 
             m <- match(attributeY$id, attributeX$id)
-            attributeComparisonsY <- data.frame(id=attributeY$id,
-                                       attr_bygroup_x=attributeX$attr[m],
-                                       attr_bygroup_y=attributeY$attr)
+            attributeComparisonsY <-
+                data.frame(id=attributeY$id,
+                           attr_bygroup_x=attributeX$attr[m],
+                           attr_bygroup_y=attributeY$attr)
 
-            add <- which(!(attributeComparisonsY$id %in% attributeComparisons$id))
+            add <-
+                which(!(attributeComparisonsY$id %in% attributeComparisons$id))
 
             if(length(add) > 0){
-                attributeComparisons <- rbind(attributeComparisons, attributeComparisonsY[add,])
+                attributeComparisons <-
+                    rbind(attributeComparisons, attributeComparisonsY[add,])
             }
         }else if(compareBy=="gene"){
             attributeX2 <- aggregate(attr ~ as_group, attributeX, aggFun)
@@ -427,12 +439,14 @@ attrChangeAltSpliced <- function(orfsX,
 
             m <- match(attributeX2$as_group, attributeY2$as_group)
             attributeComparisons <- data.frame(id=attributeX2[,1],
-                                     attr_bygroup_x=attributeX2[,-1],
-                                     attr_bygroup_y=attributeY2[m,-1])
+                                               attr_bygroup_x=attributeX2[,-1],
+                                               attr_bygroup_y=attributeY2[m,-1])
             attributeComparisons <- attributeComparisons[which(!is.na(m)),]
 
         }
-        colnames(attributeComparisons) <- gsub("attr", attribute, colnames(attributeComparisons))
+        colnames(attributeComparisons) <- gsub("attr",
+                                               attribute,
+                                               colnames(attributeComparisons))
 
         if(compareUTR == TRUE & attribute == "orf_length"){
             if(all(grepl("AS", orfsX$id))){
@@ -443,7 +457,8 @@ attrChangeAltSpliced <- function(orfsX,
                 orfsXid <- orfsX$id
                 orfsXid[hasLeafIdX] <-
                     stringr::str_sub(gsub("\\-[^]]\\:*", ":",
-                                          paste0(orfsXid[hasLeafIdX], ":")), 1, -2)
+                                          paste0(orfsXid[hasLeafIdX], ":")),
+                                     1, -2)
                 orfsXid[hasLeafIdX] <- gsub("dnre_","", orfsXid[hasLeafIdX])
 
                 if(compareBy == "gene"){
@@ -454,11 +469,13 @@ attrChangeAltSpliced <- function(orfsX,
                     m1 <- match(id.x, paste0(orfsXid, "_", orfsX$orf_length))
                 }
             }else{
-                matchToGene <- match(attributeComparisons$id, attributeX$as_group)
+                matchToGene <- match(attributeComparisons$id,
+                                     attributeX$as_group)
                 id.x <- paste0(unlist(lapply(str_split(
                     attributeX$id[matchToGene], "[+]"),"[[",1)),"_" ,
                     attributeComparisons$orf_length_bygroup_x)
-                m1 <- match(id.x, paste0((orfsX$gene_id), "_", orfsX$orf_length))
+                m1 <- match(id.x, paste0((orfsX$gene_id), "_",
+                                         orfsX$orf_length))
             }
 
             if(all(grepl("AS", orfsY$id))){
@@ -469,7 +486,8 @@ attrChangeAltSpliced <- function(orfsX,
                 orfsYid <- orfsY$id
                 orfsYid[hasLeafIdY] <-
                     stringr::str_sub(gsub("\\-[^]]\\:*", ":",
-                                          paste0(orfsYid[hasLeafIdY], ":")), 1, -2)
+                                          paste0(orfsYid[hasLeafIdY], ":")),
+                                     1, -2)
                 orfsYid[hasLeafIdY] <- gsub("upre_","", orfsYid[hasLeafIdY])
 
                 if(compareBy == "gene"){
@@ -480,7 +498,8 @@ attrChangeAltSpliced <- function(orfsX,
                     m2 <- match(id.y, paste0(orfsYid, "_", orfsY$orf_length))
                 }
             }else{
-                matchToGene <- match(attributeComparisons$id, attributeY$as_group)
+                matchToGene <- match(attributeComparisons$id,
+                                     attributeY$as_group)
                 id.y <- paste0(unlist(lapply(str_split(
                     attributeY$id[matchToGene], "[+]"),"[[",1)),"_" ,
                     attributeComparisons$orf_length_bygroup_y)
@@ -489,8 +508,10 @@ attrChangeAltSpliced <- function(orfsX,
 
             attributeComparisons$utr3_length_bygroup_x <- orfsX$utr3_length[m1]
             attributeComparisons$utr3_length_bygroup_y <- orfsY$utr3_length[m2]
-            attributeComparisons$utr5_length_bygroup_x <- orfsX$start_site_nt[m1]
-            attributeComparisons$utr5_length_bygroup_y <- orfsY$start_site_nt[m2]
+            attributeComparisons$utr5_length_bygroup_x <-
+                orfsX$start_site_nt[m1]
+            attributeComparisons$utr5_length_bygroup_y <-
+                orfsY$start_site_nt[m2]
         }
 
         return(attributeComparisons)
@@ -530,15 +551,25 @@ orfSimilarity <- function(orfA, orfB, substitutionCost=100){
         return(NA)
     }else{
         if(nchar(orfA) > nchar(orfB)){
-            lcs <- utils::adist(orfA, orfB, costs=list(ins=100, del=1, sub=substitutionCost))[1,1]
+            lcs <- utils::adist(orfA, orfB,
+                                costs=list(ins=100,
+                                           del=1,
+                                           sub=substitutionCost))[1,1]
         }else if(nchar(orfA) == nchar(orfB)){
-            lcs <- utils::adist(orfA, orfB, costs=list(ins=1, del=1, sub=substitutionCost))[1,1]
+            lcs <- utils::adist(orfA, orfB,
+                                costs=list(ins=1,
+                                           del=1,
+                                           sub=substitutionCost))[1,1]
         }else{
-            lcs <- utils::adist(orfA, orfB, costs=list(ins=1, del=100, sub=substitutionCost))[1,1]
+            lcs <- utils::adist(orfA, orfB,
+                                costs=list(ins=1,
+                                           del=100,
+                                           sub=substitutionCost))[1,1]
         }
 
         if(lcs <= nchar(orfA) + nchar(orfB)){
-            return(((nchar(orfA) + nchar(orfB) - lcs)/2) / max(nchar(orfA), nchar(orfB)))
+            return(((nchar(orfA) + nchar(orfB) - lcs)/2) /
+                       max(nchar(orfA), nchar(orfB)))
         }else{
             return(0)
         }

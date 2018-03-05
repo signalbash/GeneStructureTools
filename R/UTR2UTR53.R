@@ -18,7 +18,8 @@ UTR2UTR53 <- function(gtf){
     #transcripts with CDS/UTR annotated
     gtf.cdsutr <- gtf[gtf@elementMetadata$type %in% c("UTR", "CDS")]
     gtf.cdsutr <- gtf.cdsutr[order(gtf.cdsutr@elementMetadata$transcript_id,
-                                   GenomicRanges::start(GenomicRanges::ranges(gtf.cdsutr)))]
+                                   GenomicRanges::start(
+                                       GenomicRanges::ranges(gtf.cdsutr)))]
 
     #UTRs
     UTRTranscripts <- which(gtf.cdsutr@elementMetadata$type == "UTR")
@@ -26,32 +27,40 @@ UTR2UTR53 <- function(gtf){
 
     #5'UTRs (+)
     pos5 <- which(gtf.cdsutr@elementMetadata$transcript_id[UTRTranscripts] ==
-                      gtf.cdsutr@elementMetadata$transcript_id[UTRTranscripts +1] &
+                      gtf.cdsutr@elementMetadata$transcript_id[
+                          UTRTranscripts +1] &
                       as.character(gtf.cdsutr@strand[UTRTranscripts]) == "+" &
                       gtf.cdsutr@elementMetadata$type[UTRTranscripts +1 ] %in%
                       c("CDS", "exon"))
     #3'UTRs (+)
     pos3 <- which(gtf.cdsutr@elementMetadata$transcript_id[UTRTranscripts[-1]] ==
-                      gtf.cdsutr@elementMetadata$transcript_id[UTRTranscripts[-1] -1] &
+                      gtf.cdsutr@elementMetadata$transcript_id[
+                          UTRTranscripts[-1] -1] &
                       as.character(gtf.cdsutr@strand[UTRTranscripts[-1]]) == "+" &
                       gtf.cdsutr@elementMetadata$type[UTRTranscripts[-1] -1] %in%
                       c("CDS","exon")) + 1
 
     #3'UTRs (-)
     neg3 <- which(gtf.cdsutr@elementMetadata$transcript_id[UTRTranscripts] ==
-                      gtf.cdsutr@elementMetadata$transcript_id[UTRTranscripts +1] &
+                      gtf.cdsutr@elementMetadata$transcript_id[
+                          UTRTranscripts +1] &
                       as.character(gtf.cdsutr@strand[UTRTranscripts]) == "-" &
                       gtf.cdsutr@elementMetadata$type[UTRTranscripts +1 ] %in%
                       c("CDS","exon"))
     #5'UTRs (-)
-    neg5 <- which(gtf.cdsutr@elementMetadata$transcript_id[UTRTranscripts[-1]] ==
-                      gtf.cdsutr@elementMetadata$transcript_id[UTRTranscripts[-1] -1] &
-                      as.character(gtf.cdsutr@strand[UTRTranscripts[-1]]) == "-" &
-                      gtf.cdsutr@elementMetadata$type[UTRTranscripts[-1] -1] %in%
+    neg5 <- which(gtf.cdsutr@elementMetadata$transcript_id[
+        UTRTranscripts[-1]] ==
+                      gtf.cdsutr@elementMetadata$transcript_id[
+                          UTRTranscripts[-1] -1] &
+                      as.character(gtf.cdsutr@strand[
+                          UTRTranscripts[-1]]) == "-" &
+                      gtf.cdsutr@elementMetadata$type[
+                          UTRTranscripts[-1] -1] %in%
                       c("CDS","exon")) + 1
 
     #new type var
-    gtf.cdsutr@elementMetadata$type2 <- as.character(gtf.cdsutr@elementMetadata$type)
+    gtf.cdsutr@elementMetadata$type2 <-
+        as.character(gtf.cdsutr@elementMetadata$type)
     gtf.cdsutr@elementMetadata$type2[UTRTranscripts][pos5] <- "UTR5"
     gtf.cdsutr@elementMetadata$type2[UTRTranscripts][neg5] <- "UTR5"
     gtf.cdsutr@elementMetadata$type2[UTRTranscripts][pos3] <- "UTR3"
@@ -62,29 +71,45 @@ UTR2UTR53 <- function(gtf){
         UTRTranscripts <- which(gtf.cdsutr@elementMetadata$type2 == "UTR")
 
         #5'UTRs (+)
-        pos5 <- which(gtf.cdsutr@elementMetadata$transcript_id[UTRTranscripts] ==
-                          gtf.cdsutr@elementMetadata$transcript_id[UTRTranscripts +1] &
-                          as.character(gtf.cdsutr@strand[UTRTranscripts]) == "+" &
-                          gtf.cdsutr@elementMetadata$type2[UTRTranscripts +1 ] %in%
+        pos5 <- which(gtf.cdsutr@elementMetadata$transcript_id[
+            UTRTranscripts] ==
+                          gtf.cdsutr@elementMetadata$transcript_id[
+                              UTRTranscripts +1] &
+                          as.character(gtf.cdsutr@strand[
+                              UTRTranscripts]) == "+" &
+                          gtf.cdsutr@elementMetadata$type2[
+                              UTRTranscripts +1] %in%
                           c("CDS", "exon","UTR5"))
         #3'UTRs (+)
-        pos3 <- which(gtf.cdsutr@elementMetadata$transcript_id[UTRTranscripts[-1]] ==
-                          gtf.cdsutr@elementMetadata$transcript_id[UTRTranscripts[-1] -1] &
-                          as.character(gtf.cdsutr@strand[UTRTranscripts[-1]]) == "+" &
-                          gtf.cdsutr@elementMetadata$type2[UTRTranscripts[-1] -1] %in%
+        pos3 <- which(gtf.cdsutr@elementMetadata$transcript_id[
+            UTRTranscripts[-1]] ==
+                          gtf.cdsutr@elementMetadata$transcript_id[
+                              UTRTranscripts[-1] -1] &
+                          as.character(gtf.cdsutr@strand[
+                              UTRTranscripts[-1]]) == "+" &
+                          gtf.cdsutr@elementMetadata$type2[
+                              UTRTranscripts[-1] -1] %in%
                           c("CDS","exon","UTR3")) + 1
 
         #3'UTRs (-)
-        neg3 <- which(gtf.cdsutr@elementMetadata$transcript_id[UTRTranscripts] ==
-                          gtf.cdsutr@elementMetadata$transcript_id[UTRTranscripts +1] &
-                          as.character(gtf.cdsutr@strand[UTRTranscripts]) == "-" &
-                          gtf.cdsutr@elementMetadata$type2[UTRTranscripts +1 ] %in%
+        neg3 <- which(gtf.cdsutr@elementMetadata$transcript_id[
+            UTRTranscripts] ==
+                          gtf.cdsutr@elementMetadata$transcript_id[
+                              UTRTranscripts +1] &
+                          as.character(gtf.cdsutr@strand[
+                              UTRTranscripts]) == "-" &
+                          gtf.cdsutr@elementMetadata$type2[
+                              UTRTranscripts +1 ] %in%
                           c("CDS","exon","UTR3"))
         #5'UTRs (-)
-        neg5 <- which(gtf.cdsutr@elementMetadata$transcript_id[UTRTranscripts[-1]] ==
-                          gtf.cdsutr@elementMetadata$transcript_id[UTRTranscripts[-1] -1] &
-                          as.character(gtf.cdsutr@strand[UTRTranscripts[-1]]) == "-" &
-                          gtf.cdsutr@elementMetadata$type2[UTRTranscripts[-1] -1] %in%
+        neg5 <- which(gtf.cdsutr@elementMetadata$transcript_id[
+            UTRTranscripts[-1]] ==
+                          gtf.cdsutr@elementMetadata$transcript_id[
+                              UTRTranscripts[-1] -1] &
+                          as.character(gtf.cdsutr@strand[
+                              UTRTranscripts[-1]]) == "-" &
+                          gtf.cdsutr@elementMetadata$type2[
+                              UTRTranscripts[-1] -1] %in%
                           c("CDS","exon","UTR5")) + 1
 
         gtf.cdsutr@elementMetadata$type2[UTRTranscripts][pos5] <- "UTR5"
@@ -105,13 +130,14 @@ UTR2UTR53 <- function(gtf){
                              gtf.cdsutrDF$start,
                              gtf.cdsutrDF$end,
                              gtf.cdsutrDF$transcript_id, sep="_")
-    #gtf.cdsutrNames <- with(gtf.cdsutrDF, paste(seqnames,start,end,transcript_id, sep="_"))
     gtfDF <- as.data.frame(gtf)
-    gtfNames <- paste(gtfDF$seqnames,gtfDF$start,gtfDF$end,gtfDF$transcript_id, sep="_")
-    #gtfNames <- with(gtfDF, paste(seqnames,start,end,transcript_id, sep="_"))
+    gtfNames <- paste(gtfDF$seqnames,gtfDF$start,gtfDF$end,
+                      gtfDF$transcript_id, sep="_")
 
-    m5 <- which(gtfNames %in% gtf.cdsutrNames[gtf.cdsutr@elementMetadata$type2 == "UTR5"])
-    m3 <- which(gtfNames %in% gtf.cdsutrNames[gtf.cdsutr@elementMetadata$type2 == "UTR3"])
+    m5 <- which(gtfNames %in% gtf.cdsutrNames[
+        gtf.cdsutr@elementMetadata$type2 == "UTR5"])
+    m3 <- which(gtfNames %in% gtf.cdsutrNames[
+        gtf.cdsutr@elementMetadata$type2 == "UTR3"])
 
     gtf@elementMetadata$type <- as.character(gtf@elementMetadata$type)
 
