@@ -284,40 +284,48 @@ getOrfs <- function(transcripts,
                                  orfs = orfDF,
                                  findExonB = TRUE)
 
-        uORFS.bytranscript <- aggregate(overlaps_main_ORF ~ id, upstreamORFs,
-                                        function(x) length(x))
-        colnames(uORFS.bytranscript)[2] <- "total_uorfs"
+        if(nrow(upstreamORFs) > 0){
+            uORFS.bytranscript <- aggregate(overlaps_main_ORF ~ id, upstreamORFs,
+                                            function(x) length(x))
+            colnames(uORFS.bytranscript)[2] <- "total_uorfs"
 
-        uORFS.bytranscript.newVal <- aggregate(overlaps_main_ORF ~ id,
-                                               upstreamORFs, function(x)
-                                                   length(x[which(x=="upstream")]))
-        uORFS.bytranscript$upstream_count <-
-            uORFS.bytranscript.newVal[match(uORFS.bytranscript$id,
-                                            uORFS.bytranscript.newVal$id),2]
+            uORFS.bytranscript.newVal <- aggregate(overlaps_main_ORF ~ id,
+                                                   upstreamORFs, function(x)
+                                                       length(x[which(x=="upstream")]))
+            uORFS.bytranscript$upstream_count <-
+                uORFS.bytranscript.newVal[match(uORFS.bytranscript$id,
+                                                uORFS.bytranscript.newVal$id),2]
 
-        uORFS.bytranscript.newVal <- aggregate(overlaps_main_ORF ~ id,
-                                               upstreamORFs, function(x)
-                                                   length(x[which(x=="downstream")]))
-        uORFS.bytranscript$downstream_count <-
-            uORFS.bytranscript.newVal[match(uORFS.bytranscript$id,
-                                            uORFS.bytranscript.newVal$id),2]
+            uORFS.bytranscript.newVal <- aggregate(overlaps_main_ORF ~ id,
+                                                   upstreamORFs, function(x)
+                                                       length(x[which(x=="downstream")]))
+            uORFS.bytranscript$downstream_count <-
+                uORFS.bytranscript.newVal[match(uORFS.bytranscript$id,
+                                                uORFS.bytranscript.newVal$id),2]
 
-        uORFS.bytranscript.newVal <- aggregate(uorf_length ~ id,
-                                               upstreamORFs, function(x) max(x))
-        uORFS.bytranscript$max_uorf <-
-            uORFS.bytranscript.newVal[match(uORFS.bytranscript$id,
-                                            uORFS.bytranscript.newVal$id),2]
+            uORFS.bytranscript.newVal <- aggregate(uorf_length ~ id,
+                                                   upstreamORFs, function(x) max(x))
+            uORFS.bytranscript$max_uorf <-
+                uORFS.bytranscript.newVal[match(uORFS.bytranscript$id,
+                                                uORFS.bytranscript.newVal$id),2]
 
-        uORFS.bytranscript.newVal <-
-            aggregate(min_dist_to_junction_b ~ id,
-                      upstreamORFs[upstreamORFs$exon_b_from_final !=0,],
-                      function(x) max(x))
-        uORFS.bytranscript$uorf_maxb <-
-            uORFS.bytranscript.newVal[match(uORFS.bytranscript$id,
-                                            uORFS.bytranscript.newVal$id),2]
+            uORFS.bytranscript.newVal <-
+                aggregate(min_dist_to_junction_b ~ id,
+                          upstreamORFs[upstreamORFs$exon_b_from_final !=0,],
+                          function(x) max(x))
+            uORFS.bytranscript$uorf_maxb <-
+                uORFS.bytranscript.newVal[match(uORFS.bytranscript$id,
+                                                uORFS.bytranscript.newVal$id),2]
 
         m <- match(orfDF$id, uORFS.bytranscript$id)
         orfDF <- cbind(orfDF, uORFS.bytranscript[m,-c(1)])
+        }else{
+            orfDF$total_uorfs <- NA
+            orfDF$upstream_count <- NA
+            orfDF$downstream_count <- NA
+            orfDF$max_uorf <- NA
+            orfDF$uorf_maxb <- NA
+        }
 
         # replace any non-matching uorf summaries with 0
         for(i in 17:ncol(orfDF)){
