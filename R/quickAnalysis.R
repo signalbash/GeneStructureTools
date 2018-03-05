@@ -12,6 +12,7 @@
 #' Only needed if filtering with counts.
 #' @return filtered whippet differential comparison data.frame
 #' @export
+#' @importFrom stats median
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet/",
@@ -83,9 +84,9 @@ filterWhippetEvents <- function(whippetDataSet,
         diffSplicingResultsTemp <- diffSplicingResults(whippetDataSet)
 
         diffSplicingResultsTemp$condition_1_counts <-
-            apply(readCounts(whippetDataSet)[m,n1], 1, median)
+            apply(readCounts(whippetDataSet)[m,n1], 1, stats::median)
         diffSplicingResultsTemp$condition_2_counts <-
-            apply(readCounts(whippetDataSet)[m,n2], 1, median)
+            apply(readCounts(whippetDataSet)[m,n2], 1, stats::median)
 
         if(!is.na(minCounts)){
             keep <- which(apply(readCounts(whippetDataSet)[m,n1], 1,

@@ -58,6 +58,7 @@ maxLocation <- function(startSite, stopSite, longest = 1){
 #' @importFrom plyr desc
 #' @importFrom stats aggregate
 #' @importFrom rtracklayer import
+#' @importFrom utils write.table
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata", "example_gtf.gtf",
@@ -109,7 +110,7 @@ getOrfs <- function(transcripts,
 
         # gzip files to save some space
         gz <- gzfile(fastaFile, "w")
-        write.table(fa, gz, col.names = F, row.names = F, quote=F, sep="\n")
+        utils::write.table(fa, gz, col.names = F, row.names = F, quote=F, sep="\n")
         close(gz)
     }else if(exportFasta & is.null(fastaFile)){
         message("skipping writing .fa file; please specify a file name for export")
