@@ -267,12 +267,6 @@ getOrfs <- function(transcripts,
 
     orfDF$aa_sequence <- NULL
 
-    if (returnLongestOnly == TRUE) {
-        orfDF <- orfDF[order(plyr::desc(orfDF$orf_length)),]
-        #orfDF <- plyr::arrange(orfDF, plyr::desc(orf_length))
-        orfDF <- orfDF[!duplicated(orfDF$id), ]
-    }
-
     orfDF <- plyr::arrange(orfDF, id)
     m <- match(orfDF$id, transcripts$transcript_id)
     orfDF$gene_id <- transcripts$gene_id[m]
@@ -387,23 +381,11 @@ cumsumANDpad <- function(x, padLength){
 #' transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Neurl1a"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #' # longest ORF for each transcripts
-#' orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = TRUE)
+#' orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = FALSE)
 #' uORFS <- getUOrfs(transcript, BSgenome = g, orfs = orfs, findExonB = TRUE)
 getUOrfs <- function(transcripts,
                      BSgenome = NULL,
                      orfs, findExonB=FALSE){
-
-    if(any(duplicated(orfs$id))){
-        orfs$id <- paste0(orfs$id, "_frame",orfs$frame)
-        transcripts1 <- transcripts
-        transcripts1$transcript_id <- paste0(transcripts$transcript_id,"_frame",1)
-        transcripts2 <- transcripts
-        transcripts2$transcript_id <- paste0(transcripts$transcript_id,"_frame",2)
-        transcripts3 <- transcripts
-        transcripts3$transcript_id <- paste0(transcripts$transcript_id,"_frame",3)
-
-        transcripts <- c(transcripts1,transcripts2,transcripts3)
-    }
 
     transcripts$exon_number <-
         as.numeric(transcripts$exon_number)
@@ -455,10 +437,10 @@ getUOrfs <- function(transcripts,
         lapply(startSites, function(x)
             as.numeric(x[, 2]))
 
-    startSites <- mapply(function(x, y)
-        x[which(x < y)],
-        startSites,
-        orfs$start_site[match(orfDF$id, orfs$id)])
+    # startSites <- mapply(function(x, y)
+    #     x[which(x < y)],
+    #     startSites,
+    #     orfs$start_site[match(orfDF$id, orfs$id)])
 
     stopSites <- str_locate_all(orfDF$aa_sequence, "[*]")
     stopSites <-
@@ -489,7 +471,18 @@ getUOrfs <- function(transcripts,
     upstreamORFs <- data.frame(id=maxLoc.id, frame=maxLoc.frame, t(maxLoc))
     colnames(upstreamORFs)[3:4] <- c("start","stop")
 
-    m <- match(upstreamORFs$id,orfs$id)
+    if(any(duplicated(orfs$id))){
+        orfs$id <- paste0(orfs$id, "_frame",orfs$frame)
+
+        upstreamORFs <- rbind(upstreamORFs, upstreamORFs, upstreamORFs)
+        upstreamORFs$id <-
+            paste0(upstreamORFs$id, "_frame",
+                   rep(1:3, each=nrow(upstreamORFs)/3))
+    }
+
+    m <- match(upstreamORFs$id, orfs$id)
+    upstreamORFs <- upstreamORFs[which((upstreamORFs$start - orfs$start_site[m]) < 0),]
+    m <- match(upstreamORFs$id, orfs$id)
     upstreamORFs$dist_to_start <- orfs$start_site[m] - upstreamORFs$stop
     upstreamORFs$overlaps_main_ORF <- ifelse(upstreamORFs$dist_to_start > 0,
                                              "upstream", "downstream")
@@ -509,13 +502,12 @@ getUOrfs <- function(transcripts,
     if(findExonB == TRUE & nrow(upstreamORFs) > 0){
 
         upstreamORFs$utr3_length <-
-            (orfs$seq_length_nt[match(paste0(upstreamORFs$id,
-                                             upstreamORFs$frame),
-                                      paste0(orfs$id, orfs$frame))] -
+            (orfs$seq_length_nt[match(upstreamORFs$id,orfs$id,)] -
                  upstreamORFs$stop_site_nt) + 1
 
         widths <- data.frame(w = width(transcripts),
                              id = transcripts$transcript_id)
+
         pad <- max(table(widths$id))
         if (pad > 1) {
             if (length(unique(transcripts$transcript_id)) == 1) {
@@ -529,7 +521,10 @@ getUOrfs <- function(transcripts,
                 w2 <-
                     aggregate(w ~ id, widths, function(x)
                         cumsumANDpad(x, pad))
-                m <- match(upstreamORFs$id, w2$id)
+                id <- gsub("_frame1","",
+                           gsub("_frame2","",
+                                gsub("_frame3","", upstreamORFs$id)))
+                m <- match(id, w2$id)
                 w2 <- w2[m, -1]
                 w2  <- split(w2, seq(nrow(w2)))
                 diffs <-
@@ -573,5 +568,6 @@ getUOrfs <- function(transcripts,
                                               gsub("_frame3", "",
                                                    upstreamORFs$id[replaceName])))
 
+    upstreamORFs <- plyr::arrange(upstreamORFs, id, frame, start_site_nt)
     return(upstreamORFs)
 }
