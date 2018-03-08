@@ -286,42 +286,51 @@ getOrfs <- function(transcripts,
 
         if(nrow(upstreamORFs) > 0){
             uORFS.bytranscript <- aggregate(
-                overlaps_main_ORF ~ id, upstreamORFs,
+                overlaps_main_ORF ~ id+frame, upstreamORFs,
                 function(x) length(x))
-            colnames(uORFS.bytranscript)[2] <- "total_uorfs"
+            colnames(uORFS.bytranscript)[3] <- "total_uorfs"
 
             uORFS.bytranscript.newVal <- aggregate(
-                overlaps_main_ORF ~ id,
+                overlaps_main_ORF ~ id+frame,
                 upstreamORFs, function(x)
                     length(x[which(x=="upstream")]))
             uORFS.bytranscript$upstream_count <-
-                uORFS.bytranscript.newVal[match(uORFS.bytranscript$id,
-                                                uORFS.bytranscript.newVal$id),2]
+                uORFS.bytranscript.newVal[match(paste0(uORFS.bytranscript$id,
+                                                       uORFS.bytranscript$frame),
+                                                paste0(uORFS.bytranscript.newVal$id,
+                                                       uORFS.bytranscript.newVal$frame)),3]
 
             uORFS.bytranscript.newVal <-
-                aggregate(overlaps_main_ORF ~ id,
+                aggregate(overlaps_main_ORF ~ id+frame,
                           upstreamORFs, function(x)
                               length(x[which(x=="downstream")]))
             uORFS.bytranscript$downstream_count <-
-                uORFS.bytranscript.newVal[match(uORFS.bytranscript$id,
-                                                uORFS.bytranscript.newVal$id),2]
+                uORFS.bytranscript.newVal[match(paste0(uORFS.bytranscript$id,
+                                                       uORFS.bytranscript$frame),
+                                                paste0(uORFS.bytranscript.newVal$id,
+                                                       uORFS.bytranscript.newVal$frame)),3]
 
             uORFS.bytranscript.newVal <-
-                aggregate(uorf_length ~ id,upstreamORFs, function(x) max(x))
+                aggregate(uorf_length ~ id+frame,upstreamORFs, function(x) max(x))
             uORFS.bytranscript$max_uorf <-
-                uORFS.bytranscript.newVal[match(uORFS.bytranscript$id,
-                                                uORFS.bytranscript.newVal$id),2]
+                uORFS.bytranscript.newVal[match(paste0(uORFS.bytranscript$id,
+                                                       uORFS.bytranscript$frame),
+                                                paste0(uORFS.bytranscript.newVal$id,
+                                                       uORFS.bytranscript.newVal$frame)),3]
 
             uORFS.bytranscript.newVal <-
-                aggregate(min_dist_to_junction_b ~ id,
+                aggregate(min_dist_to_junction_b ~ id+frame,
                           upstreamORFs[upstreamORFs$exon_b_from_final !=0,],
                           function(x) max(x))
             uORFS.bytranscript$uorf_maxb <-
-                uORFS.bytranscript.newVal[match(uORFS.bytranscript$id,
-                                                uORFS.bytranscript.newVal$id),2]
+                uORFS.bytranscript.newVal[match(paste0(uORFS.bytranscript$id,
+                                                       uORFS.bytranscript$frame),
+                                                paste0(uORFS.bytranscript.newVal$id,
+                                                       uORFS.bytranscript.newVal$frame)),3]
 
-            m <- match(orfDF$id, uORFS.bytranscript$id)
-            orfDF <- cbind(orfDF, uORFS.bytranscript[m,-c(1)])
+            m <- match(paste0(orfDF$id, orfDF$frame), paste0(uORFS.bytranscript$id,
+                                                             uORFS.bytranscript$frame))
+            orfDF <- cbind(orfDF, uORFS.bytranscript[m,-c(1:2)])
         }else{
             orfDF$total_uorfs <- NA
             orfDF$upstream_count <- NA
@@ -383,6 +392,18 @@ cumsumANDpad <- function(x, padLength){
 getUOrfs <- function(transcripts,
                      BSgenome = NULL,
                      orfs, findExonB=FALSE){
+
+    if(any(duplicated(orfs$id))){
+        orfs$id <- paste0(orfs$id, "_frame",orfs$frame)
+        transcripts1 <- transcripts
+        transcripts1$transcript_id <- paste0(transcripts$transcript_id,"_frame",1)
+        transcripts2 <- transcripts
+        transcripts2$transcript_id <- paste0(transcripts$transcript_id,"_frame",2)
+        transcripts3 <- transcripts
+        transcripts3$transcript_id <- paste0(transcripts$transcript_id,"_frame",3)
+
+        transcripts <- c(transcripts1,transcripts2,transcripts3)
+    }
 
     transcripts$exon_number <-
         as.numeric(transcripts$exon_number)
@@ -467,8 +488,8 @@ getUOrfs <- function(transcripts,
 
     upstreamORFs <- data.frame(id=maxLoc.id, frame=maxLoc.frame, t(maxLoc))
     colnames(upstreamORFs)[3:4] <- c("start","stop")
-    m <- match(paste0(upstreamORFs$id, upstreamORFs$frame),
-               paste0(orfs$id, orfs$frame))
+
+    m <- match(upstreamORFs$id,orfs$id)
     upstreamORFs$dist_to_start <- orfs$start_site[m] - upstreamORFs$stop
     upstreamORFs$overlaps_main_ORF <- ifelse(upstreamORFs$dist_to_start > 0,
                                              "upstream", "downstream")
@@ -479,8 +500,7 @@ getUOrfs <- function(transcripts,
         (upstreamORFs$start * 3)- 3 + upstreamORFs$frame
     upstreamORFs$stop_site_nt <- (upstreamORFs$uorf_length * 3) +
         upstreamORFs$start_site_nt + 3
-    m <- match(paste0(upstreamORFs$id, upstreamORFs$frame),
-               paste0(orfs$id, orfs$frame))
+    m <- match(upstreamORFs$id,orfs$id, orfs$frame)
     upstreamORFs$dist_to_start_nt <- orfs$start_site_nt[m] -
         upstreamORFs$stop_site_nt
     upstreamORFs <- upstreamORFs[which((upstreamORFs$start_site_nt -
@@ -543,6 +563,15 @@ getUOrfs <- function(transcripts,
     upstreamORFs$stop <- NULL
     upstreamORFs$dist_to_start <- NULL
     upstreamORFs$utr3_length <- NULL
+
+    m <- match(upstreamORFs$id, orfs$id)
+    upstreamORFs$frame <- orfs$frame[m]
+    replaceName <- which(stringr::str_sub(upstreamORFs$id, -6,-1) %in% c("frame1", "frame2","frame3"))
+
+    upstreamORFs$id[replaceName] <- gsub("_frame1", "",
+                                         gsub("_frame2", "",
+                                              gsub("_frame3", "",
+                                                   upstreamORFs$id[replaceName])))
 
     return(upstreamORFs)
 }
