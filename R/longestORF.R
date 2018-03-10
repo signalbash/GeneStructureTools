@@ -79,7 +79,6 @@ getOrfs <- function(transcripts,
         longest = 1
     }
 
-
     # check -ve dist to junction b calls
     # check exon number ORF start/ends
 
@@ -202,6 +201,11 @@ getOrfs <- function(transcripts,
                          orfDF$stop_site - 1)
     orfDF$orf_length <- nchar(orfDF$orf_sequence)
 
+    if(returnLongestOnly==TRUE){
+        orfDF <- plyr::arrange(orfDF, plyr::desc(orf_length))
+        orfDF <- orfDF[!duplicated(orfDF$id),]
+    }
+
     orfDF$start_site_nt <-
         (orfDF$start_site * 3)- 3 + orfDF$frame
     orfDF$stop_site_nt <- (orfDF$orf_length * 3) + orfDF$start_site_nt + 3
@@ -312,16 +316,19 @@ getOrfs <- function(transcripts,
                                                 paste0(uORFS.bytranscript.newVal$id,
                                                        uORFS.bytranscript.newVal$frame)),3]
 
-            uORFS.bytranscript.newVal <-
-                aggregate(min_dist_to_junction_b ~ id+frame,
-                          upstreamORFs[upstreamORFs$exon_b_from_final !=0,],
-                          function(x) max(x))
-            uORFS.bytranscript$uorf_maxb <-
-                uORFS.bytranscript.newVal[match(paste0(uORFS.bytranscript$id,
-                                                       uORFS.bytranscript$frame),
-                                                paste0(uORFS.bytranscript.newVal$id,
-                                                       uORFS.bytranscript.newVal$frame)),3]
-
+            if(any(upstreamORFs$exon_b_from_final != 0)){
+                uORFS.bytranscript.newVal <-
+                    aggregate(min_dist_to_junction_b ~ id+frame,
+                              upstreamORFs[upstreamORFs$exon_b_from_final !=0,],
+                              function(x) max(x))
+                uORFS.bytranscript$uorf_maxb <-
+                    uORFS.bytranscript.newVal[match(paste0(uORFS.bytranscript$id,
+                                                           uORFS.bytranscript$frame),
+                                                    paste0(uORFS.bytranscript.newVal$id,
+                                                           uORFS.bytranscript.newVal$frame)),3]
+            }else{
+                uORFS.bytranscript$uorf_maxb <- NA
+            }
             m <- match(paste0(orfDF$id, orfDF$frame), paste0(uORFS.bytranscript$id,
                                                              uORFS.bytranscript$frame))
             orfDF <- cbind(orfDF, uORFS.bytranscript[m,-c(1:2)])
