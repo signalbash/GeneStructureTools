@@ -14,8 +14,15 @@ coordinates(whippetDataSet)
 \item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
 }
 \value{
-whippet event coordinates GRanges
+whippet splicing event coordinates as a GRanges object
 }
 \description{
 Method coordinates
+}
+\examples{
+whippetFiles <- system.file("extdata","whippet/",
+package = "GeneStructureTools")
+wds <- readWhippetDataSet(whippetFiles)
+
+coordinates <- coordinates(wds)
 }

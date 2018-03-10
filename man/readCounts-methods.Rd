@@ -20,3 +20,10 @@ whippet read count data.frame
 \description{
 Method readCounts
 }
+\examples{
+whippetFiles <- system.file("extdata","whippet/",
+package = "GeneStructureTools")
+wds <- readWhippetDataSet(whippetFiles)
+
+readCounts <- readCounts(wds)
+}

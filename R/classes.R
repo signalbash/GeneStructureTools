@@ -29,6 +29,13 @@ setGeneric("diffSplicingResults",
 #' @rdname diffSplicingResults-methods
 #' @return differential splicing results data.frame
 #' (originally from a whippet .diff file)
+#' @family whippet data processing
+#' @examples
+#' whippetFiles <- system.file("extdata","whippet/",
+#' package = "GeneStructureTools")
+#' wds <- readWhippetDataSet(whippetFiles)
+#'
+#' diffSplicingResults <- diffSplicingResults(wds)
 setMethod("diffSplicingResults", signature="whippetDataSet",
           definition=function(whippetDataSet)
           {
@@ -51,6 +58,13 @@ setGeneric("readCounts",
 #' @rdname readCounts-methods
 #' @return whippet read count data.frame
 #' (originally from a whippet .psi file)
+#' @family whippet data processing
+#' @examples
+#' whippetFiles <- system.file("extdata","whippet/",
+#' package = "GeneStructureTools")
+#' wds <- readWhippetDataSet(whippetFiles)
+#'
+#' readCounts <- readCounts(wds)
 setMethod("readCounts", signature="whippetDataSet",
           definition=function(whippetDataSet)
           {
@@ -73,6 +87,13 @@ setGeneric("junctions",
 #' @rdname junctions-methods
 #' @return junctions GRanges object
 #' (originally from a whippet .jnc file)
+#' @family whippet data processing
+#' @examples
+#' whippetFiles <- system.file("extdata","whippet/",
+#' package = "GeneStructureTools")
+#' wds <- readWhippetDataSet(whippetFiles)
+#'
+#' junctions <- junctions(wds)
 setMethod("junctions", signature="whippetDataSet",
           definition=function(whippetDataSet)
           {
@@ -92,7 +113,14 @@ setGeneric("coordinates",
            }
 )
 #' @rdname coordinates-methods
-#' @return whippet event coordinates GRanges
+#' @return whippet splicing event coordinates as a GRanges object
+#' @family whippet data processing
+#' @examples
+#' whippetFiles <- system.file("extdata","whippet/",
+#' package = "GeneStructureTools")
+#' wds <- readWhippetDataSet(whippetFiles)
+#'
+#' coordinates <- coordinates(wds)
 setMethod("coordinates", signature="whippetDataSet",
           definition=function(whippetDataSet)
           {

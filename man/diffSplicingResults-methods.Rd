@@ -20,3 +20,10 @@ differential splicing results data.frame
 \description{
 Method diffSplicingResults
 }
+\examples{
+whippetFiles <- system.file("extdata","whippet/",
+package = "GeneStructureTools")
+wds <- readWhippetDataSet(whippetFiles)
+
+diffSplicingResults <- diffSplicingResults(wds)
+}

@@ -20,3 +20,10 @@ junctions GRanges object
 \description{
 Method junctions
 }
+\examples{
+whippetFiles <- system.file("extdata","whippet/",
+package = "GeneStructureTools")
+wds <- readWhippetDataSet(whippetFiles)
+
+junctions <- junctions(wds)
+}
