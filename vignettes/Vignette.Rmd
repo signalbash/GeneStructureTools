@@ -43,8 +43,6 @@ GeneStructureTools currently has functions for processing data from:
 
 [**leafcutter**](https://github.com/davidaknowles/leafcutter)
 
-## Whippet
-
 **Data Preparation**
 
 We have pre-prepared data from mouse embryonic stem cell (ESC) development (Gloss et. al, 2017, Accession Number [GSE75028](https://www.ebi.ac.uk/ena/data/view/PRJNA302257)), at days 0 and 5, and run whippet on each replicate using the reccomended parameters and the Gencode vM14 annotation.
@@ -53,6 +51,14 @@ You can download the whippet, leafcutter, and DEXSeq files [here](https://drive.
 You will also need to download the Gencode GTF file from [here](http://www.gencodegenes.org/mouse_releases/14.html).
 
 For the purposes of this vignette, small subsets of these data are available in the package data (inst/extdata).
+
+Data provided is typical output for leafcutter and Whippet. For details on what each file contains, please refer to their respective manuals ( [leafcutter](http://davidaknowles.github.io/leafcutter/index.html) | [Whippet](https://github.com/timbitz/Whippet.jl) ).
+
+DEXSeq data is processed as reccomended by the (DEXSeq) manual. The script used to process raw output is [here](https://github.com/betsig/GeneStructureTools/blob/master/inst/extdata/dexseq_process.R)
+
+## Whippet
+
+To run a full analysis on Whippet output, you will need the raw .psi.gz (percent spliced in) and .jnc.gz (junction read counts) files for each sample. In addition, you will need to compare conditions using `whippet-delta.jl` and have a resulting .diff.gz file.
 
 **Read in Whippet files from downloaded data**
 
@@ -142,7 +148,21 @@ g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
 ## leafcutter
 
-Only the file `per_intron_results.tab`, and the .gtf file used with leafcutter needs to be read in for results processing.
+Only the file containg the leafcutter results for each intron, and the .gtf file used with leafcutter needs to be read in for results processing. The leafcutter results file is generated after running [prepare_results.R](https://github.com/davidaknowles/leafcutter/blob/master/leafviz/prepare_results.R) on your data, then extracting out the intron data table.
+
+First, find the location of the leafviz2table.R script:
+```{r, findScript}
+#find location of the script
+system.file("extdata","leafviz2table.R", package = "GeneStructureTools")
+```
+Then run it on your leafviz output .RData file.
+The first argument is the leafviz output RData file, and the second is the name of the table you wish to write the intron results to.
+```{sh, eval=FALSE}
+Rscript leafviz2table.R leafviz.RData per_intron_results.tab
+```
+
+We have an processed example file available in extdata/leafcutter with a small sample of significant events.
+
 ```{r readLeafcutter}
 # read in gtf annotation
 gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf", package = "GeneStructureTools"))
@@ -698,6 +718,38 @@ head(orfs_normal[,-8])
 # exon_b_from_final: junction B exon number (counting backwards from the final exon)
 ```
 
+We can also annotate upstream open reading frames for transcripts
+```{r, upstreamORFs}
+# either as an indivudual data.frame with all uORFs
+upstreamORFs <- getUOrfs(normalTranscripts, BSgenome = g, orfs=orfs_normal, findExonB=TRUE)
+
+head(upstreamORFs)
+# id: transcript is
+# frame: rading frame for ORIGINAL orf data
+# overlaps_main_orf: is the entire uorf upstream of the main orf (upstream), or is there  some overlap with the main orf (downsteam) - i.e. uORF stop codon is within the main ORF
+# uorf_length: length of the uorf (in AA)
+# start_site_nt: position (in nt) where the uorf start codon occurs within the transcript
+# stop_site_nt: position (in nt) where the uorf stop codon occurs within the transcript
+# dist_to_start_nt: distance (in nt) from the uorf stop codon to the main orf start codon
+# min_dist_to_junction_b: distance from the uorf stop codon to the nearest downstream exon end/splice junction
+# exon_b_from_final: relative exon number (from the end) of the uorf stop codon containing exon
+
+# or as a summary by using the getOrfs() function
+# with uORFS=TRUE
+orfs_normal <- getOrfs(normalTranscripts, BSgenome = g, 
+                       returnLongestOnly = FALSE, allFrames = TRUE,
+                       uORFs=TRUE)
+
+head(orfs_normal[,-8])
+# this adds the following columns:
+# total_uorfs: total number of uorfs found for the transcript and annotated open reading frame.
+# upstream_count: number of uorfs that are located fully upstream of the main orf
+# downstream_count: number of uorfs which partially overlap the main orf
+# max_uorf: maximum length of an annotated uorf. If no uorfs annotated, = 0
+# uorf_maxb: maximum distance from the uorf stop codon to the nearest downstream exon end/splice junction
+
+```
+
 **2. Compare ORFs**
 ```{r CompareORF}
 # compare normal and skipped isoforms
@@ -753,16 +805,17 @@ skippedExonTranscripts <- skipExonInTranscript(wds,
 normalTranscripts <- exons[exons$transcript_id %in% exons.ce$transcript_id]
 
 # get ORF details for each set of transcripts
+# note that notNMD requires upstream orf annotations
 orfs_normal <- getOrfs(normalTranscripts, BSgenome = g, 
-                       returnLongestOnly = FALSE, allFrames = TRUE)
+                       returnLongestOnly = FALSE, allFrames = TRUE, uORFs=TRUE)
 orfs_skipped <- getOrfs(skippedExonTranscripts[skippedExonTranscripts$set == 
                                                                 "skipped_exon"],
                         BSgenome = g,
-                        returnLongestOnly = FALSE, allFrames = TRUE)
+                        returnLongestOnly = FALSE, allFrames = TRUE, uORFs=TRUE)
 orfs_included <- getOrfs(skippedExonTranscripts[skippedExonTranscripts$set == 
                                                                "included_exon"],
                          BSgenome = g,
-                        returnLongestOnly = FALSE, allFrames = TRUE)
+                        returnLongestOnly = FALSE, allFrames = TRUE, uORFs=TRUE)
 
 # calculate NMD probability
 # --- note that if you have a different method for assessing NMD potential, you may substitute the values here
@@ -927,7 +980,7 @@ whippetDataSet=wds,
 exons = exons,
 transcripts = transcripts,
 BSgenome = g,
-NMD =TRUE # ignore nonsense mediated decay
+NMD = TRUE 
 )
 ```
 
