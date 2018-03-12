@@ -13,6 +13,7 @@
 #' @return filtered whippet differential comparison data.frame
 #' @export
 #' @importFrom stats median
+#' @family whippet data processing
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet/",
@@ -23,7 +24,7 @@ filterWhippetEvents <- function(whippetDataSet,
                                 probability = 0.95,
                                 psiDelta = 0.1,
                                 eventTypes = "all",
-                                idList=NULL,
+                                idList = NA,
                                 minCounts = NA,
                                 medianCounts = NA,
                                 sampleTable){
@@ -32,7 +33,7 @@ filterWhippetEvents <- function(whippetDataSet,
         eventTypes <- unique(diffSplicingResults(whippetDataSet)$type)
     }
 
-    if(is.null(idList)){
+    if(is.na(idList[1])){
         significantEventsIndex <-
             which(diffSplicingResults(whippetDataSet)$probability >
                       probability &
@@ -137,6 +138,7 @@ filterWhippetEvents <- function(whippetDataSet,
 #' @import GenomicRanges
 #' @importFrom rtracklayer import
 #' @importFrom utils installed.packages
+#' @family transcript isoform comparisons
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet/",
@@ -153,7 +155,7 @@ filterWhippetEvents <- function(whippetDataSet,
 #'
 #' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
 #' variableWidth=0, findIntrons=FALSE, transcripts)
-#' ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, exons)
+#' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
 #' transcriptChangeSummary(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="included_exon"],
 #' ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
 #' BSgenome=g,exons)
@@ -364,6 +366,7 @@ transcriptChangeSummary <- function(transcriptsX,
 #' @export
 #' @importFrom rtracklayer import
 #' @import GenomicRanges
+#' @family whippet data processing
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet/",
@@ -397,7 +400,7 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
     }
 
 
-    if(eventTypes == "all"){
+    if(eventTypes[1] == "all"){
         eventTypes <- unique(diffSplicingResults(whippetDataSet)$type)
     }
     if(!is.null(exportGTF)){
@@ -414,14 +417,15 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
 
         significantEvents.ce <- diffSplicingResults(whippetDataSet.ce)
 
-        exons.ce <- findExonContainingTranscripts(whippetDataSet.ce, exons,
+        exons.ce <- findExonContainingTranscripts(input=whippetDataSet.ce,
+                                                  exons=exons,
                                                   variableWidth=0,
                                                   findIntrons=FALSE,
-                                                  transcripts)
+                                                  transcripts=transcripts)
         # make skipped exon transcripts
-        skippedExonTranscripts <- skipExonInTranscript(whippetDataSet.ce,
-                                                       exons.ce,
-                                                       exons,
+        skippedExonTranscripts <- skipExonInTranscript(whippetDataSet=whippetDataSet.ce,
+                                                       skippedExons = exons.ce,
+                                                       exons = exons,
                                                        glueExons = TRUE)
 
         orfChanges.ce <- transcriptChangeSummary(
@@ -453,25 +457,17 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
 
         significantEvents.ri <- diffSplicingResults(whippetDataSet.ri)
 
-
-        # get whippet exon coordinates
-        # ranges.ri <- coordinates(whippetDataSet)[
-        #     coordinates(whippetDataSet)$id %in% significantEvents.ri$coord]
-        # need to extend for whippet coords
-        # start(ranges.ri) <- start(ranges.ri) -1
-        # end(ranges.ri) <- end(ranges.ri) +1
-
-        exons.ri <- findIntronContainingTranscripts(whippetDataSet.ri,
-                                                    exons)
+        exons.ri <- findIntronContainingTranscripts(input=whippetDataSet.ri,
+                                                    exons=exons)
 
         # find introns in the gtf that overlap whippet introns
         significantEvents.ri <-
             diffSplicingResults(whippetDataSet)[which(
                 diffSplicingResults(whippetDataSet)$type=="RI"),]
         # add the intron into transcripts
-        retainedIntronTranscripts <- addIntronInTranscript(whippetDataSet.ri,
-                                                           exons.ri,
-                                                           exons,
+        retainedIntronTranscripts <- addIntronInTranscript(whippetDataSet=whippetDataSet.ri,
+                                                           flankingExons = exons.ri,
+                                                           exons = exons,
                                                            glueExons = TRUE)
 
 
@@ -586,6 +582,7 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
 #' @importFrom stringr str_split
 #' @importFrom rtracklayer import
 #' @import GenomicRanges
+#' @family leafcutter data processing
 #' @author Beth Signal
 #' @examples
 #' leafcutterFiles <- list.files(system.file("extdata","leafcutter/",

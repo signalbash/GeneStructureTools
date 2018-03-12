@@ -13,6 +13,7 @@
 #' and alternative Y junctions.
 #' @export
 #' @import GenomicRanges
+#' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet/",
@@ -205,6 +206,7 @@ findJunctionPairs <- function(whippetDataSet, jncCoords, type=NA){
 #' @export
 #' @importFrom rtracklayer import
 #' @import GenomicRanges
+#' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet/",
@@ -674,6 +676,7 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
 #' @export
 #' @import GenomicRanges
 #' @importFrom rtracklayer import
+#' @family gtf manipulation
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",

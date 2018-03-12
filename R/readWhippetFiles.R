@@ -6,6 +6,7 @@
 #' @import GenomicRanges
 #' @importFrom IRanges IRanges
 #' @importFrom S4Vectors Rle
+#' @family whippet data processing
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
@@ -64,6 +65,7 @@ readWhippetJNCfiles <- function(files){
 #' @return data.frame with junction counts for all files
 #' @export
 #' @importFrom data.table fread
+#' @family whippet data processing
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
@@ -109,6 +111,7 @@ readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
 #' @return data.frame with junction counts for all files
 #' @export
 #' @importFrom data.table fread
+#' @family whippet data processing
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
@@ -167,6 +170,7 @@ readWhippetDIFFfiles <- function(files){
 #' @import GenomicRanges
 #' @importFrom IRanges IRanges
 #' @import stringr
+#' @family whippet data processing
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
@@ -196,6 +200,7 @@ formatWhippetEvents <- function(whippet){
 #' @export
 #' @import stringr
 #' @import methods
+#' @family whippet data processing
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet/",

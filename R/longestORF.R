@@ -6,6 +6,7 @@
 #' @return sequential start site and end site with the greatest difference
 #' @export
 #' @import plyr
+#' @family ORF annotation
 #' @author Beth Signal
 #' @examples
 #' starts <- c(1,10,15,25)
@@ -53,6 +54,7 @@ maxLocation <- function(startSite, stopSite, longest = 1){
 #' @importFrom stats aggregate
 #' @importFrom rtracklayer import
 #' @importFrom utils write.table
+#' @family ORF annotation
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata", "example_gtf.gtf",
@@ -202,7 +204,7 @@ getOrfs <- function(transcripts,
     orfDF$orf_length <- nchar(orfDF$orf_sequence)
 
     if(returnLongestOnly==TRUE){
-        orfDF <- plyr::arrange(orfDF, plyr::desc(orf_length))
+        orfDF <- orfDF[rev(order(orfDF$orf_length)),]
         orfDF <- orfDF[!duplicated(orfDF$id),]
     }
 
@@ -356,11 +358,8 @@ getOrfs <- function(transcripts,
 #' @param x input numeric vector
 #' @param padLength length to pad output to
 #' @return vector with cumulative sum, padded with NA
-#' @export
 #' @author Beth Signal
-#' @examples
-#' x <- c(1,4,7,2,5)
-#' cumsumANDpad(x, 10)
+#' @keywords internal
 cumsumANDpad <- function(x, padLength){
     y <- cumsum(c(1,x))[-1]
     if(length(y) < padLength){
@@ -381,6 +380,7 @@ cumsumANDpad <- function(x, padLength){
 #' @import Biostrings
 #' @import stringr
 #' @importFrom rtracklayer import
+#' @family ORF annotation
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata", "example_gtf.gtf",
@@ -568,13 +568,17 @@ getUOrfs <- function(transcripts,
 
     m <- match(upstreamORFs$id, orfs$id)
     upstreamORFs$frame <- orfs$frame[m]
-    replaceName <- which(stringr::str_sub(upstreamORFs$id, -6,-1) %in% c("frame1", "frame2","frame3"))
+    replaceName <- which(stringr::str_sub(upstreamORFs$id, -6,-1) %in%
+                             c("frame1", "frame2","frame3"))
 
     upstreamORFs$id[replaceName] <- gsub("_frame1", "",
                                          gsub("_frame2", "",
                                               gsub("_frame3", "",
                                                    upstreamORFs$id[replaceName])))
 
-    upstreamORFs <- plyr::arrange(upstreamORFs, id, frame, start_site_nt)
+    upstreamORFs <- upstreamORFs[order(upstreamORFs$id,
+                                       upstreamORFs$frame,
+                                       upstreamORFs$start_site_nt),]
+
     return(upstreamORFs)
 }

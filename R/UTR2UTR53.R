@@ -4,6 +4,7 @@
 #' @param gtf GRanges object of the GTF
 #' @return gtf annotation GRanges object
 #' @export
+#' @family gtf manipulation
 #' @import GenomicRanges
 #' @importFrom rtracklayer import
 #' @examples

@@ -88,6 +88,7 @@ addSets <- function(clusterGRanges){
 #' @export
 #' @import GenomicRanges
 #' @importFrom rtracklayer import
+#' @family gtf manipulation
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
@@ -120,6 +121,7 @@ removeSameExon <- function(exons){
 #' @importFrom IRanges IRanges
 #' @import GenomicRanges
 #' @importFrom rtracklayer import
+#' @family leafcutter splicing isoform creation
 #' @author Beth Signal
 #' @examples
 #' leafcutterFiles <- list.files(system.file("extdata","leafcutter/",
@@ -309,6 +311,7 @@ alternativeIntronUsage <- function(altIntronLocs, exons){
 #' @import GenomicRanges
 #' @importFrom IRanges IRanges
 #' @importFrom rtracklayer import
+#' @family gtf manipulation
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",

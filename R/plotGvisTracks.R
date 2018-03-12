@@ -6,6 +6,7 @@
 #' @importFrom plyr desc
 #' @import GenomicRanges
 #' @importFrom rtracklayer import
+#' @family Gviz gene structure visualisation
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata", "example_gtf.gtf",
@@ -171,6 +172,7 @@ annotateGeneModel <- function(transcripts, orfs){
 #' @export
 #' @import GenomicRanges
 #' @importFrom rtracklayer import
+#' @family Gviz gene structure visualisation
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata", "example_gtf.gtf",

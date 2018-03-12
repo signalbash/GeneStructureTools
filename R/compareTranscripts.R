@@ -12,6 +12,7 @@
 #' @import stringr
 #' @importFrom rtracklayer import
 #' @importFrom stats aggregate
+#' @family transcript isoform comparisons
 #' @author Beth Signal
 #' @examples
 #'
@@ -35,7 +36,7 @@
 #' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
 #' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
 #' variableWidth=0, findIntrons=FALSE, transcripts)
-#' ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, exons)
+#' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
 #'
 #' orfsSkipped <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
 #' BSgenome = g)
@@ -278,6 +279,7 @@ orfDiff <- function(orfsX,
 #' @import stringr
 #' @importFrom rtracklayer import
 #' @importFrom stats aggregate
+#' @family transcript isoform comparisons
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet/",
@@ -294,7 +296,7 @@ orfDiff <- function(orfsX,
 #' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
 #' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
 #' variableWidth=0, findIntrons=FALSE, transcripts)
-#' ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, exons)
+#' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
 #'
 #' orfsSkipped <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
 #' BSgenome = g)
@@ -539,6 +541,7 @@ attrChangeAltSpliced <- function(orfsX,
 #' @import stringdist
 #' @import stringr
 #' @importFrom utils adist
+#' @family ORF annotation
 #' @author Beth Signal
 #' @examples
 #' orfSimilarity("MFGLDIYAGTRSSFRQFSLT","MFGLDIYAGTRSSFRQFSLT")
