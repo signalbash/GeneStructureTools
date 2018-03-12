@@ -151,7 +151,7 @@ g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 Only the file containg the leafcutter results for each intron, and the .gtf file used with leafcutter needs to be read in for results processing. The leafcutter results file is generated after running [prepare_results.R](https://github.com/davidaknowles/leafcutter/blob/master/leafviz/prepare_results.R) on your data, then extracting out the intron data table.
 
 First, find the location of the leafviz2table.R script:
-```{r, findScript}
+```{r, findScript, eval=FALSE}
 #find location of the script
 system.file("extdata","leafviz2table.R", package = "GeneStructureTools")
 ```
@@ -183,7 +183,8 @@ intron_results <- read.delim(leafcutter_files[grep("per_intron_results.tab", lea
 ## Whippet
 ```{r filterWhippetEvents}
 # filter events for significance
-wds <- filterWhippetEvents(wds,
+wds <- filterWhippetEvents(
+whippetDataSet = wds,
 probability = 0.95, # min probability
 psiDelta = 0.1, # min change in PSI
 eventTypes = "all", # all event types
@@ -246,10 +247,10 @@ exons.ce <- findExonContainingTranscripts(wds.ce,
                                           transcripts = transcripts)
 # make skipped and included exon transcripts
 # removes the skipped exon from all transcripts which contain it
-skippedExonTranscripts <- skipExonInTranscript(wds,
-                                               skippedExons = exons.ce,
+skippedExonTranscripts <- skipExonInTranscript(skippedExons = exons.ce,
                                                exons=exons, 
-                                               match="skip")
+                                               match="skip",
+                                               whippetDataSet = wds.ce)
 ```
 
 
@@ -310,9 +311,9 @@ exons.ri <- findIntronContainingTranscripts(wds.ri,
 
 # make retained and non-retained transcripts
 # adds the intron into all transcripts which overlap it
-retainedIntronTranscripts <- addIntronInTranscript(wds.ri,
-                                                   exons.ri, 
+retainedIntronTranscripts <- addIntronInTranscript(exons.ri, 
                                                    exons = exons, 
+                                                   whippetDataSet = wds.ri,
                                                    glueExons = TRUE)
 
 ```
@@ -680,10 +681,10 @@ exons.ce <- findExonContainingTranscripts(wds.ce,
                                           transcripts = transcripts)
 # make skipped and included exon transcripts
 # removes the skipped exon from all transcripts which contain it
-skippedExonTranscripts <- skipExonInTranscript(wds,
-                                               skippedExons = exons.ce,
+skippedExonTranscripts <- skipExonInTranscript(skippedExons = exons.ce,
                                                exons=exons, 
-                                               match="exact")
+                                               match="exact",
+                                               whippetDataSet=wds.ce)
 # make non-skipped exon transcripts
 normalTranscripts <- exons[exons$transcript_id %in% 
                                         exons.ce$transcript_id]
@@ -724,8 +725,8 @@ We can also annotate upstream open reading frames for transcripts
 upstreamORFs <- getUOrfs(normalTranscripts, BSgenome = g, orfs=orfs_normal, findExonB=TRUE)
 
 head(upstreamORFs)
-# id: transcript is
-# frame: rading frame for ORIGINAL orf data
+# id: transcript id
+# frame: reading frame for ORIGINAL orf data
 # overlaps_main_orf: is the entire uorf upstream of the main orf (upstream), or is there  some overlap with the main orf (downsteam) - i.e. uORF stop codon is within the main ORF
 # uorf_length: length of the uorf (in AA)
 # start_site_nt: position (in nt) where the uorf start codon occurs within the transcript
@@ -797,10 +798,10 @@ exons.ce <- findExonContainingTranscripts(wds.ce,
                                           transcripts = transcripts)
 # make skipped and included exon transcripts
 # removes the skipped exon from all transcripts which contain it
-skippedExonTranscripts <- skipExonInTranscript(wds,
-                                               skippedExons = exons.ce,
+skippedExonTranscripts <- skipExonInTranscript(skippedExons = exons.ce,
                                                exons=exons, 
-                                               match="exact")
+                                               match="exact",
+                                               whippetDataSet=wds.ce)
 # make non-skipped exon transcripts
 normalTranscripts <- exons[exons$transcript_id %in% exons.ce$transcript_id]
 
@@ -901,10 +902,10 @@ exons.ri <- findIntronContainingTranscripts(wds.ri,
 
 # make retained and non-retained transcripts
 # adds the intron into all transcripts which overlap it
-retainedIntronTranscripts <- addIntronInTranscript(wds.ri,
-                                                   exons.ri, 
+retainedIntronTranscripts <- addIntronInTranscript(exons.ri, 
                                                    exons = exons, 
-                                                   glueExons = TRUE)
+                                                   glueExons = TRUE,
+                                                   whippetDataSet=wds.ri)
 # make non-retained intron transcripts
 normalTranscripts <- exons[exons$transcript_id %in% 
                                         exons.ri$transcript_id]
