@@ -27,6 +27,10 @@ orfSimilarity("MFGLDIYAFRQFSLT","MFGLDIYAGTRSSFRQFSLT")
 orfSimilarity("MFGLDIYAGTRXXFRQFSLT","MFGLDIYAGTRSSFRQFSLT")
 orfSimilarity("MFGLDIYAGTRXXFSLT","MFGLDIYAGTRSSFRQFSLT", 1)
 }
+\seealso{
+Other ORF annotation: \code{\link{getOrfs}},
+  \code{\link{getUOrfs}}, \code{\link{maxLocation}}
+}
 \author{
 Beth Signal
 }

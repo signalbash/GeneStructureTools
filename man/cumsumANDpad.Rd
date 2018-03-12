@@ -17,10 +17,7 @@ vector with cumulative sum, padded with NA
 \description{
 Cumulative sum of a sequence of numbers, padded with NA
 }
-\examples{
-x <- c(1,4,7,2,5)
-cumsumANDpad(x, 10)
-}
 \author{
 Beth Signal
 }
+\keyword{internal}

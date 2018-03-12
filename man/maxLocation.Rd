@@ -33,6 +33,10 @@ maxLocation(starts, stops, longest = 1)
 # 2nd longest start site = 10, 2nd longest stop site = 14
 maxLocation(starts, stops, longest = 2)
 }
+\seealso{
+Other ORF annotation: \code{\link{getOrfs}},
+  \code{\link{getUOrfs}}, \code{\link{orfSimilarity}}
+}
 \author{
 Beth Signal
 }

@@ -21,6 +21,9 @@ package="GeneStructureTools"))
 transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Neurl1a"]
 geneModel <- makeGeneModel(transcript)
 }
+\seealso{
+Other Gviz gene structure visualisation: \code{\link{annotateGeneModel}}
+}
 \author{
 Beth Signal
 }

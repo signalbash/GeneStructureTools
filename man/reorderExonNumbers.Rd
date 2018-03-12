@@ -24,6 +24,14 @@ package = "GeneStructureTools"))
 exons <- gtf[gtf$type=="exon"]
 exons <- reorderExonNumbers(exons)
 }
+\seealso{
+Other gtf manipulation: \code{\link{UTR2UTR53}},
+  \code{\link{addBroadTypes}},
+  \code{\link{exonsToTranscripts}},
+  \code{\link{filterGtfOverlap}},
+  \code{\link{removeDuplicateTranscripts}},
+  \code{\link{removeSameExon}}
+}
 \author{
 Beth Signal
 }

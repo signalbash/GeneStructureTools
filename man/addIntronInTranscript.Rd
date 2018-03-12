@@ -4,24 +4,24 @@
 \alias{addIntronInTranscript}
 \title{Add a retained intron to the transcripts it is skipped by}
 \usage{
-addIntronInTranscript(whippetDataSet, flankingExons, exons, glueExons = TRUE,
-  match = "exact")
+addIntronInTranscript(flankingExons, exons, whippetDataSet = NULL,
+  match = "exact", glueExons = TRUE)
 }
 \arguments{
-\item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
-
 \item{flankingExons}{data.frame generataed by findIntronContainingTranscripts()}
 
 \item{exons}{GRanges object made from a GTF with ONLY exon annotations
 (no gene, transcript, CDS etc.)}
 
-\item{glueExons}{Join together exons that are not seperated by introns?}
+\item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
 
 \item{match}{what type of match replacement should be done?
 exact: exact matches to the intron only
 retain: keep non-exact intron match coordinates in spliced sets, and retain them in retained sets
 replace: replace non-exact intron match coordinates with event coordinates in spliced sets,
 and retain in retained sets}
+
+\item{glueExons}{Join together exons that are not seperated by introns?}
 }
 \value{
 GRanges with transcripts containing retained introns
@@ -42,8 +42,27 @@ g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
 wds.intronRetention <- filterWhippetEvents(wds, eventTypes="RI")
 exons.intronRetention <- findIntronContainingTranscripts(wds.intronRetention, exons)
-IntronRetentionTranscripts <- addIntronInTranscript(wds.intronRetention,
-exons.intronRetention, exons)
+IntronRetentionTranscripts <- addIntronInTranscript(exons.intronRetention, exons,
+whippetDataSet=wds.intronRetention)
+
+exonsFromGRanges <- exons[exons$transcript_id=="ENSMUST00000139129.8" &
+exons$exon_number \%in\% c(3,4)]
+intronFromGRanges <- exonsFromGRanges[1]
+GenomicRanges::start(intronFromGRanges) <-
+GenomicRanges::end(exonsFromGRanges[exonsFromGRanges$exon_number==3])
+GenomicRanges::end(intronFromGRanges) <-
+GenomicRanges::start(exonsFromGRanges[exonsFromGRanges$exon_number==4])
+exons.intronRetention <- findIntronContainingTranscripts(intronFromGRanges, exons)
+
+IntronRetentionTranscripts <-
+addIntronInTranscript(exons.intronRetention, exons, match="retain")
+}
+\seealso{
+Other whippet splicing isoform creation: \code{\link{findExonContainingTranscripts}},
+  \code{\link{findIntronContainingTranscripts}},
+  \code{\link{findJunctionPairs}},
+  \code{\link{replaceJunction}},
+  \code{\link{skipExonInTranscript}}
 }
 \author{
 Beth Signal

@@ -56,10 +56,14 @@ wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
 
 exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
 variableWidth=0, findIntrons=FALSE, transcripts)
-ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, exons)
+ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
 transcriptChangeSummary(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="included_exon"],
 ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
 BSgenome=g,exons)
+}
+\seealso{
+Other transcript isoform comparisons: \code{\link{attrChangeAltSpliced}},
+  \code{\link{orfDiff}}
 }
 \author{
 Beth Signal

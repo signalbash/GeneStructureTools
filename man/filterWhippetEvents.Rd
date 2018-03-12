@@ -5,7 +5,7 @@
 \title{Filter out significant events from a whippet diff comparison}
 \usage{
 filterWhippetEvents(whippetDataSet, probability = 0.95, psiDelta = 0.1,
-  eventTypes = "all", idList = NULL, minCounts = NA, medianCounts = NA,
+  eventTypes = "all", idList = NA, minCounts = NA, medianCounts = NA,
   sampleTable)
 }
 \arguments{
@@ -39,6 +39,17 @@ whippetFiles <- system.file("extdata","whippet/",
 package = "GeneStructureTools")
 wds <- readWhippetDataSet(whippetFiles)
 wds <- filterWhippetEvents(wds)
+}
+\seealso{
+Other whippet data processing: \code{\link{coordinates}},
+  \code{\link{diffSplicingResults}},
+  \code{\link{formatWhippetEvents}},
+  \code{\link{junctions}}, \code{\link{readCounts}},
+  \code{\link{readWhippetDIFFfiles}},
+  \code{\link{readWhippetDataSet}},
+  \code{\link{readWhippetJNCfiles}},
+  \code{\link{readWhippetPSIfiles}},
+  \code{\link{whippetTranscriptChangeSummary}}
 }
 \author{
 Beth Signal

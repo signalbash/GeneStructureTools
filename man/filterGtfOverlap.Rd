@@ -29,6 +29,14 @@ table(gtf$type[overlap$subjectHits])
 overlapFiltered <- filterGtfOverlap(gtf[overlap$subjectHits])
 table(overlapFiltered$type[overlap$subjectHits])
 }
+\seealso{
+Other gtf manipulation: \code{\link{UTR2UTR53}},
+  \code{\link{addBroadTypes}},
+  \code{\link{exonsToTranscripts}},
+  \code{\link{removeDuplicateTranscripts}},
+  \code{\link{removeSameExon}},
+  \code{\link{reorderExonNumbers}}
+}
 \author{
 Beth Signal
 }

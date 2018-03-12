@@ -51,6 +51,13 @@ wds.altLast <- filterWhippetEvents(wds, eventTypes="AL", psiDelta=0.2)
 jncPairs.altLast <- findJunctionPairs(wds.altLast, type="AL")
 transcripts.altLast <- replaceJunction(wds.altLast, jncPairs.altLast, exons, type="AL")
 }
+\seealso{
+Other whippet splicing isoform creation: \code{\link{addIntronInTranscript}},
+  \code{\link{findExonContainingTranscripts}},
+  \code{\link{findIntronContainingTranscripts}},
+  \code{\link{findJunctionPairs}},
+  \code{\link{skipExonInTranscript}}
+}
 \author{
 Beth Signal
 }

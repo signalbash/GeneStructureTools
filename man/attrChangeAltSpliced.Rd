@@ -45,13 +45,17 @@ g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
 exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
 variableWidth=0, findIntrons=FALSE, transcripts)
-ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, exons)
+ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
 
 orfsSkipped <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
 BSgenome = g)
 orfsIncluded <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="included_exon"],
 BSgenome = g)
 attrChangeAltSpliced(orfsSkipped, orfsIncluded,attribute = "orf_length")
+}
+\seealso{
+Other transcript isoform comparisons: \code{\link{orfDiff}},
+  \code{\link{transcriptChangeSummary}}
 }
 \author{
 Beth Signal

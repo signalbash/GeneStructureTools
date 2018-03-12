@@ -4,18 +4,18 @@
 \alias{skipExonInTranscript}
 \title{Remove and include a skipped exon from the transcripts it overlaps}
 \usage{
-skipExonInTranscript(whippetDataSet, skippedExons, exons, glueExons = TRUE,
-  match = "exact")
+skipExonInTranscript(skippedExons, exons, glueExons = TRUE,
+  whippetDataSet = NULL, match = "exact")
 }
 \arguments{
-\item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
-
 \item{skippedExons}{data.frame generataed by findExonContainingTranscripts()}
 
 \item{exons}{GRanges object made from a GTF with ONLY exon annotations
 (no gene, transcript, CDS etc.)}
 
 \item{glueExons}{Join together exons that are not seperated by exons?}
+
+\item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
 
 \item{match}{what type of match replacement should be done?
 exact: exact matches to the skipped event only, also removes any intron overlaps
@@ -44,7 +44,19 @@ g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
 exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
 variableWidth=0, findIntrons=FALSE, transcripts)
-ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, exons)
+ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
+
+exonFromGRanges <- exons[exons$exon_id == "ENSMUSE00001271768.1"]
+exons.exonSkip <- findExonContainingTranscripts(exonFromGRanges, exons,
+variableWidth=0, findIntrons=FALSE, transcripts)
+ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, match="skip")
+}
+\seealso{
+Other whippet splicing isoform creation: \code{\link{addIntronInTranscript}},
+  \code{\link{findExonContainingTranscripts}},
+  \code{\link{findIntronContainingTranscripts}},
+  \code{\link{findJunctionPairs}},
+  \code{\link{replaceJunction}}
 }
 \author{
 Beth Signal

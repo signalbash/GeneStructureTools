@@ -51,13 +51,17 @@ orfDiff(orfsProteinCoding, orfsNMD, filterNMD=FALSE)
 wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
 exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
 variableWidth=0, findIntrons=FALSE, transcripts)
-ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, exons)
+ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
 
 orfsSkipped <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
 BSgenome = g)
 orfsIncluded <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="included_exon"],
 BSgenome = g)
 orfDiff(orfsSkipped, orfsIncluded, filterNMD=FALSE)
+}
+\seealso{
+Other transcript isoform comparisons: \code{\link{attrChangeAltSpliced}},
+  \code{\link{transcriptChangeSummary}}
 }
 \author{
 Beth Signal

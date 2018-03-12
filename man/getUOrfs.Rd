@@ -28,8 +28,12 @@ package="GeneStructureTools"))
 transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Neurl1a"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 # longest ORF for each transcripts
-orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = TRUE)
+orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = FALSE)
 uORFS <- getUOrfs(transcript, BSgenome = g, orfs = orfs, findExonB = TRUE)
+}
+\seealso{
+Other ORF annotation: \code{\link{getOrfs}},
+  \code{\link{maxLocation}}, \code{\link{orfSimilarity}}
 }
 \author{
 Beth Signal

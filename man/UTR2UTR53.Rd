@@ -22,6 +22,14 @@ gtf <- rtracklayer::import(gtfFile)
 gtf <- UTR2UTR53(gtf)
 table(gtf$type)
 }
+\seealso{
+Other gtf manipulation: \code{\link{addBroadTypes}},
+  \code{\link{exonsToTranscripts}},
+  \code{\link{filterGtfOverlap}},
+  \code{\link{removeDuplicateTranscripts}},
+  \code{\link{removeSameExon}},
+  \code{\link{reorderExonNumbers}}
+}
 \author{
 Beth Signal
 }

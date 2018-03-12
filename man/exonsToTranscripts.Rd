@@ -23,6 +23,14 @@ exons
 transcripts <- exonsToTranscripts(exons)
 transcripts
 }
+\seealso{
+Other gtf manipulation: \code{\link{UTR2UTR53}},
+  \code{\link{addBroadTypes}},
+  \code{\link{filterGtfOverlap}},
+  \code{\link{removeDuplicateTranscripts}},
+  \code{\link{removeSameExon}},
+  \code{\link{reorderExonNumbers}}
+}
 \author{
 Beth Signal
 }

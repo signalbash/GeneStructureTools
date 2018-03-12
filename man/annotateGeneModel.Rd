@@ -26,6 +26,9 @@ g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = TRUE)
 geneModelAnnotated <- annotateGeneModel(transcript, orfs)
 }
+\seealso{
+Other Gviz gene structure visualisation: \code{\link{makeGeneModel}}
+}
 \author{
 Beth Signal
 }

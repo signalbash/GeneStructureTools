@@ -21,6 +21,14 @@ package = "GeneStructureTools")
 gtf <- rtracklayer::import(gtfFile)
 gtf <- addBroadTypes(gtf)
 }
+\seealso{
+Other gtf manipulation: \code{\link{UTR2UTR53}},
+  \code{\link{exonsToTranscripts}},
+  \code{\link{filterGtfOverlap}},
+  \code{\link{removeDuplicateTranscripts}},
+  \code{\link{removeSameExon}},
+  \code{\link{reorderExonNumbers}}
+}
 \author{
 Beth Signal
 }

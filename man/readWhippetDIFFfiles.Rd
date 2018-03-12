@@ -21,6 +21,17 @@ package = "GeneStructureTools"), full.names = TRUE)
 diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
 whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
 }
+\seealso{
+Other whippet data processing: \code{\link{coordinates}},
+  \code{\link{diffSplicingResults}},
+  \code{\link{filterWhippetEvents}},
+  \code{\link{formatWhippetEvents}},
+  \code{\link{junctions}}, \code{\link{readCounts}},
+  \code{\link{readWhippetDataSet}},
+  \code{\link{readWhippetJNCfiles}},
+  \code{\link{readWhippetPSIfiles}},
+  \code{\link{whippetTranscriptChangeSummary}}
+}
 \author{
 Beth Signal
 }

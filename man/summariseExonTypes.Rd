@@ -35,6 +35,10 @@ types <- findDEXexonType(rownames(DEXSeqResults), DEXSeqGtf, gtf)
 summarisedTypes <- summariseExonTypes(types)
 table(types, summarisedTypes)
 }
+\seealso{
+Other DEXSeq processing methods: \code{\link{DEXSeqIdsToGeneIds}},
+  \code{\link{findDEXexonType}}
+}
 \author{
 Beth Signal
 }

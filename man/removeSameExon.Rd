@@ -24,6 +24,14 @@ length(exons.duplicated)
 exons.deduplicated <- removeSameExon(exons.duplicated)
 length(exons.deduplicated)
 }
+\seealso{
+Other gtf manipulation: \code{\link{UTR2UTR53}},
+  \code{\link{addBroadTypes}},
+  \code{\link{exonsToTranscripts}},
+  \code{\link{filterGtfOverlap}},
+  \code{\link{removeDuplicateTranscripts}},
+  \code{\link{reorderExonNumbers}}
+}
 \author{
 Beth Signal
 }

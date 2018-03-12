@@ -40,6 +40,10 @@ DEXSeqResults <- read.table(DEXSeqResultsFile, sep="\\t")
 findDEXexonType(rownames(DEXSeqResults), DEXSeqGtf, gtf)
 
 }
+\seealso{
+Other DEXSeq processing methods: \code{\link{DEXSeqIdsToGeneIds}},
+  \code{\link{summariseExonTypes}}
+}
 \author{
 Beth Signal
 }

@@ -44,6 +44,10 @@ orfs <- getOrfs(transcript, BSgenome = g, allFrames = TRUE)
 # longest 3 ORFS in eacht transcript
 orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = FALSE, longest=3)
 }
+\seealso{
+Other ORF annotation: \code{\link{getUOrfs}},
+  \code{\link{maxLocation}}, \code{\link{orfSimilarity}}
+}
 \author{
 Beth Signal
 }

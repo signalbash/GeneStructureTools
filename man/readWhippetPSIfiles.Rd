@@ -25,6 +25,17 @@ package = "GeneStructureTools"), full.names = TRUE)
 psiFiles <- whippetFiles[grep(".psi", whippetFiles)]
 whippetPSI <- readWhippetPSIfiles(psiFiles)
 }
+\seealso{
+Other whippet data processing: \code{\link{coordinates}},
+  \code{\link{diffSplicingResults}},
+  \code{\link{filterWhippetEvents}},
+  \code{\link{formatWhippetEvents}},
+  \code{\link{junctions}}, \code{\link{readCounts}},
+  \code{\link{readWhippetDIFFfiles}},
+  \code{\link{readWhippetDataSet}},
+  \code{\link{readWhippetJNCfiles}},
+  \code{\link{whippetTranscriptChangeSummary}}
+}
 \author{
 Beth Signal
 }

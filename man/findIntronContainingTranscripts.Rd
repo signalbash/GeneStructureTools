@@ -4,10 +4,10 @@
 \alias{findIntronContainingTranscripts}
 \title{Given the location of a whole retained intron, find transcripts which splice out this intron}
 \usage{
-findIntronContainingTranscripts(whippetDataSet, exons, match = "exact")
+findIntronContainingTranscripts(input, exons, match = "exact")
 }
 \arguments{
-\item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
+\item{input}{whippetDataSet generated from \code{readWhippetDataSet()} or a Granges of intron coordinates}
 
 \item{exons}{GRanges object made from a GTF with ONLY exon annotations
 (no gene, transcript, CDS etc.)}
@@ -34,7 +34,23 @@ exons <- gtf[gtf$type=="exon"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
 wds.intronRetention <- filterWhippetEvents(wds, eventTypes="RI")
-exons.intronRetention <- findIntronContainingTranscripts(wds.intronRetention, exons)
+exons.intronRetention <- findIntronContainingTranscripts(input=wds.intronRetention, exons)
+
+exonsFromGRanges <- exons[exons$transcript_id=="ENSMUST00000139129.8" &
+exons$exon_number \%in\% c(3,4)]
+intronFromGRanges <- exonsFromGRanges[1]
+GenomicRanges::start(intronFromGRanges) <-
+GenomicRanges::end(exonsFromGRanges[exonsFromGRanges$exon_number==3])
+GenomicRanges::end(intronFromGRanges) <-
+GenomicRanges::start(exonsFromGRanges[exonsFromGRanges$exon_number==4])
+exons.intronRetention <- findIntronContainingTranscripts(intronFromGRanges, exons)
+}
+\seealso{
+Other whippet splicing isoform creation: \code{\link{addIntronInTranscript}},
+  \code{\link{findExonContainingTranscripts}},
+  \code{\link{findJunctionPairs}},
+  \code{\link{replaceJunction}},
+  \code{\link{skipExonInTranscript}}
 }
 \author{
 Beth Signal

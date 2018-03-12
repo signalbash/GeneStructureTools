@@ -27,6 +27,10 @@ DEXSeqIdsToGeneIds(DEXSeqId)
 # exonic part number in id
 DEXSeqIdsToGeneIds("ENSMUSG00000001017.15:E013", removeVersion=TRUE)
 }
+\seealso{
+Other DEXSeq processing methods: \code{\link{findDEXexonType}},
+  \code{\link{summariseExonTypes}}
+}
 \author{
 Beth Signal
 }
