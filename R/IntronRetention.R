@@ -1,5 +1,5 @@
 #' Given the location of a whole retained intron, find transcripts which splice out this intron
-#' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
+#' @param input whippetDataSet generated from \code{readWhippetDataSet()} or a Granges of intron coordinates
 #' @param exons GRanges object made from a GTF with ONLY exon annotations
 #' (no gene, transcript, CDS etc.)
 #' @param match what type of matching to perform? exact = only exons which bound the intron exactly,
@@ -9,6 +9,7 @@
 #' @export
 #' @import GenomicRanges
 #' @importFrom rtracklayer import
+#' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet/",
@@ -22,19 +23,38 @@
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' wds.intronRetention <- filterWhippetEvents(wds, eventTypes="RI")
-#' exons.intronRetention <- findIntronContainingTranscripts(wds.intronRetention, exons)
-findIntronContainingTranscripts <- function(whippetDataSet,
+#' exons.intronRetention <- findIntronContainingTranscripts(input=wds.intronRetention, exons)
+#'
+#' exonsFromGRanges <- exons[exons$transcript_id=="ENSMUST00000139129.8" &
+#' exons$exon_number %in% c(3,4)]
+#' intronFromGRanges <- exonsFromGRanges[1]
+#' GenomicRanges::start(intronFromGRanges) <-
+#' GenomicRanges::end(exonsFromGRanges[exonsFromGRanges$exon_number==3])
+#' GenomicRanges::end(intronFromGRanges) <-
+#' GenomicRanges::start(exonsFromGRanges[exonsFromGRanges$exon_number==4])
+#' exons.intronRetention <- findIntronContainingTranscripts(intronFromGRanges, exons)
+findIntronContainingTranscripts <- function(input,
                                             exons,
                                             match="exact"){
     moved <- FALSE
 
-    whippetDataSet <- filterWhippetEvents(whippetDataSet,
-                                          probability = 0,
-                                          psiDelta = 0,
-                                          eventTypes="RI")
+    if(class(input)=="whippetDataSet"){
+        whippetDataSet <- filterWhippetEvents(input,
+                                              probability = 0,
+                                              psiDelta = 0,
+                                              eventTypes="RI")
 
-    eventCoords <- coordinates(whippetDataSet)
+        eventCoords <- coordinates(whippetDataSet)
 
+    }else if(class(input) == "GRanges"){
+        eventCoords <- input
+        if(!("id" %in% names(mcols(eventCoords))) &
+           "exon_id" %in% names(mcols(eventCoords))){
+            eventCoords$id <- eventCoords$exon_id
+        }else{
+            stop("please specify \"id\" or \"exon_id\" in the input")
+        }
+    }
     # remove any duplicates
     overlaps <- GenomicRanges::findOverlaps(eventCoords, type="equal")
     overlaps <- overlaps[which(overlaps@from != overlaps@to)]
@@ -54,13 +74,17 @@ findIntronContainingTranscripts <- function(whippetDataSet,
 
     # catch if intron coords dont overlap the 1nt exon start/end
     if(length(overlaps) == 0){
-        start(rangeRI.start) <- start(rangeRI.start) -1
-        end(rangeRI.start) <- start(rangeRI.start)
+        GenomicRanges::start(rangeRI.start) <-
+            GenomicRanges::start(rangeRI.start) -1
+        GenomicRanges::end(rangeRI.start) <-
+            GenomicRanges::start(rangeRI.start)
         overlaps <- GenomicRanges::findOverlaps(rangeRI.start,
                                                 exons, type="end")
         # fix original
-        start(eventCoords) <- start(eventCoords) -1
-        end(eventCoords) <- end(eventCoords) +1
+        GenomicRanges::start(eventCoords) <-
+            GenomicRanges::start(eventCoords) -1
+        GenomicRanges::end(eventCoords) <-
+            GenomicRanges::end(eventCoords) +1
         moved <- TRUE
     }
 
@@ -70,12 +94,14 @@ findIntronContainingTranscripts <- function(whippetDataSet,
 
     # end of intron // start of exon b
     rangeRI.end <- eventCoords
-    start(rangeRI.end) <- end(rangeRI.end)
+    GenomicRanges::start(rangeRI.end) <- GenomicRanges::end(rangeRI.end)
 
     overlaps <- GenomicRanges::findOverlaps(rangeRI.end, exons, type="start")
     if(length(overlaps) == 0){
-        end(rangeRI.end) <- end(rangeRI.end) +1
-        start(rangeRI.end) <- end(rangeRI.end)
+        GenomicRanges::end(rangeRI.end) <-
+            GenomicRanges::end(rangeRI.end) +1
+        GenomicRanges::start(rangeRI.end) <-
+            GenomicRanges::end(rangeRI.end)
         overlaps <- GenomicRanges::findOverlaps(rangeRI.end,
                                                 exons, type="start")
         moved <- TRUE
@@ -192,22 +218,23 @@ findIntronContainingTranscripts <- function(whippetDataSet,
 }
 
 #' Add a retained intron to the transcripts it is skipped by
-#' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 #' @param flankingExons data.frame generataed by findIntronContainingTranscripts()
 #' @param exons GRanges object made from a GTF with ONLY exon annotations
 #' (no gene, transcript, CDS etc.)
-#' @param glueExons Join together exons that are not seperated by introns?
+#' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 #' @param match what type of match replacement should be done?
 #' exact: exact matches to the intron only
 #' retain: keep non-exact intron match coordinates in spliced sets, and retain them in retained sets
 #' replace: replace non-exact intron match coordinates with event coordinates in spliced sets,
 #' and retain in retained sets
+#' @param glueExons Join together exons that are not seperated by introns?
 #' @return GRanges with transcripts containing retained introns
 #' @export
 #' @import GenomicRanges
 #' @importFrom S4Vectors DataFrame
 #' @importFrom plyr desc
 #' @importFrom rtracklayer import
+#' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet/",
@@ -222,38 +249,77 @@ findIntronContainingTranscripts <- function(whippetDataSet,
 #'
 #' wds.intronRetention <- filterWhippetEvents(wds, eventTypes="RI")
 #' exons.intronRetention <- findIntronContainingTranscripts(wds.intronRetention, exons)
-#' IntronRetentionTranscripts <- addIntronInTranscript(wds.intronRetention,
-#' exons.intronRetention, exons)
-addIntronInTranscript <- function(whippetDataSet,
-                                  flankingExons,
+#' IntronRetentionTranscripts <- addIntronInTranscript(exons.intronRetention, exons,
+#' whippetDataSet=wds.intronRetention)
+#'
+#' exonsFromGRanges <- exons[exons$transcript_id=="ENSMUST00000139129.8" &
+#' exons$exon_number %in% c(3,4)]
+#' intronFromGRanges <- exonsFromGRanges[1]
+#' GenomicRanges::start(intronFromGRanges) <-
+#' GenomicRanges::end(exonsFromGRanges[exonsFromGRanges$exon_number==3])
+#' GenomicRanges::end(intronFromGRanges) <-
+#' GenomicRanges::start(exonsFromGRanges[exonsFromGRanges$exon_number==4])
+#' exons.intronRetention <- findIntronContainingTranscripts(intronFromGRanges, exons)
+#'
+#' IntronRetentionTranscripts <-
+#' addIntronInTranscript(exons.intronRetention, exons, match="retain")
+addIntronInTranscript <- function(flankingExons,
                                   exons,
-                                  glueExons=TRUE,
-                                  match="exact"){
+                                  whippetDataSet = NULL,
+                                  match="exact",
+                                  glueExons=TRUE){
 
-
-    whippetDataSet <- filterWhippetEvents(whippetDataSet,
-                                          probability = 0,
-                                          psiDelta = 0,
-                                          eventTypes="RI")
-
-    eventCoords <- coordinates(whippetDataSet)
-
-
-    move <- which(flankingExons$moved == TRUE)
-    move.RIindex <- which(eventCoords$id %in% flankingExons$from[move])
-    start(eventCoords)[move.RIindex] <- start(eventCoords)[move.RIindex] -1
-    end(eventCoords)[move.RIindex] <- end(eventCoords)[move.RIindex] +1
 
     if(!(match %in% c("exact","retain","replace"))){
         message("match must be 'exact', 'retain', or 'replace'")
-        message("using default match = 'exact'")
-        match <- "exact"
+
+        if(!is.null(whippetDataSet)){
+            message("using match = 'exact'")
+            match <- "exact"
+        }else{
+            message("using match = 'retain'")
+            match <- "retain"
+        }
     }
 
-    if(match == "exact"){
-        keep <- which(flankingExons$overlaps == "intron")
-        flankingExons <- flankingExons[keep,]
-        eventCoords <- eventCoords[eventCoords$id %in% flankingExons$from]
+    if(is.null(whippetDataSet) & match=="exact"){
+        message("cannot use match = 'exact' without a whippetDataSet")
+        message("using match = 'retain'")
+        match <- "retain"
+    }
+
+    if(!is.null(whippetDataSet)){
+        whippetDataSet <- filterWhippetEvents(whippetDataSet,
+                                              probability = 0,
+                                              psiDelta = 0,
+                                              eventTypes="RI")
+
+        eventCoords <- coordinates(whippetDataSet)
+
+        if(match == "exact"){
+            keep <- which(flankingExons$overlaps == "intron")
+            flankingExons <- flankingExons[keep,]
+            eventCoords <- eventCoords[eventCoords$id %in% flankingExons$from]
+        }
+
+        move <- which(flankingExons$moved == TRUE)
+        move.RIindex <- which(eventCoords$id %in% flankingExons$from[move])
+        GenomicRanges::start(eventCoords)[move.RIindex] <-
+            GenomicRanges::start(eventCoords)[move.RIindex] -1
+        GenomicRanges::end(eventCoords)[move.RIindex] <-
+            GenomicRanges::end(eventCoords)[move.RIindex] +1
+
+    }else{
+        m1 <- match(paste0(flankingExons$transcript_id, flankingExons$from_exon_number),
+                   paste0(exons$transcript_id, exons$exon_number))
+        m2 <- match(paste0(flankingExons$transcript_id, flankingExons$to_exon_number),
+                    paste0(exons$transcript_id, exons$exon_number))
+
+        eventCoords <- GRanges(seqnames=seqnames(exons[c(m1)]),
+                               ranges = IRanges(start=end(exons[c(m1)]),
+                                                end=start(exons[c(m2)])),
+                               strand=strand(exons[c(m1)]),
+                               id=flankingExons$from)
     }
 
     eventCoords <- eventCoords[match(flankingExons$from, eventCoords$id)]

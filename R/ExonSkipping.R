@@ -1,5 +1,5 @@
-#' Given the location of a whole retained exon, find transcripts which can splice out this exon
-#' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
+#' Given the location of a whole spliced in exon, find transcripts which can splice out this exon
+#' @param input whippetDataSet generated from \code{readWhippetDataSet()} or a Granges of exon coordinates
 #' @param exons GRanges object made from a GTF containing exon coordinates
 #' @param variableWidth How many nts overhang is allowed for finding matching exons
 #' (default = 0, i.e. complete match)
@@ -10,6 +10,7 @@
 #' @export
 #' @import GenomicRanges
 #' @importFrom rtracklayer import
+#' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet/",
@@ -26,18 +27,33 @@
 #' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
 #' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
 #' variableWidth=0, findIntrons=FALSE, transcripts)
-findExonContainingTranscripts <- function(whippetDataSet,
+#'
+#' exonFromGRanges <- exons[exons$exon_id == "ENSMUSE00001271768.1"]
+#' exons.exonSkip <- findExonContainingTranscripts(exonFromGRanges, exons,
+#' variableWidth=0, findIntrons=FALSE, transcripts)
+findExonContainingTranscripts <- function(input,
                                           exons,
                                           variableWidth=0,
                                           findIntrons=FALSE,
                                           transcripts){
-    # check all are CE
-    whippetDataSet <- filterWhippetEvents(whippetDataSet,
-                                          probability = 0,
-                                          psiDelta = 0,
-                                          eventTypes="CE")
 
-    eventCoords <- coordinates(whippetDataSet)
+    if(class(input) == "whippetDataSet"){
+        # check all are CE
+        whippetDataSet <- filterWhippetEvents(input,
+                                              probability = 0,
+                                              psiDelta = 0,
+                                              eventTypes="CE")
+
+        eventCoords <- coordinates(whippetDataSet)
+    }else if(class(input) == "GRanges"){
+        eventCoords <- input
+        if(!("id" %in% names(mcols(eventCoords))) &
+           "exon_id" %in% names(mcols(eventCoords))){
+            eventCoords$id <- eventCoords$exon_id
+        }else{
+            stop("please specify \"id\" or \"exon_id\" in the input")
+        }
+    }
 
     # remove any duplicates
     overlaps <- GenomicRanges::findOverlaps(eventCoords, type="equal")
@@ -186,11 +202,11 @@ findExonContainingTranscripts <- function(whippetDataSet,
 }
 
 #' Remove and include a skipped exon from the transcripts it overlaps
-#' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 #' @param skippedExons data.frame generataed by findExonContainingTranscripts()
 #' @param exons GRanges object made from a GTF with ONLY exon annotations
 #' (no gene, transcript, CDS etc.)
 #' @param glueExons Join together exons that are not seperated by exons?
+#' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 #' @param match what type of match replacement should be done?
 #' exact: exact matches to the skipped event only, also removes any intron overlaps
 #' skip: keep non-exact exon match coordinates in included sets, and skip them in skipped sets
@@ -201,6 +217,7 @@ findExonContainingTranscripts <- function(whippetDataSet,
 #' @import GenomicRanges
 #' @importFrom plyr desc
 #' @importFrom rtracklayer import
+#' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet/",
@@ -217,35 +234,63 @@ findExonContainingTranscripts <- function(whippetDataSet,
 #' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
 #' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
 #' variableWidth=0, findIntrons=FALSE, transcripts)
-#' ExonSkippingTranscripts <- skipExonInTranscript(wds.exonSkip, exons.exonSkip, exons)
-skipExonInTranscript <- function(whippetDataSet,
-                                 skippedExons,
+#' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
+#'
+#' exonFromGRanges <- exons[exons$exon_id == "ENSMUSE00001271768.1"]
+#' exons.exonSkip <- findExonContainingTranscripts(exonFromGRanges, exons,
+#' variableWidth=0, findIntrons=FALSE, transcripts)
+#' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, match="skip")
+skipExonInTranscript <- function(skippedExons,
                                  exons,
                                  glueExons=TRUE,
+                                 whippetDataSet=NULL,
                                  match="exact"){
 
     if(!(match %in% c("exact","skip","replace"))){
         message("match must be 'exact', 'skip', or 'replace'")
-        message("using default match = 'exact'")
-        match <- "exact"
+
+        if(!is.null(whippetDataSet)){
+            message("using match = 'exact'")
+            match <- "exact"
+        }else{
+            message("using match = 'skip'")
+            match <- "skip"
+        }
     }
-    # check all are CE
-    whippetDataSet <- filterWhippetEvents(whippetDataSet,
-                                          probability = 0,
-                                          psiDelta = 0,
-                                          eventTypes="CE")
-
-    eventCoords <- coordinates(whippetDataSet)
-
-    # remove non-exact matches
-    if(match == "exact"){
-        m <- match(skippedExons$alt_id, eventCoords$id)
-        keep <- which((skippedExons$start) == start(eventCoords)[m] &
-                          (skippedExons$end == end(eventCoords)[m]) &
-                          skippedExons$overlaps=="exon")
-        skippedExons <- skippedExons[keep,]
+    if(is.null(whippetDataSet) & match=="exact"){
+        message("cannot use match = 'exact' without a whippetDataSet")
+        message("using match = 'skip'")
+        match <- "skip"
     }
 
+    # if a whippet dataset is being used
+    if(!is.null(whippetDataSet)){
+        # check all are CE
+        whippetDataSet <- filterWhippetEvents(whippetDataSet,
+                                              probability = 0,
+                                              psiDelta = 0,
+                                              eventTypes="CE")
+
+        eventCoords <- coordinates(whippetDataSet)
+
+        # remove non-exact matches
+        if(match == "exact"){
+            m <- match(skippedExons$alt_id, eventCoords$id)
+            keep <- which((skippedExons$start) == start(eventCoords)[m] &
+                              (skippedExons$end == end(eventCoords)[m]) &
+                              skippedExons$overlaps=="exon")
+            skippedExons <- skippedExons[keep,]
+        }
+
+        eventCoords <- eventCoords[match(skippedExons$alt_id, eventCoords$id)]
+    }else{
+        m <- match(skippedExons$gene_id, exons$gene_id)
+        eventCoords <- GRanges(seqnames=seqnames(exons[m]),
+                               ranges = IRanges(start=skippedExons$start,
+                                                end=skippedExons$end),
+                               strand=strand(exons[m]),
+                               id=skippedExons$alt_id)
+    }
     eventCoords <- eventCoords[match(skippedExons$alt_id, eventCoords$id)]
     eventCoords$exon_number <- skippedExons$exon_number
     eventCoords$transcript_id <- skippedExons$transcript_id
@@ -445,6 +490,7 @@ skipExonInTranscript <- function(whippetDataSet,
 #' @export
 #' @import GenomicRanges
 #' @importFrom rtracklayer import
+#' @family gtf manipulation
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
