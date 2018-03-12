@@ -1,7 +1,7 @@
 Package: GeneStructureTools
 Type: Package
 Title: Tools for spliced gene structure manipulation and analysis
-Version: 0.99.3
+Version: 0.99.4
 Author: Beth Signal
 Maintainer: Beth Signal <b.signal@garvan.org.au>
 Description: GeneStructureTools can be used to create in silico alternative splicing events, and analyse potential effects this has on functional gene products. 

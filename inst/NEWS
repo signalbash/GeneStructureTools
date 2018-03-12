@@ -11,3 +11,7 @@ Fixes for BioC submission
 
 Version 0.99.2
 - Fix for fread()'ing in gzip files on windows
+
+Version 0.99.4
+- Exon skipping and intron retention now works with manual coordinates again
+- Documentation updates
