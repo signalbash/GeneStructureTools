@@ -304,9 +304,9 @@ skipExonInTranscript <- function(skippedExons,
         oldStarts <- start(eventCoords)
         oldEnds <- end(eventCoords)
     }
-    start(eventCoords) <- skippedExons$start
-    end(eventCoords) <- skippedExons$end
 
+    ranges(eventCoords) <-
+        IRanges::IRanges(start=skippedExons$start, end=skippedExons$end)
 
     # transcripts containing the exon
     transcripts <- as.data.frame(table(skippedExons$transcript_id))
