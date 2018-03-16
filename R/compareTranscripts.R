@@ -145,7 +145,7 @@ orfDiff <- function(orfsX,
             #hasASidX <- grep("[+]", orfsX$id)
             if(length(hasASidX) > 0){
                 m2 <- match(paste0(orfsX$transcript_id[hasASidX],"_",
-                                   orfsX$frame),
+                                   orfsX$frame[hasASidX]),
                             paste0(orfsY$transcript_id,"_", orfsY$frame))
                 orfsY2 <- orfsY[m2,]
                 orfsY2$id <- orfsX$id[hasASidX]
@@ -155,7 +155,7 @@ orfDiff <- function(orfsX,
             #hasASidY <- grep("[+]", orfsY$id)
             if(length(hasASidY) > 0){
                 m2 <- match(paste0(orfsY$transcript_id[hasASidY],"_",
-                                   orfsY$frame),
+                                   orfsY$frame[hasASidY]),
                             paste0(orfsX$transcript_id,"_", orfsX$frame))
                 orfsX2 <- orfsX[m2,]
                 orfsX2$id <- orfsY$id[hasASidY]
