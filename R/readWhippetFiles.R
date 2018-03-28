@@ -129,11 +129,12 @@ readWhippetDIFFfiles <- function(files){
     }
 
     for(f in seq_along(files)){
+
         whip <- data.table::fread(paste0(ungzip, files[f]),
                                   data.table=FALSE, skip=1)
 
         #remove the NA column
-        keepcol <- which(apply(whip, 2, function(x) all(!is.na(x))))
+        keepcol <- which(!(apply(whip, 2, function(x) all(is.na(x)))))
         whip <- whip[,keepcol]
 
         colnames(whip) <- c("gene", "node","coord","strand","type",
