@@ -87,7 +87,40 @@ readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
         wantedCol <- which(colnames(whip) == attribute)
 
         if(exists("whip.all")){
-            whip.all <- cbind(whip.all, whip[,wantedCol])
+            if(nrow(whip.all) == nrow(whip)){
+                whip.all <- cbind(whip.all, whip[,wantedCol])
+
+                # if some weird matching is going on
+            }else{
+                # match first by truely unique name
+                uniqueName.all <- paste(whip.all$Gene,whip.all$Coord,
+                                              whip.all$Type,whip.all$Node, sep="_")
+                uniqueName.new <- paste(whip$Gene,whip$Coord,
+                                              whip$Type,whip$Node, sep="_")
+                m <- match(uniqueName.all, uniqueName.new)
+                # match second by unique name WITHOUT node
+                uniqueName.all.noNode <- paste(whip.all$Gene,whip.all$Coord,
+                                              whip.all$Type, sep="_")
+                uniqueName.new.noNode <- paste(whip$Gene,whip$Coord,
+                                          whip$Type, sep="_")
+                n <- match(uniqueName.all.noNode, uniqueName.new.noNode)
+                m[which(is.na(m))] <- n[which(is.na(m))]
+
+                # add in matching
+                whip.all <- cbind(whip.all, whip[m,wantedCol])
+
+                # add additional rows for non-matches
+                addRows <- which(!((1:nrow(whip)) %in% m))
+
+                # make a 'blank' data.frame
+                whip.add <- whip.all[1:length(addRows),]
+                whip.add[,c(1:5)] <- whip[addRows,c(1:5)]
+                for(r in 6:(ncol(whip.add)-1)){
+                    whip.add[,r] <- NA
+                }
+                whip.add[,ncol(whip.add)] <- whip[addRows,wantedCol]
+            }
+
         } else{
             whip.all <- whip[,c(1:5,wantedCol)]
         }
@@ -129,7 +162,6 @@ readWhippetDIFFfiles <- function(files){
     }
 
     for(f in seq_along(files)){
-
         whip <- data.table::fread(paste0(ungzip, files[f]),
                                   data.table=FALSE, skip=1)
 
