@@ -73,7 +73,8 @@ findIntronContainingTranscripts <- function(input,
     overlaps <- GenomicRanges::findOverlaps(rangeRI.start, exons, type="end")
 
     # catch if intron coords dont overlap the 1nt exon start/end
-    if(length(overlaps) == 0){
+    # less than 1/3 to catch stuff
+    if(length(overlaps) < length(rangeRI.start)/3){
         GenomicRanges::start(rangeRI.start) <-
             GenomicRanges::start(rangeRI.start) -1
         GenomicRanges::end(rangeRI.start) <-
@@ -97,7 +98,7 @@ findIntronContainingTranscripts <- function(input,
     GenomicRanges::start(rangeRI.end) <- GenomicRanges::end(rangeRI.end)
 
     overlaps <- GenomicRanges::findOverlaps(rangeRI.end, exons, type="start")
-    if(length(overlaps) == 0){
+    if(length(overlaps) < length(rangeRI.end)/3){
         GenomicRanges::end(rangeRI.end) <-
             GenomicRanges::end(rangeRI.end) +1
         GenomicRanges::start(rangeRI.end) <-
