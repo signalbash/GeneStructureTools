@@ -186,10 +186,10 @@ findExonContainingTranscripts <- function(input,
                 m <- match(overlappingIntrons$transcript_id,
                            overlappingExons$transcript_id)
                 # replace coordinates with known coordinates
-                overlappingIntrons$start <- overlappingExons$start[m]
-                overlappingIntrons$end <- overlappingExons$end[m]
-                overlappingIntrons$exon_number <-
-                    overlappingExons$exon_number[m]
+                overlappingIntrons$start[nonexact] <- overlappingExons$start[m][nonexact]
+                overlappingIntrons$end[nonexact] <- overlappingExons$end[m][nonexact]
+                overlappingIntrons$exon_number[nonexact] <-
+                    overlappingExons$exon_number[m][nonexact]
             }
 
             skippedExons <- rbind(skippedExons, overlappingIntrons)
