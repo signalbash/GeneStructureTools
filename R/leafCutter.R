@@ -115,6 +115,7 @@ removeSameExon <- function(exons){
 #' Note that only one cluster of alternative introns can be processed at a time.
 #' @param exons GRanges object made from a GTF with ONLY exon annotations
 #' (no gene, transcript, CDS etc.)
+#' @param replaceInternalExons replace any internal transcript exons with inferred exons from multi-intron leafcutter intron sets?
 #' @return GRanges object with all potential alternative isoforms skipping the
 #' introns specified in either the upregulated or downregulated locations
 #' @export
@@ -142,7 +143,7 @@ removeSameExon <- function(exons){
 #' altIsoforms1396plus1395 <- alternativeIntronUsage(cluster, c(exons, altIsoforms1396))
 #' unique(altIsoforms1396plus1395$transcript_id)
 
-alternativeIntronUsage <- function(altIntronLocs, exons){
+alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRUE){
     clusterGRanges <-
         GRanges(seqnames=S4Vectors::Rle(altIntronLocs$chr),
                 ranges=IRanges::IRanges(start=as.numeric(altIntronLocs$start),
@@ -257,13 +258,30 @@ alternativeIntronUsage <- function(altIntronLocs, exons){
             clusterExonsBounding <- clusterExonsBounding[
                 clusterExonsBounding$transcript_id %in% keepTranscriptIds]
 
-            InternalExons.reps <-
-                InternalExons[rep(seq_along(InternalExons),
-                                  length(unique(keepTranscriptIds)))]
-            InternalExons.reps$transcript_id <-
-                rep(unique(keepTranscriptIds), each=length(InternalExons))
+            if(replaceInternalExons == FALSE){
+                InternalExons.reps <-
+                    InternalExons[rep(seq_along(InternalExons),
+                                      length(unique(keepTranscriptIds)))]
+                InternalExons.reps$transcript_id <-
+                    rep(unique(keepTranscriptIds), each=length(InternalExons))
 
-            clusterExonsBounding <- c(clusterExonsBounding, InternalExons.reps)
+                clusterExonsBounding <- c(clusterExonsBounding, InternalExons.reps)
+            }else{
+                replaceExons <- leafcutterIntronsToExons(clusterGRanges[clusterGRanges$set==i])
+                if(!is.null(replaceExons)){
+
+                    replaceExonsFormat <- clusterExonsBounding[1:length(replaceExons)]
+                    ranges(replaceExonsFormat) <- ranges(replaceExons)
+
+                    replaceExonsFormat.reps <-
+                        replaceExonsFormat[rep(seq_along(replaceExonsFormat),
+                                      length(unique(keepTranscriptIds)))]
+                    replaceExonsFormat.reps$transcript_id <-
+                        rep(unique(keepTranscriptIds), each=length(replaceExonsFormat))
+
+                    clusterExonsBounding <- c(clusterExonsBounding, replaceExonsFormat.reps)
+                }
+            }
             clusterExonsBounding <- reorderExonNumbers(clusterExonsBounding)
             clusterExonsBounding$set <- as.numeric(i)
 
@@ -339,4 +357,41 @@ exonsToTranscripts <- function(exons){
 
 
     return(transcripts)
+}
+#' Create exon ranges from leafcutter intron ranges
+#'
+#' Create exon ranges from leafcutter intron ranges
+#' @param clusterGRanges GRanges of intron clusters with a 'set' column
+#' @return GRanges object with intron clusters converted to exons
+#' @keywords internal
+#' @importFrom IRanges IRanges
+#' @import GenomicRanges
+#' @importFrom rtracklayer import
+#' @family leafcutter splicing isoform creation
+#' @author Beth Signal
+leafcutterIntronsToExons <- function(clusterGRanges){
+    sets <- as.data.frame(table(clusterGRanges$set))
+    sets <- sets[which(sets$Freq > 1),]
+
+    for(s in seq_along(nrow(sets))){
+        clusterGRanges.set <- clusterGRanges[clusterGRanges$set==sets$Var1]
+        clusterGRanges.set <- clusterGRanges.set[order(start(clusterGRanges.set))]
+        newStarts <- end(clusterGRanges.set)[-length(clusterGRanges.set)]
+        newEnds <- start(clusterGRanges.set)[-1]
+        clusterExons <- clusterGRanges.set[-1]
+        ranges(clusterExons) <- IRanges(start=newStarts, end=newEnds)
+
+        if(s == 1){
+            clusterExons.all <- clusterExons
+        }else{
+            clusterExons.all <- c(clusterExons.all, clusterExons)
+        }
+    }
+
+    if(nrow(sets) > 0){
+        return(clusterExons.all)
+    }else{
+        return(NULL)
+    }
+
 }
