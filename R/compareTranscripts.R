@@ -210,14 +210,19 @@ orfDiff <- function(orfsX,
 
         orfChanges$gene_id <- orfsX$gene_id[match(orfChanges$id,
                                                   orfsX$spliced_id)]
+
+        keep.allORFs <- which(allORFs$gene_id %in% orfChanges$gene_id)
+        allORFs <- allORFs[keep.allORFs,]
+
         geneMatches <- lapply(orfChanges$gene_id,
                               function(x)
                                   which(!is.na(match(allORFs$gene_id, x))))
-        geneMatches <- unlist(geneMatches)
 
-        idMatches <- mapply(function(x,y)
+        idMatches <- unlist(mapply(function(x,y)
             rep(x,length(y)) ,(1:length(orfChanges$gene_id)),
-            geneMatches)
+            geneMatches))
+
+        geneMatches <- unlist(geneMatches)
 
         idMatches.y  <- match(orfChanges$id_orf_length_y[idMatches],
                               orfsY$id_with_len)
