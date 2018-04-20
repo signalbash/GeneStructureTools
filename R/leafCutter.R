@@ -1,83 +1,157 @@
+#' Create a 0/1 matrix from a Ranges overlap
+#' @param ol ranges overlaps from findOverlaps()
+#' @return matrix of all ranges by all ranges, with 0/1 coded overlaps
+#' @keywords internal
+#' @import GenomicRanges
+#' @author Beth Signal
+overlap2matrix <- function(ol, maxn=7){
+    mat <- matrix(nrow = maxn, ncol = maxn, data = 1)
+
+    for(i in 1:nrow(mat)){
+        mat[i,i] <- 0
+        mat[i, ol$subjectHits[ol$queryHits == i]] <- 0
+    }
+
+    return(mat)
+}
+#' Get a list of all potential range combinations, covering the full length of the region.
+#' @param mat matrix of all ranges by all ranges, with 0/1 coded overlaps
+#' @return list of range combinations possible
+#' @keywords internal
+#' @import GenomicRanges
+#' @author Beth Signal
+matrix2combinations <-function(mat){
+    maxn <- nrow(mat)
+    ignorecols <- vector()
+    newMat <- matrix(nrow=1, ncol=maxn, data=NA)
+    newMatLine <- newMat
+
+    for(j in 1:maxn){
+
+        if(all(is.na(newMatLine[,j]))){
+            newMatLine[,j] <- 1
+
+            if(any(mat[-c(j, ignorecols),j] == 0) & !all(mat[-c(j, ignorecols),j] == 0)){
+
+                n <- which(mat[,j] == 0)
+                n <- n[which(!(n %in% c(j, ignorecols)))]
+
+                if(length(n) <= 1){
+                    newMatLineadd <- newMatLine
+                    if(n > j){
+                        newMatLineadd[,j] <- NA
+                        newMatLineadd[,n] <- 1
+
+                        newMatLine <- rbind(newMatLine, newMatLineadd)
+                    }else{
+                        newMatLineadd[,j][which(!is.na(newMatLineadd[,n]))] <- NA
+                        newMatLine <- newMatLineadd
+                    }
+                }else{
+                    newMatLine[,j] <- NA
+                    newMatLineadd <- newMatLine
+
+                    n.low <- n[n < j]
+                    for(nx in n.low){
+                        newMatLineadd <- newMatLineadd[is.na(newMatLineadd[,nx]),]
+                        if(!is.matrix(newMatLineadd)){
+                            newMatLineadd <- t(as.matrix(newMatLineadd))
+                        }
+                    }
+                    n.high <- n[n > j]
+
+                    newMatLineadd[,n.high] <- NA
+                    newMatLineadd[,j] <- 1
+                    newMatLine <- rbind(newMatLine, newMatLineadd)
+
+                }
+            }else if(all(mat[-j,j] == 0)){
+                ignorecols <- append(ignorecols, j)
+                newMatLine[,-j] <- NA
+                newMatLine[,j] <- 1
+
+                if(exists("newMat.singles")){
+                    newMat.singles <- rbind(newMat.singles,newMatLine[1,])
+                }else{
+                    newMat.singles <- newMatLine[1,]
+                }
+                newMatLine <- newMat
+            }
+            newMat <- newMatLine
+            newMatLine <- newMat
+        }
+
+    }
+    if(exists("newMat.singles")){
+        newMat <- rbind(newMat, newMat.singles)
+    }
+
+    rownames(newMat) <- NULL
+    names(newMat) <- NULL
+
+    lens <- vector()
+    for(i in 1:nrow(newMat)){
+        colz <- which(!is.na(newMat[i,]))
+        if(length(colz) > 1){
+            lens[i] <- length(which(apply(newMat[,colz],1, function(x) all(x == 1))))
+        }else{
+            lens[i] <- length(which(newMat[,colz] == 1))
+        }
+    }
+    rm <- which(lens > 1)
+    if(length(rm) > 0){
+        newMat <- newMat[-rm,]
+    }
+
+    combos <- (apply(newMat, 1, function(x) which(!is.na(x))))
+    if(is.matrix(combos)){
+        combinationList <- list()
+        for(i in 1:ncol(combos)){
+            combinationList[[i]] <- combos[,i]
+        }
+        return(combinationList)
+    }else{
+        return(combos)
+    }
+
+}
 #' Add set numbers to introns
 #'
-#' Converts a group of introns into non-overlapping sets
-#' @param clusterGRanges Granges object with a cluster of intron locations
+#' Converts a group of introns into all non-overlapping sets
+#' @param clusterGRanges.noset Granges object with a cluster of intron locations
 #' @return Granges object with a cluster of intron locations and corresponding set numbers
 #' @keywords internal
 #' @import GenomicRanges
 #' @importFrom plyr desc
 #' @author Beth Signal
-addSets <- function(clusterGRanges){
-    clusterGRanges$set <- 1
+addSets <- function(clusterGRanges.noset){
 
-    ol <- as.data.frame(findOverlaps(clusterGRanges))
+    clusterGRanges.noset$set <- 1
+
+    ol <- as.data.frame(findOverlaps(clusterGRanges.noset))
     ol <- ol[ol$queryHits != ol$subjectHits,]
-    ol$setFrom <- clusterGRanges$set[ol$queryHits]
-    ol$setTo <- clusterGRanges$set[ol$subjectHits]
+    ol$setFrom <- clusterGRanges.noset$set[ol$queryHits]
+    ol$setTo <- clusterGRanges.noset$set[ol$subjectHits]
     ol <- ol[ol$setFrom == ol$setTo,]
 
-    while(nrow(ol) > 0){
-        #find coord with most overlaps
-        tab <- as.data.frame(table(ol$queryHits))
-        tab <- tab[order(plyr::desc(tab$Freq)),]
+    if(nrow(ol) > 0){
+        combinationList <- matrix2combinations(overlap2matrix(ol, maxn=length(clusterGRanges.noset)))
 
-        clusterGRanges$set[as.numeric(as.character(tab$Var1[1]))] <-
-            max(clusterGRanges$set) + 1
+        sets <- unlist(mapply(function(x,y) rep(x,y), 1:length(combinationList), lapply(combinationList, length)))
 
-        olSet <- findOverlaps(clusterGRanges[clusterGRanges$set ==
-                                                 max(clusterGRanges$set)],
-                              clusterGRanges[clusterGRanges$set !=
-                                                 max(clusterGRanges$set)])
-
-        line <- clusterGRanges[clusterGRanges$set!=
-                                   max(clusterGRanges$set)][-olSet@to]
-        line <- line[!duplicated(ranges(line))]
-
-        if(length(line) == 1){
-            line$set <- max(clusterGRanges$set)
-            clusterGRanges <- c(clusterGRanges, line)
-
-            # if theres multiple options for additions...
-        }else if(length(line) > 1){
-            # find if any of the options overlap each other
-            olLine <- as.data.frame(findOverlaps(line))
-            olLine <- olLine[olLine$queryHits != olLine$subjectHits,]
-            counter <- 1
-            originalCoords <- clusterGRanges[clusterGRanges$set==
-                                                 max(clusterGRanges$set)]
-
-            while(nrow(olLine) > 0){
-                # make a new set with a non-overlapping part
-                tab <- as.data.frame(table(olLine$queryHits))
-                tab <- tab[order(plyr::desc(tab$Freq)),]
-                rm <- olLine$subjectHits[olLine$queryHits == tab$Var1[1]]
-                line.part <- line[-rm]
-                line.part$set <- max(originalCoords$set)
-                line.part <- c(originalCoords,line.part)
-                line.part$set <- max(line.part$set) + counter
-
-                clusterGRanges <- c(clusterGRanges ,line.part)
-
-                counter <- counter + 1
-                line <- line[rm]
-                olLine <- as.data.frame(findOverlaps(line))
-                olLine <- olLine[olLine$queryHits != olLine$subjectHits,]
-            }
-            line$set <- max(originalCoords$set)
-            clusterGRanges <- c(clusterGRanges, line)
-
-        }
-        ol <- as.data.frame(findOverlaps(clusterGRanges))
-        ol <- ol[ol$queryHits != ol$subjectHits,]
-        ol$setFrom <- clusterGRanges$set[ol$queryHits]
-        ol$setTo <- clusterGRanges$set[ol$subjectHits]
-        ol <- ol[ol$setFrom == ol$setTo,]
-        ol
+        clusterGRanges.sets <- clusterGRanges.noset[unlist(combinationList)]
+        clusterGRanges.sets$set <- sets
+    }else{
+        clusterGRanges.sets <- clusterGRanges.noset
+        clusterGRanges.sets$set <- 1
     }
 
-    #reorder by set for sanity
-    reorder <- order(clusterGRanges$set, start(clusterGRanges))
-    return(clusterGRanges[reorder])
+    setlist <- unique(clusterGRanges.sets$set)
+    newSetList <- 1:length(setlist)
+
+    clusterGRanges.sets$set <- newSetList[match(clusterGRanges.sets$set, setlist)]
+
+    return(clusterGRanges.sets)
 }
 
 #' Remove exon duplicates
@@ -152,6 +226,7 @@ alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRU
                 id=altIntronLocs$clusterID,
                 direction=ifelse(altIntronLocs$deltapsi >0, "+","-"))
 
+
     m <- match(altIntronLocs$ensemblID, exons$gene_id)
     strand(clusterGRanges)[which(!is.na(m))] <-
         strand(exons)[m][which(!is.na(m))]
@@ -178,8 +253,17 @@ alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRU
     # add sets to cluster introns
     clusterGRanges.dnre <-
         addSets(clusterGRanges[clusterGRanges$direction=="-"])
+    # reorder sets? WTF
+    setlist = unique(clusterGRanges.dnre$set)
+    clusterGRanges.dnre$set = match(clusterGRanges.dnre$set, setlist)
+
     clusterGRanges.upre <-
         addSets(clusterGRanges[clusterGRanges$direction=="+"])
+
+    # reorder sets? WTF
+    setlist = unique(clusterGRanges.upre$set)
+    clusterGRanges.upre$set = match(clusterGRanges.upre$set, setlist)
+
     clusterGRanges.upre$set <-
         clusterGRanges.upre$set + max(clusterGRanges.dnre$set)
     clusterGRanges <- c(clusterGRanges.upre, clusterGRanges.dnre)
@@ -270,7 +354,7 @@ alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRU
                 replaceExons <- leafcutterIntronsToExons(clusterGRanges[clusterGRanges$set==i])
                 if(!is.null(replaceExons)){
 
-                    replaceExonsFormat <- clusterExonsBounding[1:length(replaceExons)]
+                    replaceExonsFormat <- clusterExonsBounding[rep(1, length(replaceExons))]
                     ranges(replaceExonsFormat) <- ranges(replaceExons)
 
                     replaceExonsFormat.reps <-
