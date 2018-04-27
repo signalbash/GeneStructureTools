@@ -279,8 +279,6 @@ transcriptChangeSummary <- function(transcriptsX,
                 orfsY$nmd_class <- predictNMD(orfsY, model = useModel)
             }
 
-        }
-
         }else{
             message("package notNMD is not installed")
             message("Skipping NMD calculations")
