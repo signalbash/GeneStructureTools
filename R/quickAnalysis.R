@@ -134,6 +134,8 @@ filterWhippetEvents <- function(whippetDataSet,
 #' Use if PSI directionality should be taken into account when comparing isoforms.
 #' @param rearrangeXY should PSI directionality be taken into account?
 #' @param exportGTF file name to export alternative isoform GTFs (default=\code{NULL})
+#' @param uniprotData data.frame of uniprot sequence information
+#' @param uniprotSeqFeatures data.frame of uniprot sequence features
 #' @return Summarised ORF changes data.frame
 #' @export
 #' @import GenomicRanges
@@ -171,7 +173,9 @@ transcriptChangeSummary <- function(transcriptsX,
                                     compareToGene = FALSE,
                                     whippetDataSet = NULL,
                                     rearrangeXY = TRUE,
-                                    exportGTF = NULL){
+                                    exportGTF = NULL,
+                                    uniprotData=NULL,
+                                    uniprotSeqFeatures=NULL){
 
 
     if(!is.null(whippetDataSet) & rearrangeXY == TRUE){
@@ -318,10 +322,14 @@ transcriptChangeSummary <- function(transcriptsX,
 
         orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "gene",
                              geneSimilarity = TRUE,
-                             allORFs = orfAllGenes,compareUTR = TRUE)
+                             allORFs = orfAllGenes,compareUTR = TRUE,
+                             uniprotData = uniprotData,
+                             uniprotSeqFeatures = uniprotSeqFeatures)
     }else{
         orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "gene",
-                             compareUTR = TRUE)
+                             compareUTR = TRUE,
+                             uniprotData = uniprotData,
+                             uniprotSeqFeatures = uniprotSeqFeatures)
     }
 
 
@@ -382,6 +390,9 @@ transcriptChangeSummary <- function(transcriptsX,
 #' @param BSgenome BSGenome object containing the genome for the species analysed
 #' @param NMD Use NMD predictions? (Note: notNMD must be installed to use this feature)
 #' @param exportGTF file name to export alternative isoform GTFs (default=NULL)
+#' @param rearrangeXY should PSI directionality be taken into account?
+#' @param uniprotData data.frame of uniprot sequence information
+#' @param uniprotSeqFeatures data.frame of uniprot sequence features
 #' @return data.frame containing signficant whippet diff data and ORF change summaries
 #' @export
 #' @importFrom rtracklayer import
@@ -405,7 +416,10 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
                                            exons=NULL,
                                            transcripts=NULL,
                                            NMD = FALSE,
-                                           exportGTF = NULL){
+                                           exportGTF = NULL,
+                                           rearrangeXY = FALSE,
+                                           uniprotData=NULL,
+                                           uniprotSeqFeatures=NULL){
 
 
     # diffSplicingResults(whippetDataSet)
@@ -451,7 +465,10 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
         orfChanges.ce <- transcriptChangeSummary(
             skippedExonTranscripts[skippedExonTranscripts$set=="included_exon"],
             skippedExonTranscripts[skippedExonTranscripts$set=="skipped_exon"],
-            BSgenome = BSgenome,NMD = NMD, whippetDataSet=whippetDataSet.ce)
+            BSgenome = BSgenome,NMD = NMD, whippetDataSet=whippetDataSet.ce,
+            rearrangeXY = rearrangeXY,
+            uniprotData = uniprotData,
+            uniprotSeqFeatures = uniprotSeqFeatures)
         # add to significantEvents.ce
         m <- match(significantEvents.ce$coord, orfChanges.ce$id)
         significantEvents.ce <- cbind(significantEvents.ce, orfChanges.ce[m,-1])
@@ -496,7 +513,10 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
                                           "spliced_intron"],
             retainedIntronTranscripts[retainedIntronTranscripts$set==
                                           "retained_intron"],
-            BSgenome = BSgenome,NMD = NMD, whippetDataSet=whippetDataSet.ri)
+            BSgenome = BSgenome,NMD = NMD, whippetDataSet=whippetDataSet.ri,
+            rearrangeXY = rearrangeXY,
+            uniprotData = uniprotData,
+            uniprotSeqFeatures = uniprotSeqFeatures)
         # add to significantEvents.ce
         m <- match(significantEvents.ri$coord, orfChanges.ri$id)
         significantEvents.ri <- cbind(significantEvents.ri, orfChanges.ri[m,-1])
@@ -555,7 +575,10 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
                     transcriptsY = altTranscripts[
                         altTranscripts$set==paste0(event, "_Y")],
                     BSgenome = BSgenome,NMD = NMD,
-                    whippetDataSet=whippetDataSet.jnc)
+                    whippetDataSet=whippetDataSet.jnc,
+                    rearrangeXY = rearrangeXY,
+                    uniprotData = uniprotData,
+                    uniprotSeqFeatures = uniprotSeqFeatures)
 
                 # add to significantEvents
                 m <- match(significantEvents.jnc$coord, orfChanges.jnc$id)
