@@ -202,7 +202,7 @@ head(whippet_summary)
 
 ```
 
-###leafcutter
+### leafcutter
 ```{r leafcutterSummary}
 leafcutter_summary <- leafcutterTranscriptChangeSummary(intron_results, 
                                                         exons = exons,
