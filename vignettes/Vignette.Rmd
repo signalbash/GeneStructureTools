@@ -850,8 +850,8 @@ orfChange <- cbind(orfChange, nmdChange[m,-1])
 
 This adds an extra two columns to the orfChange output:
 
-`nmd_prob_bygroup_x`: mininmum NMD probability in first set of transcripts (normalTranscripts)
-`nmd_prob_bygroup_y`: mininmum NMD probability in second set of transcripts (skippedExonTranscripts)
+`nmd_prob_bygroup_x`: minimum NMD probability in first set of transcripts (normalTranscripts)
+`nmd_prob_bygroup_y`: minimum NMD probability in second set of transcripts (skippedExonTranscripts)
 
 
 ```{r plotORFs, eval = TRUE}
