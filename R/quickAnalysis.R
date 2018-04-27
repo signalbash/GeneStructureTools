@@ -132,6 +132,7 @@ filterWhippetEvents <- function(whippetDataSet,
 #' @param compareToGene compare alternative isoforms to all normal gene isoforms (in exons)
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 #' Use if PSI directionality should be taken into account when comparing isoforms.
+#' @param rearrangeXY should PSI directionality be taken into account?
 #' @param exportGTF file name to export alternative isoform GTFs (default=\code{NULL})
 #' @return Summarised ORF changes data.frame
 #' @export
@@ -169,10 +170,11 @@ transcriptChangeSummary <- function(transcriptsX,
                                     orfPrediction = "allFrames",
                                     compareToGene = FALSE,
                                     whippetDataSet = NULL,
+                                    rearrangeXY = TRUE,
                                     exportGTF = NULL){
 
 
-    if(!is.null(whippetDataSet)){
+    if(!is.null(whippetDataSet) & rearrangeXY == TRUE){
         whippetEvents <- diffSplicingResults(whippetDataSet)
         allTranscripts <- c(transcriptsX, transcriptsY)
         type <- gsub("_X","",gsub("_Y","", allTranscripts$set))
@@ -244,6 +246,7 @@ transcriptChangeSummary <- function(transcriptsX,
 
     # manual NMD
     notNMDInstalled <- "notNMD" %in% rownames(utils::installed.packages())
+    notNMDLoaded <- "notNMD" %in% loadedNamespaces()
 
     if(NMD == TRUE){
 
@@ -253,7 +256,7 @@ transcriptChangeSummary <- function(transcriptsX,
             useModel <- NMDModel
         }
 
-        if(notNMDInstalled){
+        if(notNMDInstalled & notNMDLoaded == FALSE){
             save(orfsX, orfsY, BSgenome, useModel, file="temp_ORFs.Rdata")
 
             #### run notnmd
@@ -263,6 +266,20 @@ transcriptChangeSummary <- function(transcriptsX,
 
             load("temp_ORFs.Rdata")
             system("rm -f temp_ORFs.Rdata")
+
+        }else if(notNMDInstalled & notNMDLoaded == TRUE){
+
+            if(exists("orfsX")){
+                orfsX$nmd_prob <- predictNMD(orfsX, "prob", model = useModel)
+                orfsX$nmd_class <- predictNMD(orfsX, model = useModel)
+            }
+
+            if(exists("orfsY")){
+                orfsY$nmd_prob <- predictNMD(orfsY, "prob", model = useModel)
+                orfsY$nmd_class <- predictNMD(orfsY, model = useModel)
+            }
+
+        }
 
         }else{
             message("package notNMD is not installed")
@@ -275,7 +292,7 @@ transcriptChangeSummary <- function(transcriptsX,
 
     if(compareToGene == TRUE){
 
-        if(NMD == TRUE & notNMDInstalled){
+        if(NMD == TRUE & notNMDInstalled & notNMDLoaded == FALSE){
             orfAllGenes <- getOrfs(exons[exons$gene_id %in%
                                              unique(c(transcriptsX$gene_id,
                                                       transcriptsY$gene_id))],
@@ -286,6 +303,11 @@ transcriptChangeSummary <- function(transcriptsX,
             load("temp_ORFs.Rdata")
             system("rm -f temp_ORFs.Rdata")
             #orfAllGenes <- orfAllGenes[orfAllGenes$nmd_prob > 0.5,]
+
+        }else if(notNMDInstalled & notNMDLoaded == TRUE){
+
+            orfAllGenes$nmd_prob <- predictNMD(orfAllGenes, "prob", model = useModel)
+            orfAllGenes$nmd_class <- predictNMD(orfAllGenes, model = useModel)
 
         }else{
             orfAllGenes <- getOrfs(
