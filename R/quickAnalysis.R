@@ -178,33 +178,36 @@ transcriptChangeSummary <- function(transcriptsX,
                                     uniprotSeqFeatures=NULL){
 
 
-    if(!is.null(whippetDataSet) & rearrangeXY == TRUE){
+    if(!is.null(whippetDataSet)){
         whippetEvents <- diffSplicingResults(whippetDataSet)
-        allTranscripts <- c(transcriptsX, transcriptsY)
-        type <- gsub("_X","",gsub("_Y","", allTranscripts$set))
-        type <- gsub("skipped_exon", "CE", gsub("included_exon","CE", type))
-        type <- gsub("retained_intron", "RI", gsub("spliced_intron","RI", type))
 
-        m <- match(paste0(allTranscripts$whippet_id,"_",type),
-                   paste0(whippetEvents$coord,"_",
-                          whippetEvents$type))
-        # A -- psi in condition 1 (A) is higher (i.e. included -- > skipped)
-        normA <- which(whippetEvents$psi_a > whippetEvents$psi_b)
-        # B -- psi in condition 2 (B) is higher (i.e. skipped -- > included)
-        normB <- which(whippetEvents$psi_a < whippetEvents$psi_b)
+        if(rearrangeXY == TRUE){
+            allTranscripts <- c(transcriptsX, transcriptsY)
+            type <- gsub("_X","",gsub("_Y","", allTranscripts$set))
+            type <- gsub("skipped_exon", "CE", gsub("included_exon","CE", type))
+            type <- gsub("retained_intron", "RI", gsub("spliced_intron","RI", type))
 
-        #sets for X (+A)
-        setsX <- c(paste0(unique(type), "_Y"), "included_exon","retained_intron")
-        #sets for Y (+B)
-        setsY <- c(paste0(unique(type), "_X"), "skipped_exon","spliced_intron")
+            m <- match(paste0(allTranscripts$whippet_id,"_",type),
+                       paste0(whippetEvents$coord,"_",
+                              whippetEvents$type))
+            # A -- psi in condition 1 (A) is higher (i.e. included -- > skipped)
+            normA <- which(whippetEvents$psi_a > whippetEvents$psi_b)
+            # B -- psi in condition 2 (B) is higher (i.e. skipped -- > included)
+            normB <- which(whippetEvents$psi_a < whippetEvents$psi_b)
 
-        transcriptsX <- allTranscripts[
-            which((m %in% normA & allTranscripts$set %in% setsX) |
-                      (m %in% normB & allTranscripts$set %in% setsY))]
+            #sets for X (+A)
+            setsX <- c(paste0(unique(type), "_Y"), "included_exon","retained_intron")
+            #sets for Y (+B)
+            setsY <- c(paste0(unique(type), "_X"), "skipped_exon","spliced_intron")
 
-        transcriptsY <- allTranscripts[
-            which((m %in% normA & allTranscripts$set %in% setsY) |
-                      (m %in% normB & allTranscripts$set %in% setsX))]
+            transcriptsX <- allTranscripts[
+                which((m %in% normA & allTranscripts$set %in% setsX) |
+                          (m %in% normB & allTranscripts$set %in% setsY))]
+
+            transcriptsY <- allTranscripts[
+                which((m %in% normA & allTranscripts$set %in% setsY) |
+                          (m %in% normB & allTranscripts$set %in% setsX))]
+        }
 
     }
 
@@ -618,6 +621,8 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
 #' @param NMD Use NMD predictions? (Note: notNMD must be installed to use this feature)
 #' @param showProgressBar show a progress bar of alternative isoform generation?
 #' @param exportGTF file name to export alternative isoform GTFs (default=NULL)
+#' @param uniprotData data.frame of uniprot sequence information
+#' @param uniprotSeqFeatures data.frame of uniprot sequence features
 #' @return data.frame containing signficant whippet diff data and ORF change summaries
 #' @export
 #' @importFrom utils setTxtProgressBar
@@ -645,7 +650,9 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
                                               BSgenome,
                                               NMD = FALSE,
                                               showProgressBar=TRUE,
-                                              exportGTF=NULL){
+                                              exportGTF=NULL,
+                                              uniprotData=NULL,
+                                              uniprotSeqFeatures=NULL){
 
 
     geneEvents <- as.data.frame(table(significantEvents$ensemblID,
@@ -669,11 +676,13 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
             for(i in 2:nrow(geneEvents)){
                 altIntronLocs = significantEvents[
                     significantEvents$clusterID == geneEvents$Var2[i],]
-                altIntronLocs <- altIntronLocs[altIntronLocs$verdict==
-                                                   "annotated",]
+                #altIntronLocs <- altIntronLocs[altIntronLocs$verdict==
+                #                                   "annotated",]
                 if(nrow(altIntronLocs) > 1){
                     altIso1 <- alternativeIntronUsage(altIntronLocs, exons)
-                    altIso <- c(altIso, altIso1)
+                    if(!is.null(altIso1)){
+                        altIso <- c(altIso, altIso1)
+                    }
                 }
                 if(showProgressBar){utils::setTxtProgressBar(pb, i)}
 
@@ -726,7 +735,9 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
     orfDiff <- transcriptChangeSummary(transcriptsX,
                                        transcriptsY,
                                        BSgenome = BSgenome,
-                                       NMD = NMD)
+                                       NMD = NMD,
+                                       uniprotData = uniprotData,
+                                       uniprotSeqFeatures = uniprotSeqFeatures)
     m <- match(gsub("_","",significantEvents$clusterID), orfDiff$id)
     significantEvents.withORF <- cbind(significantEvents, orfDiff[m,-1])
     #significantEvents.withORF <- significantEvents.withORF[!duplicated(m),]
