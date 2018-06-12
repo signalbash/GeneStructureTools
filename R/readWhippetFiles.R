@@ -1,5 +1,6 @@
 #' Read in a list of whippet .jnc.gz files and format as a GRanges object
 #' @param files vector of *.jnc.gz file names
+#' @param minCount minimum number of counts a junction needs to be kept.
 #' @return GRanges object with junctions
 #' @export
 #' @importFrom data.table fread
@@ -13,7 +14,7 @@
 #' package = "GeneStructureTools"), full.names = TRUE)
 #' jncFiles <- whippetFiles[grep(".jnc", whippetFiles)]
 #' whippetJNC <- readWhippetJNCfiles(jncFiles)
-readWhippetJNCfiles <- function(files){
+readWhippetJNCfiles <- function(files, minCount=0){
 
     # check platform for windows/unix specific decompression
     operatingSystem <- .Platform$OS.type
@@ -48,13 +49,19 @@ readWhippetJNCfiles <- function(files){
     }
 
     colnames(whip.all)[-(1:5)] <- gsub(".jnc.gz","", basename(files))
+    whip.all$count <- rowSums(whip.all[,-c(1:5)])
+
+    whip.all <- whip.all[which(whip.all$count >= minCount),]
 
     geneIds <- unlist(lapply(stringr::str_split(whip.all$id, ":"), "[[", 1))
 
     jncCoords <- GRanges(seqnames=S4Vectors::Rle(whip.all$chrom),
                          ranges=IRanges::IRanges(start=as.numeric(whip.all$start),
                                                  end=as.numeric(whip.all$end)),
-                         strand=whip.all$strand, id=whip.all$id, gene=geneIds)
+                         strand=whip.all$strand,
+                         id=whip.all$id,
+                         gene=geneIds,
+                         junction_count=whip.all$count)
     return(jncCoords)
 }
 
