@@ -32,7 +32,6 @@ matrix2combinations <-function(mat){
             newMatLine[,j] <- 1
 
             if(any(mat[-c(j, ignorecols),j] == 0) & !all(mat[-c(j, ignorecols),j] == 0)){
-
                 n <- which(mat[,j] == 0)
                 n <- n[which(!(n %in% c(j, ignorecols)))]
 
@@ -89,19 +88,33 @@ matrix2combinations <-function(mat){
     rownames(newMat) <- NULL
     names(newMat) <- NULL
 
-    lens <- vector()
-    for(i in 1:nrow(newMat)){
-        colz <- which(!is.na(newMat[i,]))
-        if(length(colz) > 1){
-            lens[i] <- length(which(apply(newMat[,colz],1, function(x) all(x == 1))))
-        }else{
-            lens[i] <- length(which(newMat[,colz] == 1))
+    # lens <- vector()
+    # for(i in 1:nrow(newMat)){
+    #     colz <- which(!is.na(newMat[i,]))
+    #     if(length(colz) > 1){
+    #         lens[i] <- length(which(apply(newMat[,colz],1, function(x) all(x == 1))))
+    #     }else{
+    #         lens[i] <- length(which(newMat[,colz] == 1))
+    #     }
+    # }
+    # rm <- which(lens > 1)
+    # if(length(rm) > 0){
+    #     newMat <- newMat[-rm,]
+    # }
+
+    for(x in 1:nrow(mat)){
+
+        dontCombine <- which(mat[x,] == 0)
+        dontCombine <- dontCombine[dontCombine != x]
+
+        for(y in seq_along(dontCombine)){
+            rm <- which(newMat[,x] == 1 & newMat[,dontCombine[y]] == 1)
+            if(length(rm) > 0){
+                newMat <- newMat[-rm,]
+            }
         }
     }
-    rm <- which(lens > 1)
-    if(length(rm) > 0){
-        newMat <- newMat[-rm,]
-    }
+
 
     combos <- (apply(newMat, 1, function(x) which(!is.na(x))))
     if(is.matrix(combos)){
@@ -218,18 +231,30 @@ removeSameExon <- function(exons){
 #' unique(altIsoforms1396plus1395$transcript_id)
 
 alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRUE){
+
+    altIntronLocs$deltapsi <- altIntronLocs$PSI_a - altIntronLocs$PSI_b
+
     clusterGRanges <-
         GRanges(seqnames=S4Vectors::Rle(altIntronLocs$chr),
                 ranges=IRanges::IRanges(start=as.numeric(altIntronLocs$start),
                                         end=as.numeric(altIntronLocs$end)),
                 strand="*",
                 id=altIntronLocs$clusterID,
-                direction=ifelse(altIntronLocs$deltapsi >0, "+","-"))
+                direction=ifelse(altIntronLocs$deltapsi >0, "+","-"),
+                verdict=altIntronLocs$verdict,
+                deltapsi=altIntronLocs$deltapsi)
 
 
-    m <- match(altIntronLocs$ensemblID, exons$gene_id)
+    m <- match(altIntronLocs$gene, exons$gene_name)
+    if(all(!is.na(m))){
     strand(clusterGRanges)[which(!is.na(m))] <-
         strand(exons)[m][which(!is.na(m))]
+    }else{
+        near <- nearest(clusterGRanges, exons)
+        strand(clusterGRanges) <-
+            strand(exons)[near]
+    }
+
     # maximum spanning region
     clusterGRanges.max <- clusterGRanges
     #start(clusterGRanges.max) <- min(start(clusterGRanges.max))
@@ -237,6 +262,7 @@ alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRU
 
     #find overlaps -- for when range overlaps multiple genes
     olExons <- as.data.frame(findOverlaps(clusterGRanges.max, exons))
+    if(nrow(olExons) > 0){
     transcripts <-
         exonsToTranscripts(exons[exons$gene_id %in%
                                      exons$gene_id[olExons$subjectHits]])
@@ -251,22 +277,29 @@ alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRU
 
 
     # add sets to cluster introns
-    clusterGRanges.dnre <-
-        addSets(clusterGRanges[clusterGRanges$direction=="-"])
-    # reorder sets? WTF
-    setlist = unique(clusterGRanges.dnre$set)
-    clusterGRanges.dnre$set = match(clusterGRanges.dnre$set, setlist)
+    if(any(clusterGRanges$direction=="-")){
+        clusterGRanges.dnre <-
+            addSets(clusterGRanges[clusterGRanges$direction=="-"])
+        setlist = unique(clusterGRanges.dnre$set)
+        clusterGRanges.dnre$set = match(clusterGRanges.dnre$set, setlist)
+    }
+    if(any(clusterGRanges$direction=="+")){
+        clusterGRanges.upre <-
+            addSets(clusterGRanges[clusterGRanges$direction=="+"])
+        setlist = unique(clusterGRanges.upre$set)
+        clusterGRanges.upre$set = match(clusterGRanges.upre$set, setlist)
+    }
+    if(any(clusterGRanges$direction=="+") & any(clusterGRanges$direction=="-")){
+        clusterGRanges.upre$set <-
+            clusterGRanges.upre$set + max(clusterGRanges.dnre$set)
+        clusterGRanges <- c(clusterGRanges.upre, clusterGRanges.dnre)
+    }else if(any(clusterGRanges$direction=="+")){
+        clusterGRanges <- clusterGRanges.upre
+    }else if(any(clusterGRanges$direction=="-")){
+        clusterGRanges <- clusterGRanges.dnre
+    }
 
-    clusterGRanges.upre <-
-        addSets(clusterGRanges[clusterGRanges$direction=="+"])
-
-    # reorder sets? WTF
-    setlist = unique(clusterGRanges.upre$set)
-    clusterGRanges.upre$set = match(clusterGRanges.upre$set, setlist)
-
-    clusterGRanges.upre$set <-
-        clusterGRanges.upre$set + max(clusterGRanges.dnre$set)
-    clusterGRanges <- c(clusterGRanges.upre, clusterGRanges.dnre)
+    clusterGRanges$set <- clusterGRanges$set - min(clusterGRanges$set) + 1
 
     overlaps <- as.data.frame(findOverlaps(clusterGRanges, clusterExons))
     rmExons <- clusterExons[unique(overlaps$subjectHits)]
@@ -275,19 +308,87 @@ alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRU
     start(clusterGRanges.intron) <- start(clusterGRanges.intron) +1
     end(clusterGRanges.intron) <- end(clusterGRanges.intron) -1
 
+
+    move <- which(clusterGRanges$verdict != "annotated")
+    clusterExons.novel <- NULL
+    setTrack <- vector()
+    for(m in seq_along(move)){
+        ol <- findOverlaps(clusterGRanges.intron[move[m]], clusterExons)
+
+        if(length(ol) == 0){
+            if(clusterGRanges.intron$verdict[move[m]] == "cryptic_threeprime"){
+                near <- precede(clusterGRanges.intron[move[m]], clusterExons)
+                clusterExons.alt <- clusterExons[near]
+                same <- findOverlaps(clusterExons.alt, clusterExons, type="start")
+                clusterExons.alt <- clusterExons[same@to]
+            }
+            if(clusterGRanges.intron$verdict[move[m]] == "cryptic_fiveprime"){
+                near <- follow(clusterGRanges.intron[move[m]], clusterExons)
+                clusterExons.alt <- clusterExons[near]
+                same <- findOverlaps(clusterExons.alt, clusterExons, type="end")
+                clusterExons.alt <- clusterExons[same@to]
+            }
+
+        }else{
+            clusterExons.alt <- clusterExons[ol@to]
+        }
+
+
+        if(clusterGRanges.intron$verdict[move[m]] == "cryptic_fiveprime"){
+            k <- which(start(clusterExons.alt) < start(clusterGRanges)[move[m]])
+            clusterExons.alt <- clusterExons.alt[k]
+            end(clusterExons.alt) <- start(clusterGRanges)[move[m]]
+        }
+        if(clusterGRanges.intron$verdict[move[m]] == "cryptic_threeprime"){
+            k <- which(end(clusterExons.alt) > end(clusterGRanges)[move[m]])
+            clusterExons.alt <- clusterExons.alt[k]
+            start(clusterExons.alt) <- end(clusterGRanges)[move[m]]
+        }
+        if(clusterGRanges.intron$verdict[move[m]] == "cryptic_unanchored"){
+            k5 <- which(start(clusterExons.alt) < start(clusterGRanges)[move[m]])
+            clusterExons.alt5 <- clusterExons.alt[k5]
+            end(clusterExons.alt5) <- start(clusterGRanges)[move[m]]
+
+            k3 <- which(end(clusterExons.alt) > end(clusterGRanges)[move[m]])
+            clusterExons.alt3 <- clusterExons.alt[k3]
+            start(clusterExons.alt3) <- end(clusterGRanges)[move[m]]
+            clusterExons.alt <- c(clusterExons.alt3, clusterExons.alt5)
+
+        }
+
+        setTrack <- c(setTrack, rep(clusterGRanges.intron$set[move[m]], length(clusterExons.alt)))
+        clusterExons.novel <- c(clusterExons.novel, clusterExons.alt)
+    }
+    if(length(move) >1){
+        clusterExons.novel <- do.call("c", clusterExons.novel)
+    }else if(length(move) == 1){
+        clusterExons.novel <- clusterExons.novel[[1]]
+    }
+
+    #rm(clusterExons.allSets)
+    clusterExons.allSets <- NULL
     for(i in seq_along(unique(clusterGRanges$set))){
+
+        if(i %in% setTrack){
+            clusterExons.tid <- paste0(clusterExons$exon_id, clusterExons$transcript_id)
+            clusterExons.novel.tid <- paste0(clusterExons.novel$exon_id, clusterExons.novel$transcript_id)[setTrack==i]
+            rm <- which(clusterExons.tid %in% clusterExons.novel.tid)
+            clusterExons.replace <- c(clusterExons[-rm], clusterExons.novel)
+        }else{
+            clusterExons.replace <- clusterExons
+        }
 
         clusterGRanges.max <-
             clusterGRanges.intron[clusterGRanges.intron$set==i]
         start(clusterGRanges.max) <- min(start(clusterGRanges.max))
         end(clusterGRanges.max) <- max(end(clusterGRanges.max))
 
-        overlapsCluster <- findOverlaps(clusterGRanges.max, clusterExons)
-        rmExons <- clusterExons[unique(overlapsCluster@to)]
+        overlapsCluster <- findOverlaps(clusterGRanges.max, clusterExons.replace)
+        rmExons <- clusterExons.replace[unique(overlapsCluster@to)]
         if(length(rmExons) > 0){
-            clusterExonsBounding <- clusterExons[-unique(overlapsCluster@to)]
+            clusterExonsBounding <- clusterExons.replace[-unique(overlapsCluster@to)]
         }else{
-            clusterExonsBounding <- clusterExons
+            clusterExonsBounding <- clusterExons.replace
         }
 
         #overlaps start of the intron
@@ -379,30 +480,43 @@ alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRU
 
     }
 
-    m <- match(clusterExons.allSets$set, clusterGRanges$set)
-    #n <- which(!grepl("[+]", clusterExons.allSets$transcript_id))
-    clusterExons.allSets$new_transcript_id <- NA
-    clusterExons.allSets$new_transcript_id <-
-        paste0(clusterExons.allSets$transcript_id, "+AS ",
-               ifelse(clusterGRanges$direction[m] == "+", "upre","dnre"),
-               "_",
-               gsub("_", "", clusterGRanges$id[m]),
-               "-", clusterExons.allSets$set)
+    if(!is.null(clusterExons.allSets)){
+        if(length(clusterExons.allSets) == 1){
+            clusterExons.allSets <- clusterExons.allSets[[1]]
+        }else if(length(clusterExons.allSets) > 1){
+            clusterExons.allSets <- do.call("c", clusterExons.allSets)
+        }
 
-    n <- which(grepl("[+]", clusterExons.allSets$transcript_id))
-    clusterExons.allSets$new_transcript_id[n] <-
-        paste0(clusterExons.allSets$transcript_id, ":",
-               gsub("_", "", clusterGRanges$id[m]),
-               "-", clusterExons.allSets$set)[n]
+        m <- match(clusterExons.allSets$set, clusterGRanges$set)
+        #n <- which(!grepl("[+]", clusterExons.allSets$transcript_id))
+        clusterExons.allSets$new_transcript_id <- NA
+        clusterExons.allSets$new_transcript_id <-
+            paste0(clusterExons.allSets$transcript_id, "+AS ",
+                   ifelse(clusterGRanges$direction[m] == "+", "upre","dnre"),
+                   "_",
+                   gsub("_", "", clusterGRanges$id[m]),
+                   "-", clusterExons.allSets$set)
 
-    clusterExons.allSets$transcript_id <-
-        clusterExons.allSets$new_transcript_id
-    clusterExons.allSets$new_transcript_id <- NULL
-    clusterExons.allSets$set <- NULL
+        n <- which(grepl("[+]", clusterExons.allSets$transcript_id))
+        clusterExons.allSets$new_transcript_id[n] <-
+            paste0(clusterExons.allSets$transcript_id, ":",
+                   gsub("_", "", clusterGRanges$id[m]),
+                   "-", clusterExons.allSets$set)[n]
 
-    clusterExons.allSets <-
-        removeDuplicateTranscripts(clusterExons.allSets)
-    return(clusterExons.allSets)
+        clusterExons.allSets$transcript_id <-
+            clusterExons.allSets$new_transcript_id
+        clusterExons.allSets$new_transcript_id <- NULL
+        clusterExons.allSets$set <- NULL
+
+        clusterExons.allSets <-
+            removeDuplicateTranscripts(clusterExons.allSets)
+        return(clusterExons.allSets)
+    }else{
+        return(NULL)
+    }
+    }else{
+        return(NULL)
+    }
 }
 
 #' Convert an exon-level gtf annotation to a transcript-level gtf annotation
