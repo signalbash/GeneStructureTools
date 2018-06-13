@@ -328,6 +328,17 @@ alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRU
                 same <- findOverlaps(clusterExons.alt, clusterExons, type="end")
                 clusterExons.alt <- clusterExons[same@to]
             }
+            if(clusterGRanges.intron$verdict[move[m]] == "cryptic_unanchored"){
+                near <- follow(clusterGRanges.intron[move[m]], clusterExons)
+                clusterExons.alt <- clusterExons[near]
+                same5 <- findOverlaps(clusterExons.alt, clusterExons, type="end")
+
+                near <- precede(clusterGRanges.intron[move[m]], clusterExons)
+                clusterExons.alt <- clusterExons[near]
+                same3 <- findOverlaps(clusterExons.alt, clusterExons, type="start")
+
+                clusterExons.alt <- clusterExons[c(same3@to, same5@to)]
+            }
 
         }else{
             clusterExons.alt <- clusterExons[ol@to]
