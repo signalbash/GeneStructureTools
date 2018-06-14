@@ -725,6 +725,12 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
 
 
     }
+    if(is.list(altIso)){
+        if(length(altIso) > 1){
+            altIso <- do.call("c", altIso)
+        }
+    }
+
     altIso$spliced_id <- unlist(lapply(
         stringr::str_split(altIso$transcript_id, " "),"[[",2))
 
