@@ -309,7 +309,7 @@ alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRU
     end(clusterGRanges.intron) <- end(clusterGRanges.intron) -1
 
 
-    move <- which(clusterGRanges$verdict != "annotated")
+    move <- which(clusterGRanges$verdict %in% c("cryptic_threeprime","cryptic_fiveprime","cryptic_unanchored"))
     clusterExons.novel <- NULL
     setTrack <- vector()
     for(m in seq_along(move)){
@@ -321,12 +321,25 @@ alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRU
                 clusterExons.alt <- clusterExons[near]
                 same <- findOverlaps(clusterExons.alt, clusterExons, type="start")
                 clusterExons.alt <- clusterExons[same@to]
+
+                ol <- follow(clusterGRanges.intron[move[m]], clusterExons)
+                ol <- findOverlaps(clusterExons[ol], clusterExons, type="start")
+                ids <- clusterExons$transcript_id[ol@to]
+                clusterExons.alt <- rep(clusterExons.alt, length(ids))
+                clusterExons.alt$transcript_id <- rep(ids, each=length(same@to))
+
             }
             if(clusterGRanges.intron$verdict[move[m]] == "cryptic_fiveprime"){
                 near <- follow(clusterGRanges.intron[move[m]], clusterExons)
                 clusterExons.alt <- clusterExons[near]
                 same <- findOverlaps(clusterExons.alt, clusterExons, type="end")
                 clusterExons.alt <- clusterExons[same@to]
+
+                ol <- precede(clusterGRanges.intron[move[m]], clusterExons)
+                ol <- findOverlaps(clusterExons[ol], clusterExons, type="end")
+                ids <- clusterExons$transcript_id[ol@to]
+                clusterExons.alt <- rep(clusterExons.alt, length(ids))
+                clusterExons.alt$transcript_id <- rep(ids, each=length(same@to))
             }
             if(clusterGRanges.intron$verdict[move[m]] == "cryptic_unanchored"){
                 near <- follow(clusterGRanges.intron[move[m]], clusterExons)
@@ -376,6 +389,39 @@ alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRU
         clusterExons.novel <- clusterExons.novel[[1]]
     }
 
+    pairs <- which(clusterGRanges$verdict %in% c("novel annotated pair"))
+    clusterExons.pairs <- NULL
+    for(p in seq_along(pairs)){
+        clusterGRanges.start <- clusterGRanges[pairs[p]]
+        end(clusterGRanges.start) <- start(clusterGRanges.start)
+        ol <- findOverlaps(clusterGRanges.start, clusterExons, type="end")
+        clusterExons.start <- clusterExons[ol@to]
+        rep.end <- length(clusterExons.start)
+        start.ids <- clusterExons.start$transcript_id
+
+        clusterGRanges.end <- clusterGRanges[pairs[p]]
+        start(clusterGRanges.end) <- end(clusterGRanges.end)
+        ol <- findOverlaps(clusterGRanges.end, clusterExons, type="start")
+        clusterExons.end <- clusterExons[ol@to]
+        rep.start <- length(clusterExons.end)
+        end.ids <- clusterExons.end$transcript_id
+
+        clusterExons.start <- rep(clusterExons.start, rep.start)
+        clusterExons.start$transcript_id <- rep(end.ids, each=rep.end)
+
+        clusterExons.end <- rep(clusterExons.end, rep.end)
+        clusterExons.end$transcript_id <- rep(start.ids, each=rep.start)
+
+        clusterExons.pairs <- c(clusterExons.pairs, clusterExons.start, clusterExons.end)
+
+        # remember to reorder exon numbers
+        setTrack <- c(setTrack, rep(clusterGRanges.intron$set[pairs[p]], length(clusterExons.start)+length(clusterExons.end)))
+
+    }
+    clusterExons.pairs <- do.call("c", clusterExons.pairs)
+    clusterExons.novel <- c(clusterExons.novel, clusterExons.pairs)
+
+
     #rm(clusterExons.allSets)
     clusterExons.allSets <- NULL
     for(i in seq_along(unique(clusterGRanges$set))){
@@ -383,11 +429,13 @@ alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRU
         if(i %in% setTrack){
             clusterExons.tid <- paste0(clusterExons$exon_id, clusterExons$transcript_id)
             clusterExons.novel.tid <- paste0(clusterExons.novel$exon_id, clusterExons.novel$transcript_id)[setTrack==i]
-            rm <- which(clusterExons.tid %in% clusterExons.novel.tid)
-            clusterExons.replace <- c(clusterExons[-rm], clusterExons.novel)
+            keep <- which(!(clusterExons.tid %in% clusterExons.novel.tid))
+            clusterExons.replace <- c(clusterExons[keep], clusterExons.novel[setTrack==i])
         }else{
             clusterExons.replace <- clusterExons
         }
+
+        clusterExons.replace <- reorderExonNumbers(clusterExons.replace)
 
         clusterGRanges.max <-
             clusterGRanges.intron[clusterGRanges.intron$set==i]

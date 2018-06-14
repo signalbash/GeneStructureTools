@@ -667,8 +667,7 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
                                         style = 3)
         }
 
-        altIso <- alternativeIntronUsage(significantEvents[
-            significantEvents$clusterID == geneEvents$Var2[1],],
+        altIso <- alternativeIntronUsage(altIntronLocs = significantEvents[significantEvents$clusterID == geneEvents$Var2[1],],
             exons)
         if(showProgressBar){utils::setTxtProgressBar(pb, 1)}
 
@@ -676,8 +675,12 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
             for(i in 2:nrow(geneEvents)){
                 altIntronLocs = significantEvents[
                     significantEvents$clusterID == geneEvents$Var2[i],]
-                #altIntronLocs <- altIntronLocs[altIntronLocs$verdict==
-                #                                   "annotated",]
+
+                altIntronLocs$deltapsi <- altIntronLocs$PSI_a - altIntronLocs$PSI_b
+                if(all(altIntronLocs$deltapsi < 0) | all(altIntronLocs$deltapsi > 0)){
+                    altIntronLocs <- altIntronLocs[-(1:nrow(altIntronLocs)),]
+                }
+
                 if(nrow(altIntronLocs) > 1){
                     altIso1 <- alternativeIntronUsage(altIntronLocs, exons)
                     if(!is.null(altIso1)){
