@@ -49,7 +49,7 @@ readWhippetJNCfiles <- function(files, minCount=0){
     }
 
     colnames(whip.all)[-(1:5)] <- gsub(".jnc.gz","", basename(files))
-    whip.all$count <- rowSums(whip.all[,-c(1:5)])
+    whip.all$count <- rowSums(whip.all[,-c(1:5)], na.rm = T)
 
     whip.all <- whip.all[which(whip.all$count >= minCount),]
 
