@@ -136,6 +136,7 @@ filterWhippetEvents <- function(whippetDataSet,
 #' @param exportGTF file name to export alternative isoform GTFs (default=\code{NULL})
 #' @param uniprotData data.frame of uniprot sequence information
 #' @param uniprotSeqFeatures data.frame of uniprot sequence features
+#' @param selectLongest passed to getORFs()
 #' @return Summarised ORF changes data.frame
 #' @export
 #' @import GenomicRanges
@@ -175,7 +176,8 @@ transcriptChangeSummary <- function(transcriptsX,
                                     rearrangeXY = TRUE,
                                     exportGTF = NULL,
                                     uniprotData=NULL,
-                                    uniprotSeqFeatures=NULL){
+                                    uniprotSeqFeatures=NULL,
+                                    selectLongest=1){
 
 
     if(!is.null(whippetDataSet)){
@@ -224,14 +226,16 @@ transcriptChangeSummary <- function(transcriptsX,
 
     if(orfPrediction == "allFrames"){
         orfsX <- getOrfs(transcriptsX, BSgenome,returnLongestOnly = FALSE,
-                         allFrames = TRUE, uORFs = TRUE)
+                         allFrames = TRUE, uORFs = TRUE,
+                         selectLongest = selectLongest)
         orfsY <- getOrfs(transcriptsY, BSgenome,returnLongestOnly = FALSE,
-                         allFrames = TRUE, uORFs = TRUE)
+                         allFrames = TRUE, uORFs = TRUE,
+                         selectLongest = selectLongest)
     }else{
         orfsX <- getOrfs(transcriptsX, BSgenome,returnLongestOnly = TRUE,
-                         uORFs = TRUE)
+                         uORFs = TRUE, selectLongest = selectLongest)
         orfsY <- getOrfs(transcriptsY, BSgenome,returnLongestOnly = TRUE,
-                         uORFs = TRUE)
+                         uORFs = TRUE, selectLongest = selectLongest)
     }
 
     if(all(!grepl("[+]", orfsX$id))){
@@ -301,7 +305,8 @@ transcriptChangeSummary <- function(transcriptsX,
             orfAllGenes <- getOrfs(exons[exons$gene_id %in%
                                              unique(c(transcriptsX$gene_id,
                                                       transcriptsY$gene_id))],
-                                   BSgenome,returnLongestOnly = TRUE)
+                                   BSgenome,returnLongestOnly = TRUE,
+                                   selectLongest = selectLongest)
 
             save(orfAllGenes, BSgenome, file="temp_ORFs.Rdata")
             system(paste0("Rscript ", scriptLoc, " temp_ORFs.Rdata"))
@@ -396,6 +401,7 @@ transcriptChangeSummary <- function(transcriptsX,
 #' @param rearrangeXY should PSI directionality be taken into account?
 #' @param uniprotData data.frame of uniprot sequence information
 #' @param uniprotSeqFeatures data.frame of uniprot sequence features
+#' @param selectLongest passed to getORFs()
 #' @return data.frame containing signficant whippet diff data and ORF change summaries
 #' @export
 #' @importFrom rtracklayer import
@@ -422,7 +428,8 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
                                            exportGTF = NULL,
                                            rearrangeXY = FALSE,
                                            uniprotData=NULL,
-                                           uniprotSeqFeatures=NULL){
+                                           uniprotSeqFeatures=NULL,
+                                           selectLongest=1){
 
 
     # diffSplicingResults(whippetDataSet)
@@ -471,7 +478,8 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
             BSgenome = BSgenome,NMD = NMD, whippetDataSet=whippetDataSet.ce,
             rearrangeXY = rearrangeXY,
             uniprotData = uniprotData,
-            uniprotSeqFeatures = uniprotSeqFeatures)
+            uniprotSeqFeatures = uniprotSeqFeatures,
+            selectLongest = selectLongest)
         # add to significantEvents.ce
         m <- match(significantEvents.ce$coord, orfChanges.ce$id)
         significantEvents.ce <- cbind(significantEvents.ce, orfChanges.ce[m,-1])
@@ -519,7 +527,8 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
             BSgenome = BSgenome,NMD = NMD, whippetDataSet=whippetDataSet.ri,
             rearrangeXY = rearrangeXY,
             uniprotData = uniprotData,
-            uniprotSeqFeatures = uniprotSeqFeatures)
+            uniprotSeqFeatures = uniprotSeqFeatures,
+            selectLongest = selectLongest)
         # add to significantEvents.ce
         m <- match(significantEvents.ri$coord, orfChanges.ri$id)
         significantEvents.ri <- cbind(significantEvents.ri, orfChanges.ri[m,-1])
@@ -581,7 +590,8 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
                     whippetDataSet=whippetDataSet.jnc,
                     rearrangeXY = rearrangeXY,
                     uniprotData = uniprotData,
-                    uniprotSeqFeatures = uniprotSeqFeatures)
+                    uniprotSeqFeatures = uniprotSeqFeatures,
+                    selectLongest = selectLongest)
 
                 # add to significantEvents
                 m <- match(significantEvents.jnc$coord, orfChanges.jnc$id)

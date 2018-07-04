@@ -44,6 +44,8 @@ maxLocation <- function(startSite, stopSite, longest = 1){
 #' @param exportFasta export a .fa.gz file with nucleotide sequences for each transcript?
 #' @param fastaFile file name for .fa.gz export
 #' @param uORFs get uORF summaries?
+#' @param selectLongest proportion of ORFs for each gene to find uORFs for. Value between 0 and 1.
+#' Speeds up uORF calculations but will only return results for the longest ORFs.
 #' @return data.frame with longest orf details
 #' @export
 #' @import GenomicRanges
@@ -74,7 +76,8 @@ getOrfs <- function(transcripts,
                     longest=1,
                     exportFasta=FALSE,
                     fastaFile=NULL,
-                    uORFs=FALSE){
+                    uORFs=FALSE,
+                    selectLongest = 1){
 
     if (allFrames == TRUE) {
         returnLongestOnly = FALSE
@@ -152,7 +155,7 @@ getOrfs <- function(transcripts,
             if(length(x) == 0){1}else{
                 as.numeric(x[, 2])})
 
-    stopSites <- str_locate_all(orfDF$aa_sequence, "[*]")
+    stopSites <- stringr::str_locate_all(orfDF$aa_sequence, "[*]")
     stopSites <-
         mapply(function(x, y)
             c(as.numeric(x[, 2]), nchar(y)),
@@ -279,7 +282,17 @@ getOrfs <- function(transcripts,
     orfDF <- orfDF[,c(1, ncol(orfDF), 2:(ncol(orfDF)-1))]
 
     if(uORFs == TRUE){
-        upstreamORFs <- getUOrfs(transcripts=transcripts,
+
+        #select the longest N% of orfs to speed stuff up
+        maxNgenes <- as.data.frame(ceiling(table(orfDF$gene_id)*selectLongest))
+
+        orfDF <- orfDF[rev(order(orfDF$orf_length)),]
+        longIndices <- as.numeric(unlist(apply(maxNgenes, 1, function(x) which(orfDF$gene_id == x[1])[1:x[2]])))
+        orfDF <- orfDF[unique(longIndices),]
+
+        transcripts.uorf <- transcripts[transcripts$transcript_id %in% orfDF$id]
+
+        upstreamORFs <- getUOrfs(transcripts=transcripts.uorf,
                                  BSgenome = BSgenome,
                                  orfs = orfDF,
                                  findExonB = TRUE)
