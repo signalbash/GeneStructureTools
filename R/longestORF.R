@@ -450,46 +450,13 @@ getUOrfs <- function(transcripts,
     orfDF$seq_length <- nchar(orfDF$aa_sequence)
     orfDF$seq_length_nt <- nchar(seqCat) + orfDF$frame -1
 
-    startSites <-
-        stringr::str_locate_all(orfDF$aa_sequence, "M")
-    # NOTE THAT M MUST BE FIRST CODON
-    startSites <-
-        lapply(startSites, function(x)
-            as.numeric(x[, 2]))
+    uORF.pos <- str_locate_all(orfDF$aa_sequence, "M(\\w+?)*") # need to add one to end
+    uORF.number <- unlist(lapply(uORF.pos, length))/2
+    ids <- unlist(mapply(function(x,y) rep(x,y) ,orfDF$id, uORF.number))
+    frames <- unlist(mapply(function(x,y) rep(x,y) ,orfDF$frame, uORF.number))
+    uORF.pos <- do.call("rbind", uORF.pos)
+    upstreamORFs <- data.frame(id=ids, frame=frames, start=uORF.pos[,1], stop=uORF.pos[,2]+1)
 
-    # startSites <- mapply(function(x, y)
-    #     x[which(x < y)],
-    #     startSites,
-    #     orfs$start_site[match(orfDF$id, orfs$id)])
-
-    stopSites <- str_locate_all(orfDF$aa_sequence, "[*]")
-    stopSites <-
-        mapply(function(x, y)
-            c(as.numeric(x[, 2]), nchar(y)),
-            stopSites,
-            orfDF$aa_sequence)
-
-    maxLoc1 <-
-        mapply(function(x, y)
-            maxLocation(x, y), startSites, stopSites)
-    maxLoc <- maxLoc1
-    maxLoc.id <- orfDF$id
-    maxLoc.frame <- orfDF$frame
-
-    redo <- which(!(apply(maxLoc1,2, function(x) all(is.na(x)))))
-    n=2
-    while(length(redo) > 0){
-        maxLoc1 <- mapply(function(x, y)
-            maxLocation(x, y, n), startSites[redo], stopSites[redo])
-        maxLoc.id <- c(maxLoc.id, orfDF$id[redo])
-        maxLoc.frame <- c(maxLoc.frame, orfDF$frame[redo])
-        maxLoc <- cbind(maxLoc, maxLoc1)
-        n=n+1
-        redo <- which(!(apply(maxLoc1,2, function(x) all(is.na(x)))))
-    }
-
-    upstreamORFs <- data.frame(id=maxLoc.id, frame=maxLoc.frame, t(maxLoc))
-    colnames(upstreamORFs)[3:4] <- c("start","stop")
 
     if(any(duplicated(orfs$id))){
         orfs$id <- paste0(orfs$id, "_frame",orfs$frame)
