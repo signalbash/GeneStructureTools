@@ -91,10 +91,12 @@ findJunctionPairs <- function(whippetDataSet, type=NA){
         }
     }
 
-    junctionsA$whippet_id <- olA.from
-    junctionsA$search <- eventCoords$search[match(junctionsA$whippet_id,
-                                                  eventCoords$id)]
-    junctionsA$set <- "A"
+    if(length(junctionsA) > 0){
+        junctionsA$whippet_id <- olA.from
+        junctionsA$search <- eventCoords$search[match(junctionsA$whippet_id,
+                                                      eventCoords$id)]
+        junctionsA$set <- "A"
+    }
 
     if(type %in% c("AA","AD")){
 
@@ -125,11 +127,15 @@ findJunctionPairs <- function(whippetDataSet, type=NA){
                 junctionsB <- jncCoords[olB.left@to]
             }
         }
-        junctionsB$whippet_id <- olB.from
-        junctionsB$search <- eventCoords$search[match(junctionsB$whippet_id,
-                                                      eventCoords$id)]
-        junctionsB$set <- "B"
-        junctions <- c(junctionsA, junctionsB)
+        if(length(junctionsB) > 0 & length(junctionsA) > 0){
+            junctionsB$whippet_id <- olB.from
+            junctionsB$search <- eventCoords$search[match(junctionsB$whippet_id,
+                                                          eventCoords$id)]
+            junctionsB$set <- "B"
+            junctions <- c(junctionsA, junctionsB)
+        }else{
+            junctions <- NULL
+        }
     }
 
     if(type %in% c("AF","AL")){
@@ -167,30 +173,38 @@ findJunctionPairs <- function(whippetDataSet, type=NA){
             }
         }
 
-        junctionsC$set <- "C"
-        junctions <- c(junctionsA, junctionsC)
+        if(length(junctionsC) > 0 & length(junctionsA) > 0){
+            junctionsC$set <- "C"
+            junctions <- c(junctionsA, junctionsC)
+        }else{
+            junctions <- NULL
+        }
     }
 
-    keep <- which(width(junctions) > 2)
+    if(!is.null(junctions)){
+        keep <- which(width(junctions) > 2)
 
-    # replace junction codes
-    if(type %in% c("AA", "AD")){
-        junctions$set[which((junctions$set=="A" &
-                                 as.logical(strand(junctions) == "+")) |
-                                (junctions$set=="B" &
-                                as.logical(strand(junctions) == "-")))] <- "X"
-        junctions$set[which((junctions$set=="A" &
-                                 as.logical(strand(junctions) == "-")) |
-                                (junctions$set=="B" &
-                                as.logical(strand(junctions) == "+")))] <- "Y"
-    }
-    if(type %in% c("AF", "AL")){
-        junctions$set[which(junctions$set=="A")] <- "X"
-        junctions$set[which(junctions$set=="C")] <- "Y"
-    }
+        # replace junction codes
+        if(type %in% c("AA", "AD")){
+            junctions$set[which((junctions$set=="A" &
+                                     as.logical(strand(junctions) == "+")) |
+                                    (junctions$set=="B" &
+                                    as.logical(strand(junctions) == "-")))] <- "X"
+            junctions$set[which((junctions$set=="A" &
+                                     as.logical(strand(junctions) == "-")) |
+                                    (junctions$set=="B" &
+                                    as.logical(strand(junctions) == "+")))] <- "Y"
+        }
+        if(type %in% c("AF", "AL")){
+            junctions$set[which(junctions$set=="A")] <- "X"
+            junctions$set[which(junctions$set=="C")] <- "Y"
+        }
 
-    junctions <- junctions[keep]
-    return(junctions)
+        junctions <- junctions[keep]
+        return(junctions)
+    }else{
+        return(NULL)
+    }
 }
 
 #' Find transcripts containing/overlapping junctions and replace them with alternative junctions
