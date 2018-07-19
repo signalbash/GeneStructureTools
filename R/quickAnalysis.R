@@ -618,8 +618,11 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
         rtracklayer::export.gff(exportedTranscripts, con=exportGTF,
                                 format="gtf")
     }
-
-    return(SignificantEvents.withORF)
+    if(exists("SignificantEvents.withORF")){
+        return(SignificantEvents.withORF)
+    }else{
+        return(NULL)
+    }
 }
 #' Compare open reading frames for whippet differentially spliced events
 #' @param significantEvents  data.frame containing information from the
