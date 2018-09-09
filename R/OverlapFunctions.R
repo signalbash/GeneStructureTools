@@ -119,12 +119,21 @@ summariseExonTypes <- function(types){
 
     types <- gsub("protein_coding-CDS:protein_coding-UTR3:protein_coding-UTR5",
                   "protein_coding-CDS", types)
+
+    # version 2 -- if CDS then class as CDS
     types <- gsub("protein_coding-CDS:protein_coding-UTR5",
-                  "protein_coding-start_codon",
+                  "protein_coding-CDS",
                   types)
     types <- gsub("protein_coding-CDS:protein_coding-UTR3",
+                  "protein_coding-CDS",
+                  types)
+    types <- gsub("protein_coding-CDS:protein_coding-stop_codon:protein_coding-UTR3",
                   "protein_coding-stop_codon",
                   types)
+    types <- gsub("protein_coding-CDS:protein_coding-start_codon:protein_coding-UTR5",
+                  "protein_coding-start_codon",
+                  types)
+
 
     types2 <- types
     types2[grep("protein_coding-start_codon", types2)] <- "start_codon"
@@ -169,7 +178,9 @@ overlapTypes <- function(queryCoords, gtf, set=c("from", "to", "overlap")){
     gtf.overlap <- gtf[overlaps$subjectHits]
     gtf.overlap$index <- overlaps$queryHits
     gtf.overlap <- gtf.overlap[(gtf.overlap$type %in%
-                                    c("exon", "CDS","UTR","UTR3","UTR5"))]
+                                    c("exon", "CDS","UTR","UTR3",
+                                      "UTR5","stop_codon","start_codon"))]
+
 
     gtf.overlap <- filterGtfOverlap(gtf.overlap)
     gtf.overlap <- addBroadTypes(gtf.overlap)
