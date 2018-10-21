@@ -529,69 +529,77 @@ attrChangeAltSpliced <- function(orfsX,
                                                colnames(attributeComparisons))
 
         if(compareUTR == TRUE & attribute == "orf_length"){
-            if(all(grepl("AS", orfsX$id))){
-                id.x <- paste0(attributeComparisons$id,"_" ,
-                               attributeComparisons$orf_length_bygroup_x)
+            if(nrow(attributeComparisons) > 0){
+                if(all(grepl("AS", orfsX$id))){
+                    id.x <- paste0(attributeComparisons$id,"_" ,
+                                   attributeComparisons$orf_length_bygroup_x)
 
-                hasLeafIdX <- grep("dnre_", orfsX$id)
-                orfsXid <- orfsX$id
-                orfsXid[hasLeafIdX] <-
-                    stringr::str_sub(gsub("\\-[^]]\\:*", ":",
-                                          paste0(orfsXid[hasLeafIdX], ":")),
-                                     1, -2)
-                orfsXid[hasLeafIdX] <- gsub("dnre_","", orfsXid[hasLeafIdX])
+                    hasLeafIdX <- grep("dnre_", orfsX$id)
+                    orfsXid <- orfsX$id
+                    orfsXid[hasLeafIdX] <-
+                        stringr::str_sub(gsub("\\-[^]]\\:*", ":",
+                                              paste0(orfsXid[hasLeafIdX], ":")),
+                                         1, -2)
+                    orfsXid[hasLeafIdX] <- gsub("dnre_","", orfsXid[hasLeafIdX])
 
-                if(compareBy == "gene"){
-                    orfsXid <- unlist(lapply(str_split(orfsXid, " "), "[[", 2))
-                    m1 <- match(id.x, paste0(orfsXid,
-                                             "_", orfsX$orf_length))
+                    if(compareBy == "gene"){
+                        orfsXid <- unlist(lapply(str_split(orfsXid, " "), "[[", 2))
+                        m1 <- match(id.x, paste0(orfsXid,
+                                                 "_", orfsX$orf_length))
+                    }else{
+                        m1 <- match(id.x, paste0(orfsXid, "_", orfsX$orf_length))
+                    }
                 }else{
-                    m1 <- match(id.x, paste0(orfsXid, "_", orfsX$orf_length))
+                    matchToGene <- match(attributeComparisons$id,
+                                         attributeX$as_group)
+                    id.x <- paste0(unlist(lapply(str_split(
+                        attributeX$id[matchToGene], "[+]"),"[[",1)),"_" ,
+                        attributeComparisons$orf_length_bygroup_x)
+                    m1 <- match(id.x, paste0((orfsX$gene_id), "_",
+                                             orfsX$orf_length))
                 }
+
+                if(all(grepl("AS", orfsY$id))){
+                    id.y <- paste0(attributeComparisons$id,"_" ,
+                                   attributeComparisons$orf_length_bygroup_y)
+
+                    hasLeafIdY <- grep("upre_", orfsY$id)
+                    orfsYid <- orfsY$id
+                    orfsYid[hasLeafIdY] <-
+                        stringr::str_sub(gsub("\\-[^]]\\:*", ":",
+                                              paste0(orfsYid[hasLeafIdY], ":")),
+                                         1, -2)
+                    orfsYid[hasLeafIdY] <- gsub("upre_","", orfsYid[hasLeafIdY])
+
+                    if(compareBy == "gene"){
+                        orfsYid <- unlist(lapply(str_split(orfsYid, " "), "[[", 2))
+                        m2 <- match(id.y, paste0(orfsYid,
+                                                 "_", orfsY$orf_length))
+                    }else{
+                        m2 <- match(id.y, paste0(orfsYid, "_", orfsY$orf_length))
+                    }
+                }else{
+                    matchToGene <- match(attributeComparisons$id,
+                                         attributeY$as_group)
+                    id.y <- paste0(unlist(lapply(str_split(
+                        attributeY$id[matchToGene], "[+]"),"[[",1)),"_" ,
+                        attributeComparisons$orf_length_bygroup_y)
+                    m2 <- match(id.y, paste0((orfsY$gene_id), "_", orfsY$orf_length))
+                }
+
+                attributeComparisons$utr3_length_bygroup_x <- orfsX$utr3_length[m1]
+                attributeComparisons$utr3_length_bygroup_y <- orfsY$utr3_length[m2]
+                attributeComparisons$utr5_length_bygroup_x <-
+                    orfsX$start_site_nt[m1]
+                attributeComparisons$utr5_length_bygroup_y <-
+                    orfsY$start_site_nt[m2]
             }else{
-                matchToGene <- match(attributeComparisons$id,
-                                     attributeX$as_group)
-                id.x <- paste0(unlist(lapply(str_split(
-                    attributeX$id[matchToGene], "[+]"),"[[",1)),"_" ,
-                    attributeComparisons$orf_length_bygroup_x)
-                m1 <- match(id.x, paste0((orfsX$gene_id), "_",
-                                         orfsX$orf_length))
+                attributeComparisons$utr3_length_bygroup_x <- numeric(0)
+                attributeComparisons$utr3_length_bygroup_y <- numeric(0)
+                attributeComparisons$utr5_length_bygroup_x <- numeric(0)
+                attributeComparisons$utr5_length_bygroup_y <- numeric(0)
             }
 
-            if(all(grepl("AS", orfsY$id))){
-                id.y <- paste0(attributeComparisons$id,"_" ,
-                               attributeComparisons$orf_length_bygroup_y)
-
-                hasLeafIdY <- grep("upre_", orfsY$id)
-                orfsYid <- orfsY$id
-                orfsYid[hasLeafIdY] <-
-                    stringr::str_sub(gsub("\\-[^]]\\:*", ":",
-                                          paste0(orfsYid[hasLeafIdY], ":")),
-                                     1, -2)
-                orfsYid[hasLeafIdY] <- gsub("upre_","", orfsYid[hasLeafIdY])
-
-                if(compareBy == "gene"){
-                    orfsYid <- unlist(lapply(str_split(orfsYid, " "), "[[", 2))
-                    m2 <- match(id.y, paste0(orfsYid,
-                                             "_", orfsY$orf_length))
-                }else{
-                    m2 <- match(id.y, paste0(orfsYid, "_", orfsY$orf_length))
-                }
-            }else{
-                matchToGene <- match(attributeComparisons$id,
-                                     attributeY$as_group)
-                id.y <- paste0(unlist(lapply(str_split(
-                    attributeY$id[matchToGene], "[+]"),"[[",1)),"_" ,
-                    attributeComparisons$orf_length_bygroup_y)
-                m2 <- match(id.y, paste0((orfsY$gene_id), "_", orfsY$orf_length))
-            }
-
-            attributeComparisons$utr3_length_bygroup_x <- orfsX$utr3_length[m1]
-            attributeComparisons$utr3_length_bygroup_y <- orfsY$utr3_length[m2]
-            attributeComparisons$utr5_length_bygroup_x <-
-                orfsX$start_site_nt[m1]
-            attributeComparisons$utr5_length_bygroup_y <-
-                orfsY$start_site_nt[m2]
         }
 
         return(attributeComparisons)
