@@ -99,83 +99,91 @@ findJunctionPairs <- function(whippetDataSet, type=NA){
     }
 
     if(type %in% c("AA","AD")){
+        if(length(junctionsA) > 0){
 
-        # junction B only required if AA/AD
-        junctionSJB.right <- eventCoords[eventCoords$search=="right"]
-        junctionSJB.left <- eventCoords[eventCoords$search=="left"]
+            # junction B only required if AA/AD
+            junctionSJB.right <- eventCoords[eventCoords$search=="right"]
+            junctionSJB.left <- eventCoords[eventCoords$search=="left"]
 
-        # same for B junctions
-        olB.from <- vector()
-        if(length(junctionSJB.right) > 0){
-            start(junctionSJB.right) <- end(junctionSJB.right)
-            olB.right <- findOverlaps(junctionSJB.right, jncCoords,
-                                      type="start")
-            olB.from <- append(olB.from,
-                               as.character(
-                                   junctionSJB.right$id[olB.right@from]))
-            junctionsB <- jncCoords[olB.right@to]
-        }
-        if(length(junctionSJB.left) > 0){
-            end(junctionSJB.left) <- end(junctionSJB.left) +1
-            start(junctionSJB.left) <- end(junctionSJB.left)
-            olB.left <- findOverlaps(junctionSJB.left, jncCoords, type="end")
-            olB.from <- append(olB.from,
-                               as.character(junctionSJB.left$id[olB.left@from]))
-            if(exists("junctionsB")){
-                junctionsB <- c(junctionsB, jncCoords[olB.left@to])
-            }else{
-                junctionsB <- jncCoords[olB.left@to]
+            # same for B junctions
+            olB.from <- vector()
+            if(length(junctionSJB.right) > 0){
+                start(junctionSJB.right) <- end(junctionSJB.right)
+                olB.right <- findOverlaps(junctionSJB.right, jncCoords,
+                                          type="start")
+                olB.from <- append(olB.from,
+                                   as.character(
+                                       junctionSJB.right$id[olB.right@from]))
+                junctionsB <- jncCoords[olB.right@to]
             }
-        }
-        if(length(junctionsB) > 0 & length(junctionsA) > 0){
-            junctionsB$whippet_id <- olB.from
-            junctionsB$search <- eventCoords$search[match(junctionsB$whippet_id,
-                                                          eventCoords$id)]
-            junctionsB$set <- "B"
-            junctions <- c(junctionsA, junctionsB)
+            if(length(junctionSJB.left) > 0){
+                end(junctionSJB.left) <- end(junctionSJB.left) +1
+                start(junctionSJB.left) <- end(junctionSJB.left)
+                olB.left <- findOverlaps(junctionSJB.left, jncCoords, type="end")
+                olB.from <- append(olB.from,
+                                   as.character(junctionSJB.left$id[olB.left@from]))
+                if(exists("junctionsB")){
+                    junctionsB <- c(junctionsB, jncCoords[olB.left@to])
+                }else{
+                    junctionsB <- jncCoords[olB.left@to]
+                }
+            }
+            if(length(junctionsB) > 0 & length(junctionsA) > 0){
+                junctionsB$whippet_id <- olB.from
+                junctionsB$search <- eventCoords$search[match(junctionsB$whippet_id,
+                                                              eventCoords$id)]
+                junctionsB$set <- "B"
+                junctions <- c(junctionsA, junctionsB)
+            }else{
+                junctions <- NULL
+            }
         }else{
             junctions <- NULL
         }
     }
 
     if(type %in% c("AF","AL")){
-        junctionsA.left <- junctionsA[junctionsA$search=="left"]
-        junctionsA.right <- junctionsA[junctionsA$search=="right"]
+        if(length(junctionsA) > 0){
+            junctionsA.left <- junctionsA[junctionsA$search=="left"]
+            junctionsA.right <- junctionsA[junctionsA$search=="right"]
 
-        if(length(junctionsA.left) > 0){
-            end(junctionsA.left) <- start(junctionsA.left)
-            olC.left <- findOverlaps(junctionsA.left, jncCoords, type="start")
-            junctionsC.left <- jncCoords[olC.left@to]
-            junctionsC.left$whippet_id <-
-                junctionsA.left$whippet_id[olC.left@from]
-            junctionsC.left$search <- junctionsA.left$search[olC.left@from]
-            ol <- findOverlaps(junctionsC.left, junctionsA, type="equal")
-            if(length(ol) > 0){
-                junctionsC.left <- junctionsC.left[-ol@from]
+            if(length(junctionsA.left) > 0){
+                end(junctionsA.left) <- start(junctionsA.left)
+                olC.left <- findOverlaps(junctionsA.left, jncCoords, type="start")
+                junctionsC.left <- jncCoords[olC.left@to]
+                junctionsC.left$whippet_id <-
+                    junctionsA.left$whippet_id[olC.left@from]
+                junctionsC.left$search <- junctionsA.left$search[olC.left@from]
+                ol <- findOverlaps(junctionsC.left, junctionsA, type="equal")
+                if(length(ol) > 0){
+                    junctionsC.left <- junctionsC.left[-ol@from]
+                }
+                junctionsC <- junctionsC.left
             }
-            junctionsC <- junctionsC.left
-        }
-        if(length(junctionsA.right) > 0){
-            start(junctionsA.right) <- end(junctionsA.right)
-            olC.right <- findOverlaps(junctionsA.right, jncCoords, type="end")
-            junctionsC.right <- jncCoords[olC.right@to]
-            junctionsC.right$whippet_id <-
-                junctionsA.right$whippet_id[olC.right@from]
-            junctionsC.right$search <- junctionsA.right$search[olC.right@from]
-            ol <- findOverlaps(junctionsC.right, junctionsA, type="equal")
-            if(length(ol) > 0){
-                junctionsC.right <- junctionsC.right[-ol@from]
+            if(length(junctionsA.right) > 0){
+                start(junctionsA.right) <- end(junctionsA.right)
+                olC.right <- findOverlaps(junctionsA.right, jncCoords, type="end")
+                junctionsC.right <- jncCoords[olC.right@to]
+                junctionsC.right$whippet_id <-
+                    junctionsA.right$whippet_id[olC.right@from]
+                junctionsC.right$search <- junctionsA.right$search[olC.right@from]
+                ol <- findOverlaps(junctionsC.right, junctionsA, type="equal")
+                if(length(ol) > 0){
+                    junctionsC.right <- junctionsC.right[-ol@from]
+                }
+                if(exists("junctionsC")){
+                    junctionsC <- c(junctionsC, junctionsC.right)
+                }else{
+                    junctionsC <- junctionsC.right
+                }
             }
-            if(exists("junctionsC")){
-                junctionsC <- c(junctionsC, junctionsC.right)
+
+            if(length(junctionsC) > 0 & length(junctionsA) > 0){
+                junctionsC$set <- "C"
+                junctions <- c(junctionsA, junctionsC)
             }else{
-                junctionsC <- junctionsC.right
+                junctions <- NULL
             }
-        }
-
-        if(length(junctionsC) > 0 & length(junctionsA) > 0){
-            junctionsC$set <- "C"
-            junctions <- c(junctionsA, junctionsC)
         }else{
             junctions <- NULL
         }
