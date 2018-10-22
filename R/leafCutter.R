@@ -229,8 +229,7 @@ removeSameExon <- function(exons){
 #' # multiple cluster processing
 #' altIsoforms1396plus1395 <- alternativeIntronUsage(cluster, c(exons, altIsoforms1396))
 #' unique(altIsoforms1396plus1395$transcript_id)
-
-alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRUE){
+alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRUE, junctions=NULL){
 
     altIntronLocs$deltapsi <- altIntronLocs$PSI_a - altIntronLocs$PSI_b
 
@@ -395,6 +394,18 @@ alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRU
 
             #rm(clusterExons.allSets)
             clusterExons.allSets <- NULL
+
+            if(!is.null(junctions)){
+                # find junctions which are within the cluster ranges,
+                # but aren't the same junctions
+                ol <- findOverlaps(clusterGRanges, junctions)
+                jnc <- junctions[ol@to]
+
+                newJunc <- which(!(paste0(start(jnc), "-", end(jnc)+1) %in%
+                                       paste0(start(clusterGRanges), "-", end(clusterGRanges))))
+                jnc <- jnc[newJunc]
+            }
+
             for(i in seq_along(unique(clusterGRanges$set))){
 
                 if(i %in% setTrack){
@@ -482,7 +493,38 @@ alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRU
 
                         clusterExonsBounding <- c(clusterExonsBounding, InternalExons.reps)
                     }else{
-                        replaceExons <- leafcutterIntronsToExons(clusterGRanges[clusterGRanges$set==i])
+                        if(!is.null(junctions)){
+                            replaceExons <- leafcutterIntronsToExons(clusterGRanges[clusterGRanges$set==i])
+                            # keep junctions which overlap any exons created from the cluster junctions
+                            if(!is.null(replaceExons)){
+                                keep <- findOverlaps(jnc, replaceExons, type="within")
+                                jnc.set <- jnc[unique(keep@from)]
+                                if(length(jnc.set) > 0){
+                                    # annotate the same as clusterGRanges
+                                    jnc.set$id <- clusterGRanges$id[clusterGRanges$set==i][1]
+                                    jnc.set$direction <- clusterGRanges$direction[clusterGRanges$set==i][1]
+                                    jnc.set$verdict <- "junction"
+                                    jnc.set$deltapsi <- 0
+                                    jnc.set$set <- i
+                                    jnc.set$count <- NULL
+
+                                    # remove any overlapping junctions
+                                    jnc.set <- jnc.set[rev(order(width(jnc.set)))]
+                                    ol <- findOverlaps(jnc.set)
+                                    rm <- as.data.frame(table(ol@from))
+                                    while(any(rm$Freq > 1)){
+                                        rm <- rm[rev(order(rm$Freq)),]
+                                        jnc.set <- jnc.set[-as.numeric(rm$Var1[1])]
+                                        ol <- findOverlaps(jnc.set)
+                                        rm <- as.data.frame(table(ol@from))
+                                    }
+                                    replaceExons <- leafcutterIntronsToExons(c(clusterGRanges[clusterGRanges$set==i], jnc.set))
+                                }
+                            }
+
+                        }else{
+                            replaceExons <- leafcutterIntronsToExons(clusterGRanges[clusterGRanges$set==i])
+                        }
                         if(!is.null(replaceExons)){
 
                             replaceExonsFormat <- clusterExonsBounding[rep(1, length(replaceExons))]
@@ -607,7 +649,8 @@ exonsToTranscripts <- function(exons){
 #' @importFrom rtracklayer import
 #' @family leafcutter splicing isoform creation
 #' @author Beth Signal
-leafcutterIntronsToExons <- function(clusterGRanges){
+leafcutterIntronsToExons <- function(clusterGRanges, junctions){
+    clusterGRanges <- clusterGRanges[order(start(clusterGRanges))]
     sets <- as.data.frame(table(clusterGRanges$set))
     sets <- sets[which(sets$Freq > 1),]
 
@@ -633,6 +676,43 @@ leafcutterIntronsToExons <- function(clusterGRanges){
     }
 
 }
+
+#' Create junction ranges from STAR junction files
+#'
+#' Create junction ranges from STAR junction files
+#' @param junctionFiles list of files with STAR junctions
+#' @param minReads minimum number of reads a junction requires to be kept
+#' @return GRanges object with junctions
+#' @export
+#' @importFrom IRanges IRanges
+#' @import GenomicRanges
+#' @family leafcutter splicing isoform creation
+#' @author Beth Signal
+readLeafcutterJunctions <- function(junctionFiles, minReads=10){
+
+    junctions.all <- NULL
+    for(f in seq_along(junctionFiles)){
+        junctions <- read.delim(junctionFiles[f], header=F)
+
+        index <- match(paste(junctions$V1,junctions$V2,junctions$V3,junctions$V6, sep="_"),
+                       paste(junctions.all$V1,junctions.all$V2,junctions.all$V3,junctions.all$V6, sep="_"))
+
+        junctions.all$V5[index[which(!is.na(index))]] <- junctions.all$V5[index[which(!is.na(index))]] + junctions$V5[which(!is.na(index))]
+
+        junctions.all <- rbind(junctions.all, junctions[which(is.na(index)),])
+    }
+    junctions.all <- junctions.all[junctions.all$V5 >= minReads,]
+
+    junctionGrange <- GRanges(seqnames=junctions.all$V1,
+                              ranges=IRanges(start=junctions.all$V2,
+                                             end=junctions.all$V3),
+                              strand=junctions.all$V6,
+                              count=junctions.all$V5)
+
+    return(junctionGrange)
+
+}
+
 #' Create new exon ranges for a cryptic splice junction
 #'
 #' Create new exon ranges for a cryptic splice junction
