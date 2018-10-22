@@ -16,16 +16,9 @@
 #' whippetJNC <- readWhippetJNCfiles(jncFiles)
 readWhippetJNCfiles <- function(files, minCount=0){
 
-    # check platform for windows/unix specific decompression
-    operatingSystem <- .Platform$OS.type
-    if(operatingSystem == "unix"){
-        ungzip <- "zcat < "
-    }else{ #in windows
-        ungzip <- "gzip -dc "
-    }
 
     for(f in seq_along(files)){
-        whip <- data.table::fread(paste0(ungzip, files[f]), data.table=FALSE)
+        whip <- data.table::fread(files[f], data.table=FALSE)
         colnames(whip) <- c("chromosome","start","end","id","count","strand")
 
         if(exists("whip.all")){
@@ -81,16 +74,8 @@ readWhippetJNCfiles <- function(files, minCount=0){
 #' whippetPSI <- readWhippetPSIfiles(psiFiles)
 readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
 
-    # check platform for windows/unix specific decompression
-    operatingSystem <- .Platform$OS.type
-    if(operatingSystem == "unix"){
-        ungzip <- "zcat < "
-    }else{ #in windows
-        ungzip <- "gzip -dc "
-    }
-
     for(f in seq_along(files)){
-        whip <- data.table::fread(paste0(ungzip, files[f]), data.table=FALSE)
+        whip <- data.table::fread(files[f], data.table=FALSE)
         wantedCol <- which(colnames(whip) == attribute)
 
         if(exists("whip.all")){
@@ -160,16 +145,8 @@ readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
 #' whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
 readWhippetDIFFfiles <- function(files){
 
-    # check platform for windows/unix specific decompression
-    operatingSystem <- .Platform$OS.type
-    if(operatingSystem == "unix"){
-        ungzip <- "zcat < "
-    }else{ #in windows
-        ungzip <- "gzip -dc "
-    }
-
     for(f in seq_along(files)){
-        whip <- data.table::fread(paste0(ungzip, files[f]),
+        whip <- data.table::fread(files[f],
                                   data.table=FALSE, skip=1)
 
         #remove the NA column
