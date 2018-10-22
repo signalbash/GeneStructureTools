@@ -15,3 +15,8 @@ Version 0.99.2
 Version 0.99.4
 - Exon skipping and intron retention now works with manual coordinates again
 - Documentation updates
+
+Version 0.1.0
+- Updated leafcutter modelling algorithm
+- Leafcutter version now models cryptic junctions
+- Various bug fixes

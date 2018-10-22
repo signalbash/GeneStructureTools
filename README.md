@@ -30,7 +30,7 @@ We also have functions for re-annotation of .GTF features, such as annotating UT
 
 ## Usage
 
-Please check the [vignette](https://rawgit.com/betsig/GeneStructureTools/master/vignettes/Vignette.html) for usage details.
+Please check the [BioConductor](http://bioconductor.org/packages/GeneStructureTools/) for usage details in the latest version.
 
 ## Development
 
