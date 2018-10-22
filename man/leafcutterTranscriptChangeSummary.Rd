@@ -6,7 +6,8 @@
 \usage{
 leafcutterTranscriptChangeSummary(significantEvents,
   combineGeneEvents = FALSE, exons, BSgenome, NMD = FALSE,
-  showProgressBar = TRUE, exportGTF = NULL)
+  showProgressBar = TRUE, junctions = NULL, exportGTF = NULL,
+  uniprotData = NULL, uniprotSeqFeatures = NULL)
 }
 \arguments{
 \item{significantEvents}{data.frame containing information from the
@@ -23,7 +24,13 @@ Currently not reccomended.}
 
 \item{showProgressBar}{show a progress bar of alternative isoform generation?}
 
+\item{junctions}{junctions GRanges object from readLeafcutterJunctions()}
+
 \item{exportGTF}{file name to export alternative isoform GTFs (default=NULL)}
+
+\item{uniprotData}{data.frame of uniprot sequence information}
+
+\item{uniprotSeqFeatures}{data.frame of uniprot sequence features}
 }
 \value{
 data.frame containing signficant whippet diff data and ORF change summaries

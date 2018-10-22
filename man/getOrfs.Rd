@@ -6,7 +6,7 @@
 \usage{
 getOrfs(transcripts, BSgenome = NULL, returnLongestOnly = TRUE,
   allFrames = FALSE, longest = 1, exportFasta = FALSE, fastaFile = NULL,
-  uORFs = FALSE)
+  uORFs = FALSE, selectLongest = 1)
 }
 \arguments{
 \item{transcripts}{GRanges object with ONLY exon annotations
@@ -25,6 +25,9 @@ getOrfs(transcripts, BSgenome = NULL, returnLongestOnly = TRUE,
 \item{fastaFile}{file name for .fa.gz export}
 
 \item{uORFs}{get uORF summaries?}
+
+\item{selectLongest}{proportion of ORFs for each gene to find uORFs for. Value between 0 and 1.
+Speeds up uORF calculations but will only return results for the longest ORFs.}
 }
 \value{
 data.frame with longest orf details

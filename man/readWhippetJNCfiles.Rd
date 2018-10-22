@@ -4,10 +4,12 @@
 \alias{readWhippetJNCfiles}
 \title{Read in a list of whippet .jnc.gz files and format as a GRanges object}
 \usage{
-readWhippetJNCfiles(files)
+readWhippetJNCfiles(files, minCount = 0)
 }
 \arguments{
 \item{files}{vector of *.jnc.gz file names}
+
+\item{minCount}{minimum number of counts a junction needs to be kept.}
 }
 \value{
 GRanges object with junctions

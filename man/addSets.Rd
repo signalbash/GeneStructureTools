@@ -4,16 +4,16 @@
 \alias{addSets}
 \title{Add set numbers to introns}
 \usage{
-addSets(clusterGRanges)
+addSets(clusterGRanges.noset)
 }
 \arguments{
-\item{clusterGRanges}{Granges object with a cluster of intron locations}
+\item{clusterGRanges.noset}{Granges object with a cluster of intron locations}
 }
 \value{
 Granges object with a cluster of intron locations and corresponding set numbers
 }
 \description{
-Converts a group of introns into non-overlapping sets
+Converts a group of introns into all non-overlapping sets
 }
 \author{
 Beth Signal

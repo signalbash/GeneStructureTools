@@ -4,7 +4,8 @@
 \alias{alternativeIntronUsage}
 \title{Create transcripts with alternative intron usage}
 \usage{
-alternativeIntronUsage(altIntronLocs, exons)
+alternativeIntronUsage(altIntronLocs, exons, replaceInternalExons = TRUE,
+  junctions = NULL)
 }
 \arguments{
 \item{altIntronLocs}{data.frame containing information from the
@@ -13,6 +14,8 @@ Note that only one cluster of alternative introns can be processed at a time.}
 
 \item{exons}{GRanges object made from a GTF with ONLY exon annotations
 (no gene, transcript, CDS etc.)}
+
+\item{replaceInternalExons}{replace any internal transcript exons with inferred exons from multi-intron leafcutter intron sets?}
 }
 \value{
 GRanges object with all potential alternative isoforms skipping the
@@ -39,6 +42,12 @@ unique(altIsoforms1395$transcript_id)
 # multiple cluster processing
 altIsoforms1396plus1395 <- alternativeIntronUsage(cluster, c(exons, altIsoforms1396))
 unique(altIsoforms1396plus1395$transcript_id)
+}
+\seealso{
+Other leafcutter splicing isoform creation: \code{\link{leafcutterIntronsToExons}},
+  \code{\link{makeNewLeafExonsUnanchored}},
+  \code{\link{makeNewLeafExons}},
+  \code{\link{readLeafcutterJunctions}}
 }
 \author{
 Beth Signal

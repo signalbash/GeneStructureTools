@@ -7,7 +7,8 @@
 transcriptChangeSummary(transcriptsX, transcriptsY, BSgenome, exons,
   NMD = FALSE, NMDModel = NULL, compareBy = "gene",
   orfPrediction = "allFrames", compareToGene = FALSE,
-  whippetDataSet = NULL, exportGTF = NULL)
+  whippetDataSet = NULL, rearrangeXY = TRUE, exportGTF = NULL,
+  uniprotData = NULL, uniprotSeqFeatures = NULL, selectLongest = 1)
 }
 \arguments{
 \item{transcriptsX}{GRanges object with exon annotations for
@@ -33,7 +34,15 @@ all transcripts to be compared for the 'alternative' condition}
 \item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}
 Use if PSI directionality should be taken into account when comparing isoforms.}
 
+\item{rearrangeXY}{should PSI directionality be taken into account?}
+
 \item{exportGTF}{file name to export alternative isoform GTFs (default=\code{NULL})}
+
+\item{uniprotData}{data.frame of uniprot sequence information}
+
+\item{uniprotSeqFeatures}{data.frame of uniprot sequence features}
+
+\item{selectLongest}{passed to getORFs()}
 }
 \value{
 Summarised ORF changes data.frame

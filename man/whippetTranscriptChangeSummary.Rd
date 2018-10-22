@@ -6,7 +6,8 @@
 \usage{
 whippetTranscriptChangeSummary(whippetDataSet, gtf.all = NULL, BSgenome,
   eventTypes = "all", exons = NULL, transcripts = NULL, NMD = FALSE,
-  exportGTF = NULL)
+  exportGTF = NULL, rearrangeXY = FALSE, uniprotData = NULL,
+  uniprotSeqFeatures = NULL, selectLongest = 1)
 }
 \arguments{
 \item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
@@ -24,6 +25,14 @@ whippetTranscriptChangeSummary(whippetDataSet, gtf.all = NULL, BSgenome,
 \item{NMD}{Use NMD predictions? (Note: notNMD must be installed to use this feature)}
 
 \item{exportGTF}{file name to export alternative isoform GTFs (default=NULL)}
+
+\item{rearrangeXY}{should PSI directionality be taken into account?}
+
+\item{uniprotData}{data.frame of uniprot sequence information}
+
+\item{uniprotSeqFeatures}{data.frame of uniprot sequence features}
+
+\item{selectLongest}{passed to getORFs()}
 }
 \value{
 data.frame containing signficant whippet diff data and ORF change summaries
