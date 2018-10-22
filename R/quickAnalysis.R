@@ -633,6 +633,7 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
 #' @param BSgenome BSGenome object containing the genome for the species analysed
 #' @param NMD Use NMD predictions? (Note: notNMD must be installed to use this feature)
 #' @param showProgressBar show a progress bar of alternative isoform generation?
+#' @param junctions junctions GRanges object from readLeafcutterJunctions()
 #' @param exportGTF file name to export alternative isoform GTFs (default=NULL)
 #' @param uniprotData data.frame of uniprot sequence information
 #' @param uniprotSeqFeatures data.frame of uniprot sequence features
@@ -663,6 +664,7 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
                                               BSgenome,
                                               NMD = FALSE,
                                               showProgressBar=TRUE,
+                                              junctions=NULL,
                                               exportGTF=NULL,
                                               uniprotData=NULL,
                                               uniprotSeqFeatures=NULL){
@@ -681,7 +683,7 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
         }
 
         altIso <- alternativeIntronUsage(altIntronLocs = significantEvents[significantEvents$clusterID == geneEvents$Var2[1],],
-            exons)
+            exons, junctions=junctions)
         if(showProgressBar){utils::setTxtProgressBar(pb, 1)}
 
         if(nrow(geneEvents) > 1){
@@ -695,7 +697,7 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
                 }
 
                 if(nrow(altIntronLocs) > 1){
-                    altIso1 <- alternativeIntronUsage(altIntronLocs, exons)
+                    altIso1 <- alternativeIntronUsage(altIntronLocs, exons, junctions=junctions)
                     if(!is.null(altIso1)){
                         altIso <- c(altIso, altIso1)
                     }
