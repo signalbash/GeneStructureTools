@@ -48,11 +48,12 @@ findIntronContainingTranscripts <- function(input,
 
     }else if(class(input) == "GRanges"){
         eventCoords <- input
-        if(!("id" %in% names(mcols(eventCoords))) &
-           "exon_id" %in% names(mcols(eventCoords))){
-            eventCoords$id <- eventCoords$exon_id
-        }else{
-            stop("please specify \"id\" or \"exon_id\" in the input")
+        if(!("id" %in% names(mcols(eventCoords)))){
+            if("exon_id" %in% names(mcols(eventCoords))){
+                eventCoords$id <- eventCoords$exon_id
+            }else{
+                stop("please specify \"id\" or \"exon_id\" in the input")
+            }
         }
     }
     # remove any duplicates
@@ -545,4 +546,5 @@ addIntronInTranscript <- function(flankingExons,
 
     return(gtfTranscripts.withIntron)
 }
+
 
