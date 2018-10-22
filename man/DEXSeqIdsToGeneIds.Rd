@@ -34,3 +34,4 @@ Other DEXSeq processing methods: \code{\link{findDEXexonType}},
 \author{
 Beth Signal
 }
+\concept{DEXSeq processing methods}

@@ -5,8 +5,8 @@
 \title{Filter out significant events from a whippet diff comparison}
 \usage{
 filterWhippetEvents(whippetDataSet, probability = 0.95, psiDelta = 0.1,
-  eventTypes = "all", idList = NA, minCounts = NA, medianCounts = NA,
-  sampleTable)
+  eventTypes = "all", idList = NA, minCounts = NA,
+  medianCounts = NA, sampleTable)
 }
 \arguments{
 \item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
@@ -54,3 +54,4 @@ Other whippet data processing: \code{\link{coordinates}},
 \author{
 Beth Signal
 }
+\concept{whippet data processing}

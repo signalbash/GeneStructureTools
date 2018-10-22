@@ -24,4 +24,5 @@ Other leafcutter splicing isoform creation: \code{\link{alternativeIntronUsage}}
 \author{
 Beth Signal
 }
+\concept{leafcutter splicing isoform creation}
 \keyword{internal}

@@ -60,3 +60,4 @@ Other transcript isoform comparisons: \code{\link{orfDiff}},
 \author{
 Beth Signal
 }
+\concept{transcript isoform comparisons}

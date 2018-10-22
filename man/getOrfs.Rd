@@ -5,8 +5,8 @@
 \title{Get open reading frames for transcripts}
 \usage{
 getOrfs(transcripts, BSgenome = NULL, returnLongestOnly = TRUE,
-  allFrames = FALSE, longest = 1, exportFasta = FALSE, fastaFile = NULL,
-  uORFs = FALSE, selectLongest = 1)
+  allFrames = FALSE, longest = 1, exportFasta = FALSE,
+  fastaFile = NULL, uORFs = FALSE, selectLongest = 1)
 }
 \arguments{
 \item{transcripts}{GRanges object with ONLY exon annotations
@@ -54,3 +54,4 @@ Other ORF annotation: \code{\link{getUOrfs}},
 \author{
 Beth Signal
 }
+\concept{ORF annotation}

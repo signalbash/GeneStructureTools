@@ -52,3 +52,4 @@ Other leafcutter splicing isoform creation: \code{\link{leafcutterIntronsToExons
 \author{
 Beth Signal
 }
+\concept{leafcutter splicing isoform creation}

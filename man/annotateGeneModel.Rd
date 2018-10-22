@@ -32,3 +32,4 @@ Other Gviz gene structure visualisation: \code{\link{makeGeneModel}}
 \author{
 Beth Signal
 }
+\concept{Gviz gene structure visualisation}

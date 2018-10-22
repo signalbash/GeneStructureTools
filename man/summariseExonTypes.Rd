@@ -42,3 +42,4 @@ Other DEXSeq processing methods: \code{\link{DEXSeqIdsToGeneIds}},
 \author{
 Beth Signal
 }
+\concept{DEXSeq processing methods}

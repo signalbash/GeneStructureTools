@@ -67,3 +67,4 @@ Other whippet splicing isoform creation: \code{\link{findExonContainingTranscrip
 \author{
 Beth Signal
 }
+\concept{whippet splicing isoform creation}

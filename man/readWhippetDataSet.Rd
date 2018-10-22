@@ -34,3 +34,4 @@ Other whippet data processing: \code{\link{coordinates}},
 \author{
 Beth Signal
 }
+\concept{whippet data processing}

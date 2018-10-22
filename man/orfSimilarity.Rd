@@ -34,3 +34,4 @@ Other ORF annotation: \code{\link{getOrfs}},
 \author{
 Beth Signal
 }
+\concept{ORF annotation}

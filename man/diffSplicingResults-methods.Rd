@@ -38,3 +38,4 @@ Other whippet data processing: \code{\link{coordinates}},
   \code{\link{readWhippetPSIfiles}},
   \code{\link{whippetTranscriptChangeSummary}}
 }
+\concept{whippet data processing}

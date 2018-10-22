@@ -37,3 +37,4 @@ Other whippet data processing: \code{\link{diffSplicingResults}},
   \code{\link{readWhippetPSIfiles}},
   \code{\link{whippetTranscriptChangeSummary}}
 }
+\concept{whippet data processing}

@@ -5,9 +5,9 @@
 \title{Compare open reading frames for whippet differentially spliced events}
 \usage{
 whippetTranscriptChangeSummary(whippetDataSet, gtf.all = NULL, BSgenome,
-  eventTypes = "all", exons = NULL, transcripts = NULL, NMD = FALSE,
-  exportGTF = NULL, rearrangeXY = FALSE, uniprotData = NULL,
-  uniprotSeqFeatures = NULL, selectLongest = 1)
+  eventTypes = "all", exons = NULL, transcripts = NULL,
+  NMD = FALSE, exportGTF = NULL, rearrangeXY = FALSE,
+  uniprotData = NULL, uniprotSeqFeatures = NULL, selectLongest = 1)
 }
 \arguments{
 \item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}}
@@ -65,3 +65,4 @@ Other whippet data processing: \code{\link{coordinates}},
 \author{
 Beth Signal
 }
+\concept{whippet data processing}

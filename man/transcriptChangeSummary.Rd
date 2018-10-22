@@ -77,3 +77,4 @@ Other transcript isoform comparisons: \code{\link{attrChangeAltSpliced}},
 \author{
 Beth Signal
 }
+\concept{transcript isoform comparisons}

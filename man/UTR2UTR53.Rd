@@ -33,3 +33,4 @@ Other gtf manipulation: \code{\link{addBroadTypes}},
 \author{
 Beth Signal
 }
+\concept{gtf manipulation}

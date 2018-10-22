@@ -57,3 +57,4 @@ Other whippet splicing isoform creation: \code{\link{addIntronInTranscript}},
 \author{
 Beth Signal
 }
+\concept{whippet splicing isoform creation}
