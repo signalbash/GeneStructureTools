@@ -450,10 +450,10 @@ getUOrfs <- function(transcripts,
     orfDF$seq_length <- nchar(orfDF$aa_sequence)
     orfDF$seq_length_nt <- nchar(seqCat) + orfDF$frame -1
 
-    uORF.pos <- str_locate_all(orfDF$aa_sequence, "M(\\w+?)*") # need to add one to end
+    uORF.pos <- stringr::str_locate_all(orfDF$aa_sequence, "M(\\w+?)*") # need to add one to end
     uORF.number <- unlist(lapply(uORF.pos, length))/2
-    ids <- unlist(mapply(function(x,y) rep(x,y) ,orfDF$id, uORF.number))
-    frames <- unlist(mapply(function(x,y) rep(x,y) ,orfDF$frame, uORF.number))
+    ids <- as.vector(unlist(mapply(function(x,y) rep(x,y) ,orfDF$id, uORF.number)))
+    frames <- as.vector(unlist(mapply(function(x,y) rep(x,y) ,orfDF$frame, uORF.number)))
     uORF.pos <- do.call("rbind", uORF.pos)
     upstreamORFs <- data.frame(id=ids, frame=frames, start=uORF.pos[,1], stop=uORF.pos[,2]+1)
 
