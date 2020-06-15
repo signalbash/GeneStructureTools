@@ -161,7 +161,7 @@ The first argument is the leafviz output RData file, and the second is the name 
 Rscript leafviz2table.R leafviz.RData per_intron_results.tab
 ```
 
-We have an processed example file available in extdata/leafcutter with a small sample of significant events.
+We have an processed example file available in `extdata/GeneStructureTools` with a small sample of significant events.
 
 ```{r readLeafcutter}
 # read in gtf annotation
@@ -202,7 +202,7 @@ head(whippet_summary)
 
 ```
 
-###leafcutter
+### leafcutter
 ```{r leafcutterSummary}
 leafcutter_summary <- leafcutterTranscriptChangeSummary(intron_results, 
                                                         exons = exons,
@@ -850,8 +850,8 @@ orfChange <- cbind(orfChange, nmdChange[m,-1])
 
 This adds an extra two columns to the orfChange output:
 
-`nmd_prob_bygroup_x`: mininmum NMD probability in first set of transcripts (normalTranscripts)
-`nmd_prob_bygroup_y`: mininmum NMD probability in second set of transcripts (skippedExonTranscripts)
+`nmd_prob_bygroup_x`: minimum NMD probability in first set of transcripts (normalTranscripts)
+`nmd_prob_bygroup_y`: minimum NMD probability in second set of transcripts (skippedExonTranscripts)
 
 
 ```{r plotORFs, eval = TRUE}
