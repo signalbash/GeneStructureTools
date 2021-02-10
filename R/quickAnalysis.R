@@ -163,6 +163,7 @@ filterWhippetEvents <- function(whippetDataSet,
 #' transcriptChangeSummary(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="included_exon"],
 #' ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
 #' BSgenome=g,exons)
+
 transcriptChangeSummary <- function(transcriptsX,
                                     transcriptsY,
                                     BSgenome,
@@ -334,10 +335,11 @@ transcriptChangeSummary <- function(transcriptsX,
                              uniprotData = uniprotData,
                              uniprotSeqFeatures = uniprotSeqFeatures)
     }else{
+
         orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "gene",
-                             compareUTR = TRUE,
-                             uniprotData = uniprotData,
-                             uniprotSeqFeatures = uniprotSeqFeatures)
+                             compareUTR = TRUE)
+                             #uniprotData = uniprotData,
+                             #uniprotSeqFeatures = uniprotSeqFeatures)
     }
 
 
@@ -383,7 +385,45 @@ transcriptChangeSummary <- function(transcriptsX,
     }
     if(!is.null(whippetDataSet)){
         m <- match(orfChange$id, whippetEvents$coord)
-        orfChange <- cbind(whippetEvents[m,], orfChange)
+
+        # for TS/TE events
+        if(all(is.na(m))){
+
+            tidToEvent = data.frame(tid=c(transcriptsX$transcript_id, transcriptsY$transcript_id),
+                                    event_id=c(transcriptsX$whippet_id, transcriptsY$whippet_id))
+            tidToEvent = dplyr::distinct(tidToEvent)
+
+            #m = match(orfChange$id, unlist(lapply(str_split(tidToEvent$tid, "[ ]"), "[[", 2)))
+            m = match(whippetEvents$coord, tidToEvent$event_id)
+            whippetEvents = whippetEvents[which(!is.na(m)),]
+            m = match(whippetEvents$coord, tidToEvent$event_id)
+            whippetEvents$group_id = unlist(lapply(str_split(tidToEvent$tid[m], "[ ]"), "[[", 2))
+
+            m = match(orfChange$id, whippetEvents$group_id)
+            whippetEvents = arrange(whippetEvents, group_id, plyr::desc(probability), plyr::desc(abs(psi_delta)))
+            whippetEvents = whippetEvents[!duplicated(whippetEvents$group_id),]
+
+            orfChange.reverse = orfChange
+            x.cols = which(str_sub(colnames(orfChange), -2,-1) == "_x")
+            y.cols = which(str_sub(colnames(orfChange), -2,-1) == "_y")
+            orfChange.reverse[,(x.cols)] = orfChange[,(y.cols)]
+            orfChange.reverse[,(y.cols)] = orfChange[,(x.cols)]
+
+            whip.up = which(whippetEvents$psi_delta > 0)
+            whip.down = which(whippetEvents$psi_delta < 0)
+
+            m.up = match(orfChange$id, whippetEvents$group_id[whip.up])
+            m.dn = match(orfChange.reverse$id, whippetEvents$group_id[whip.down])
+
+            orfChange.combined = rbind(cbind(whippetEvents[whip.up,][m.up,], orfChange),
+                                       cbind(whippetEvents[whip.down,][m.dn,], orfChange.reverse))
+
+            orfChange = orfChange.combined[which(!is.na(orfChange.combined$gene)),]
+            orfChange$group_id = NULL
+
+        }else{
+            orfChange <- cbind(whippetEvents[m,], orfChange)
+        }
     }
     return(orfChange)
 
@@ -391,6 +431,8 @@ transcriptChangeSummary <- function(transcriptsX,
 
 #' Compare open reading frames for whippet differentially spliced events
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
+#' @param unfilteredWDS unfiltered whippetDataSet generated from \code{readWhippetDataSet()}
+#' Note that this should contain ALL TS/TE events, regardless of significance, as these are used to construct the entire exon range.
 #' @param eventTypes which event type to filter for? default = "all"
 #' @param exons GRanges gtf annotation of exons
 #' @param transcripts GRanges gtf annotation of transcripts
@@ -419,6 +461,7 @@ transcriptChangeSummary <- function(transcriptsX,
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #' whippetTranscriptChangeSummary(wds, gtf.all=gtf,BSgenome = g)
 whippetTranscriptChangeSummary <- function(whippetDataSet,
+                                           unfilteredWDS,
                                            gtf.all=NULL,
                                            BSgenome,
                                            eventTypes = "all",
@@ -480,9 +523,13 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
             uniprotData = uniprotData,
             uniprotSeqFeatures = uniprotSeqFeatures,
             selectLongest = selectLongest)
-        # add to significantEvents.ce
-        m <- match(significantEvents.ce$coord, orfChanges.ce$id)
-        significantEvents.ce <- cbind(significantEvents.ce, orfChanges.ce[m,-1])
+
+        add = which(!(significantEvents.ce$coord %in% orfChanges.ce$id))
+        if(length(add) > 0){
+            significantEvents.ce <- plyr::rbind.fill(orfChanges.ce, significantEvents.ce[add,])
+        }else{
+            significantEvents.ce <- orfChanges.ce
+        }
 
         if(exists("SignificantEvents.withORF")){
             SignificantEvents.withORF <- rbind(SignificantEvents.withORF,
@@ -529,10 +576,13 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
             uniprotData = uniprotData,
             uniprotSeqFeatures = uniprotSeqFeatures,
             selectLongest = selectLongest)
-        # add to significantEvents.ce
-        m <- match(significantEvents.ri$coord, orfChanges.ri$id)
-        significantEvents.ri <- cbind(significantEvents.ri, orfChanges.ri[m,-1])
 
+        add = which(!(significantEvents.ri$coord %in% orfChanges.ri$id))
+        if(length(add) > 0){
+            significantEvents.ri <- plyr::rbind.fill(orfChanges.ri, significantEvents.ri[add,])
+        }else{
+            significantEvents.ri <- orfChanges.ri
+        }
         if(exists("SignificantEvents.withORF")){
             SignificantEvents.withORF <- rbind(SignificantEvents.withORF,
                                                significantEvents.ri)
@@ -542,6 +592,50 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
         if(!is.null(exportGTF)){
             exportedTranscripts <- c(exportedTranscripts,
                                      retainedIntronTranscripts)
+        }
+    }
+    if(any(eventTypes %in% c("TS", "TE")) & any(diffSplicingResults(whippetDataSet)$type %in% c("TE","TS"))){
+
+        events.t <- eventTypes[eventTypes %in% c("TE","TS")]
+        events.significant <- unique(diffSplicingResults(whippetDataSet)$type)
+        events.significant <- events.significant[events.significant %in% events.t]
+
+        for(e in seq_along(events.significant)){
+            event <- events.significant[e]
+            whippetDataSet.t <- filterWhippetEvents(whippetDataSet,
+                                                     probability = 0.99,
+                                                     psiDelta = 0.4,
+                                                     eventTypes=event)
+            significantEvents.t <- diffSplicingResults(whippetDataSet.t)
+
+            transcripts.altT <- alterTranscriptStartEnds(whippetDataSet.t, exons, unfilteredWDS, type=event)
+
+            orfChanges.t <- transcriptChangeSummary(
+                transcriptsX = transcripts.altT[transcripts.altT$set== "tss_upregulated" | transcripts.altT$set== "tes_upregulated"],
+                transcriptsY = transcripts.altT[transcripts.altT$set== "tss_downregulated" | transcripts.altT$set== "tes_downregulated"],
+                BSgenome = BSgenome,NMD = NMD, whippetDataSet=whippetDataSet.t,
+                rearrangeXY = FALSE,
+                uniprotData = uniprotData,
+                uniprotSeqFeatures = uniprotSeqFeatures,
+                selectLongest = selectLongest)
+
+            # add to significantEvents.t
+            # this is different to other events due to how TE/TS coords are given.
+            # only ONE orf chance per 'group' of events, instead of duplicating the orf change in the opposite direction
+            m <- match(significantEvents.t$coord, orfChanges.t$coord)
+            significantEvents.t <-  orfChanges.t[m[which(!is.na(m))],]
+
+
+            if(exists("SignificantEvents.withORF")){
+                SignificantEvents.withORF <- rbind(SignificantEvents.withORF,
+                                                   significantEvents.t)
+            }else{
+                SignificantEvents.withORF <- significantEvents.t
+            }
+            if(!is.null(exportGTF)){
+                exportedTranscripts <- c(exportedTranscripts,
+                                         transcripts.altT)
+            }
         }
     }
     if(any(eventTypes %in% c("AA","AD","AF","AL")) &
@@ -594,9 +688,12 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
                     selectLongest = selectLongest)
 
                 # add to significantEvents
-                m <- match(significantEvents.jnc$coord, orfChanges.jnc$id)
-                significantEvents.jnc <- cbind(significantEvents.jnc,
-                                               orfChanges.jnc[m,-1])
+                add = which(!(significantEvents.jnc$coord %in% orfChanges.jnc$id))
+                if(length(add) > 0){
+                    significantEvents.jnc <- plyr::rbind.fill(orfChanges.jnc, significantEvents.jnc[add,])
+                }else{
+                    significantEvents.jnc <- orfChanges.jnc
+                }
 
                 if(exists("SignificantEvents.withORF")){
                     SignificantEvents.withORF <-
