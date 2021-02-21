@@ -23,7 +23,7 @@
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' #TODO: ADD EXAMPLES
-
+#alterTranscriptStartEnds(whippetDataSet = whippetDataSet.t, exons, unfilteredWDS, type=event)
 alterTranscriptStartEnds <- function(whippetDataSet,
                                      exons,
                                      unfilteredWDS,
@@ -124,9 +124,9 @@ alterTranscriptStartEnds <- function(whippetDataSet,
     allSignifEvents$direction = ifelse(allSignifEvents$psi_delta > 0, "up", "down")
     # add event with next largest psi_delta (in the correct direction)
     allSignifEvents = plyr::arrange(allSignifEvents, psi_delta)
-    signifEvents = rbind(signifEvents, allSignifEvents[match(add.down, allSignifEvents$group_name),])
+    signifEvents = plyr::rbind.fill(signifEvents, allSignifEvents[match(add.down, allSignifEvents$group_name),])
     allSignifEvents = plyr::arrange(allSignifEvents, plyr::desc(psi_delta))
-    signifEvents = rbind(signifEvents, allSignifEvents[match(add.up, allSignifEvents$group_name),])
+    signifEvents = plyr::rbind.fill(signifEvents, allSignifEvents[match(add.up, allSignifEvents$group_name),])
 
     ## find/replace transcription start sites
     # rep overlaps for each up/down TSS
@@ -252,15 +252,11 @@ alterTranscriptStartEnds <- function(whippetDataSet,
 
     }
 
-    gtfTranscripts$whippet_id = ol.combo$coord[match(gtfTranscripts$new_transcript_id, ol.combo$new_transcript_id)]
+    gtfTranscripts$event_id = ol.combo$coord[match(gtfTranscripts$new_transcript_id, ol.combo$new_transcript_id)]
 
     gtfTranscripts$from = NULL
     gtfTranscripts$transcript_id = gtfTranscripts$new_transcript_id
     gtfTranscripts$new_transcript_id = NULL
-
-
-    aggregate(newstart ~ from_id, replaceWith[replaceWith$strand == "+",], function(x) max(as.numeric(x))-min(as.numeric(x)))
-    aggregate(newend ~ from_id, replaceWith[replaceWith$strand == "+",], function(x) max(as.numeric(x))-min(as.numeric(x)))
 
 
     return(gtfTranscripts)
