@@ -79,38 +79,50 @@ filterWhippetEvents <- function(whippetDataSet,
                                                        !is.na(medianCounts))){
         m <- match(diffSplicingResults(whippetDataSet)$unique_name,
                    readCounts(whippetDataSet)$unique_name)
-        n1 <- match(sampleTable$sample[
-            sampleTable$condition %in%
-                unique(diffSplicingResults(whippetDataSet)$condition_1)],
-                    colnames(readCounts(whippetDataSet)))
-        n2 <- match(sampleTable$sample[
-            sampleTable$condition %in%
-                unique(diffSplicingResults(whippetDataSet)$condition_2)],
-                    colnames(readCounts(whippetDataSet)))
 
-        diffSplicingResultsTemp <- diffSplicingResults(whippetDataSet)
+        if(!all(sampleTable$sample %in% colnames(readCounts(whippetDataSet)))){
+            notFound <- sampleTable$sample[which(!(sampleTable$sample %in% colnames(readCounts(whippetDataSet))))]
+            message(paste0("Can't find ", paste0(notFound, collapse = ", "), " in the read counts file column names"))
+            maybe <- colnames(readCounts(whippetDataSet))
+            maybe <- maybe[which(!(tolower(maybe) %in% c('gene', "node", "coord", "strand", "type", "na_count", "unique_name")))]
+            message(paste0("Did you mean to specifiy 'sample' in sampleTable as ", paste0(maybe, collapse = ", "), " ?"))
+            message("skipping filtering based on read counts...")
+        }else{
 
-        diffSplicingResultsTemp$condition_1_counts <-
-            apply(readCounts(whippetDataSet)[m,n1], 1, stats::median)
-        diffSplicingResultsTemp$condition_2_counts <-
-            apply(readCounts(whippetDataSet)[m,n2], 1, stats::median)
+            n1 <- match(sampleTable$sample[
+                sampleTable$condition %in%
+                    unique(diffSplicingResults(whippetDataSet)$condition_1)],
+                        colnames(readCounts(whippetDataSet)))
+            n2 <- match(sampleTable$sample[
+                sampleTable$condition %in%
+                    unique(diffSplicingResults(whippetDataSet)$condition_2)],
+                        colnames(readCounts(whippetDataSet)))
 
-        if(!is.na(minCounts)){
-            keep <- which(apply(readCounts(whippetDataSet)[m,n1], 1,
-                                function(x) all(x > minCounts)) |
-                              apply(readCounts(whippetDataSet)[m,n2], 1,
-                                    function(x) all(x > minCounts)))
-            slot(whippetDataSet, "diffSplicingResults") <-
-                diffSplicingResultsTemp[keep,]
-        }
+            diffSplicingResultsTemp <- diffSplicingResults(whippetDataSet)
 
-        if(!is.na(medianCounts)){
-            keep <- which(diffSplicingResultsTemp$condition_1_counts >=
-                              medianCounts |
-                              diffSplicingResultsTemp$condition_2_counts >=
-                              medianCounts)
-            slot(whippetDataSet, "diffSplicingResults") <-
-                diffSplicingResultsTemp[keep,]
+            diffSplicingResultsTemp$condition_1_counts <-
+                apply(readCounts(whippetDataSet)[m,n1], 1, stats::median)
+            diffSplicingResultsTemp$condition_2_counts <-
+                apply(readCounts(whippetDataSet)[m,n2], 1, stats::median)
+
+
+            if(!is.na(minCounts)){
+                keep <- which(apply(readCounts(whippetDataSet)[m,n1], 1,
+                                    function(x) all(x > minCounts)) |
+                                  apply(readCounts(whippetDataSet)[m,n2], 1,
+                                        function(x) all(x > minCounts)))
+                slot(whippetDataSet, "diffSplicingResults") <-
+                    diffSplicingResultsTemp[keep,]
+            }
+
+            if(!is.na(medianCounts)){
+                keep <- which(diffSplicingResultsTemp$condition_1_counts >=
+                                  medianCounts |
+                                  diffSplicingResultsTemp$condition_2_counts >=
+                                  medianCounts)
+                slot(whippetDataSet, "diffSplicingResults") <-
+                    diffSplicingResultsTemp[keep,]
+            }
         }
 
     }
