@@ -540,7 +540,7 @@ addIntronInTranscript <- function(flankingExons,
 
     }
 
-    gtfTranscripts.withIntron$whippet_id <- unlist(lapply(stringr::str_split(
+    gtfTranscripts.withIntron$event_id <- unlist(lapply(stringr::str_split(
         gtfTranscripts.withIntron$transcript_id, " "),"[[",2))
     gtfTranscripts.withIntron$overlaps <- NULL
 

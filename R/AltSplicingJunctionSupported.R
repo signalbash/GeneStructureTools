@@ -92,8 +92,8 @@ findJunctionPairs <- function(whippetDataSet, type=NA){
     }
 
     if(length(junctionsA) > 0){
-        junctionsA$whippet_id <- olA.from
-        junctionsA$search <- eventCoords$search[match(junctionsA$whippet_id,
+        junctionsA$event_id <- olA.from
+        junctionsA$search <- eventCoords$search[match(junctionsA$event_id,
                                                       eventCoords$id)]
         junctionsA$set <- "A"
     }
@@ -129,8 +129,8 @@ findJunctionPairs <- function(whippetDataSet, type=NA){
                 }
             }
             if(length(junctionsB) > 0 & length(junctionsA) > 0){
-                junctionsB$whippet_id <- olB.from
-                junctionsB$search <- eventCoords$search[match(junctionsB$whippet_id,
+                junctionsB$event_id <- olB.from
+                junctionsB$search <- eventCoords$search[match(junctionsB$event_id,
                                                               eventCoords$id)]
                 junctionsB$set <- "B"
                 junctions <- c(junctionsA, junctionsB)
@@ -151,8 +151,8 @@ findJunctionPairs <- function(whippetDataSet, type=NA){
                 end(junctionsA.left) <- start(junctionsA.left)
                 olC.left <- findOverlaps(junctionsA.left, jncCoords, type="start")
                 junctionsC.left <- jncCoords[olC.left@to]
-                junctionsC.left$whippet_id <-
-                    junctionsA.left$whippet_id[olC.left@from]
+                junctionsC.left$event_id <-
+                    junctionsA.left$event_id[olC.left@from]
                 junctionsC.left$search <- junctionsA.left$search[olC.left@from]
                 ol <- findOverlaps(junctionsC.left, junctionsA, type="equal")
                 if(length(ol) > 0){
@@ -164,8 +164,8 @@ findJunctionPairs <- function(whippetDataSet, type=NA){
                 start(junctionsA.right) <- end(junctionsA.right)
                 olC.right <- findOverlaps(junctionsA.right, jncCoords, type="end")
                 junctionsC.right <- jncCoords[olC.right@to]
-                junctionsC.right$whippet_id <-
-                    junctionsA.right$whippet_id[olC.right@from]
+                junctionsC.right$event_id <-
+                    junctionsA.right$event_id[olC.right@from]
                 junctionsC.right$search <- junctionsA.right$search[olC.right@from]
                 ol <- findOverlaps(junctionsC.right, junctionsA, type="equal")
                 if(length(ol) > 0){
@@ -263,7 +263,7 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
     range <- junctionPairs
 
     eventCoords <- coordinates(whippetDataSet)
-    eventCoords <- eventCoords[eventCoords$id %in% junctionPairs$whippet_id]
+    eventCoords <- eventCoords[eventCoords$id %in% junctionPairs$event_id]
 
 
     if(type %in% c("AA", "AD")){
@@ -408,12 +408,12 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
 
         gtfTranscripts.altered$set <-
             range$set[match(gtfTranscripts.altered$from, range$id)]
-        gtfTranscripts.altered$whippet_id <- junctionPairs$whippet_id[
+        gtfTranscripts.altered$event_id <- junctionPairs$event_id[
             match(gtfTranscripts.altered$from, junctionPairs$id)]
         gtfTranscripts.altered$transcript_id <-
             paste0(gtfTranscripts.altered$transcript_id,
                    "+AS",type,gtfTranscripts.altered$set," ",
-                   gtfTranscripts.altered$whippet_id)
+                   gtfTranscripts.altered$event_id)
         gtfTranscripts.altered$set <- paste0(type, "_",
                                              gtfTranscripts.altered$set)
 
@@ -668,12 +668,12 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
                      'exon_number','from','set'),
                    colnames(mcols(gtfTranscripts.altered)))]
         colnames(mcols(gtfTranscripts.altered))[6] <- "new_event_id"
-        gtfTranscripts.altered$whippet_id <- range$whippet_id[
+        gtfTranscripts.altered$event_id <- range$event_id[
             match(gtfTranscripts.altered$new_event_id, range$id)]
         gtfTranscripts.altered$transcript_id <- paste0(
             gtfTranscripts.altered$transcript_id,
             "+AS",type,gtfTranscripts.altered$set," ",
-            gtfTranscripts.altered$whippet_id)
+            gtfTranscripts.altered$event_id)
         gtfTranscripts.altered$set <- paste0(type, "_",
                                              gtfTranscripts.altered$set)
 
@@ -683,7 +683,7 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
         mcols(gtfTranscripts.altered)[,c('gene_id','transcript_id',
                                          'transcript_type','exon_id',
                                          'exon_number',
-                                         'set','whippet_id')]
+                                         'set','event_id')]
     gtfTranscripts.altered <- removeDuplicateTranscripts(gtfTranscripts.altered)
 
     return(gtfTranscripts.altered)

@@ -4,7 +4,6 @@
 #' @param variableWidth How many nts overhang is allowed for finding matching exons
 #' (default = 0, i.e. complete match)
 #' @param findIntrons Find transcripts where the event occurs within the intron?
-#' @param transcripts GRanges object made from a GTF containing transcript coordinates
 #' (only required if findIntrons=TRUE)
 #' @return data.frame with all overlapping exons
 #' @export
@@ -34,8 +33,7 @@
 findExonContainingTranscripts <- function(input,
                                           exons,
                                           variableWidth=0,
-                                          findIntrons=FALSE,
-                                          transcripts){
+                                          findIntrons=FALSE){
 
     if(class(input) == "whippetDataSet"){
         # check all are CE
@@ -104,6 +102,8 @@ findExonContainingTranscripts <- function(input,
 
 
     if(findIntrons == TRUE){
+        # make a transcripts GRanges
+        transcripts <- transcriptsFromExons(exons)
         # overlaps a transcript (i.e. can overlap an intron)
         overlaps <- GenomicRanges::findOverlaps(eventCoords, transcripts)
         overlapsDF <- as.data.frame(overlaps)
@@ -476,7 +476,7 @@ skipExonInTranscript <- function(skippedExons,
         }
 
     }
-    gtfTranscripts.rm$whippet_id <- unlist(lapply(stringr::str_split(
+    gtfTranscripts.rm$event_id <- unlist(lapply(stringr::str_split(
         gtfTranscripts.rm$transcript_id, " "),"[[",2))
     gtfTranscripts.rm$overlaps <- NULL
     return(gtfTranscripts.rm)
