@@ -90,7 +90,7 @@ skipExonByJunction <- function(input,
         gtfTranscripts.withExon1 <- reorderExonNumbers(gtfTranscripts.withExon1)
 
         gtfTranscripts.withExon2 <- gtfTranscripts.rm
-        gtfTranscripts.withExon2 <- c(gtfTranscripts.withExon2, eventCoords)
+        gtfTranscripts.withExon2 <- c(gtfTranscripts.withExon2, eventCoords.mxe2)
         gtfTranscripts.withExon2 <- reorderExonNumbers(gtfTranscripts.withExon2)
 
         gtfTranscripts.withExon1$set <- "included_exon1"
