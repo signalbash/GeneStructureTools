@@ -703,9 +703,7 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
                                               NMD = FALSE,
                                               showProgressBar=TRUE,
                                               junctions=NULL,
-                                              exportGTF=NULL,
-                                              uniprotData=NULL,
-                                              uniprotSeqFeatures=NULL){
+                                              exportGTF=NULL){
 
 
     geneEvents <- as.data.frame(table(significantEvents$ensemblID,
@@ -722,14 +720,16 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
 
         altIso <- alternativeIntronUsage(altIntronLocs = significantEvents[significantEvents$clusterID == geneEvents$Var2[1],],
             exons, junctions=junctions)
+
         if(showProgressBar){utils::setTxtProgressBar(pb, 1)}
 
         if(nrow(geneEvents) > 1){
             for(i in 2:nrow(geneEvents)){
                 altIntronLocs = significantEvents[
                     significantEvents$clusterID == geneEvents$Var2[i],]
-
-                altIntronLocs$deltapsi <- altIntronLocs$PSI_a - altIntronLocs$PSI_b
+                if(!("deltapsi" %in% colnames(altIntronLocs))){
+                    altIntronLocs$deltapsi <- altIntronLocs$PSI_a - altIntronLocs$PSI_b
+                }
                 if(all(altIntronLocs$deltapsi < 0) | all(altIntronLocs$deltapsi > 0)){
                     altIntronLocs <- altIntronLocs[-(1:nrow(altIntronLocs)),]
                 }
@@ -797,9 +797,7 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
     orfDiff <- transcriptChangeSummary(transcriptsX,
                                        transcriptsY,
                                        BSgenome = BSgenome,
-                                       NMD = NMD,
-                                       uniprotData = uniprotData,
-                                       uniprotSeqFeatures = uniprotSeqFeatures)
+                                       NMD = NMD)
     m <- match(gsub("_","",significantEvents$clusterID), orfDiff$id)
     significantEvents.withORF <- cbind(significantEvents, orfDiff[m,-1])
     #significantEvents.withORF <- significantEvents.withORF[!duplicated(m),]
