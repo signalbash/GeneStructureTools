@@ -563,3 +563,18 @@ getUOrfs <- function(transcripts,
 
     return(upstreamORFs)
 }
+
+manualNMD <- function(orfs){
+    orfs$nmd_class_manual <- "nonsense_mediated_decay"
+    orfs$nmd_class_manual[orfs$orf_length > 50 &
+                               (orfs$min_dist_to_junction_b < 50 |
+                                    orfs$exon_b_from_final == 0)] <-
+        "not_nmd"
+
+    orfs$nmd_prob_manual <- 1
+    orfs$nmd_prob_manual[orfs$nmd_class_manual == "not_nmd"] <- 0
+    return(orfs)
+
+}
+
+
