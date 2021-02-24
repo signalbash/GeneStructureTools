@@ -123,7 +123,7 @@ orfDiff <- function(orfsX,
                                          orfsX$spliced_id[hasLeafIdX])
     orfsX$spliced_id[hasLeafIdX] <-
         stringr::str_sub(gsub("\\-[^]]\\:*", ":",
-                              paste0(orfsX$spliced_id[hasLeafIdX], ":")), 1, -2)
+                              paste0(gsub("[+-][-]","-",orfsX$spliced_id[hasLeafIdX]), ":")), 1, -2)
     hasASidY <- grep("AS", orfsY$id)
     hasLeafIdY <- grep("upre_", orfsY$id)
     orfsY$spliced_id <- orfsY$gene_id
@@ -136,7 +136,7 @@ orfDiff <- function(orfsX,
                                          orfsY$spliced_id[hasLeafIdY])
     orfsY$spliced_id[hasLeafIdY] <-
         stringr::str_sub(gsub("\\-[^]]\\:*", ":",
-                              paste0(orfsY$spliced_id[hasLeafIdY], ":")), 1, -2)
+                              paste0(gsub("[+-][-]","-",orfsY$spliced_id[hasLeafIdY]), ":")), 1, -2)
 
 
     m <- match(paste0(orfsX$spliced_id,"_", orfsX$frame),
@@ -423,10 +423,7 @@ attrChangeAltSpliced <- function(orfsX,
         hasLeafIdX <- grep("dnre_", attributeX$id)
         attributeX$id[hasLeafIdX] <-
             gsub("dnre_","",attributeX$id[hasLeafIdX])
-        attributeX$id[hasLeafIdX] <-
-            stringr::str_sub(gsub("\\-[^]]\\:*", ":",
-                                  paste0(attributeX$id[hasLeafIdX], ":")),
-                             1, -2)
+        attributeX$id[hasLeafIdX] <- stringr::str_sub(gsub("\\-[^]]\\:*", ":",paste0(gsub("[+-][-]","-",attributeX$id[hasLeafIdX]), ":")), 1, -2)
         attributeX$as_group[hasASidX] <-
             unlist(lapply(str_split(attributeX$id[hasASidX], " "), '[[', 2))
 
@@ -444,10 +441,8 @@ attrChangeAltSpliced <- function(orfsX,
         hasLeafIdY <- grep("upre_", attributeY$id)
         attributeY$id[hasLeafIdY] <-
             gsub("upre_","",attributeY$id[hasLeafIdY])
-        attributeY$id[hasLeafIdY] <-
-            stringr::str_sub(gsub("\\-[^]]\\:*", ":",
-                                  paste0(attributeY$id[hasLeafIdY], ":")),
-                             1, -2)
+        attributeY$id[hasLeafIdY] <- stringr::str_sub(gsub("\\-[^]]\\:*", ":",paste0(gsub("[+-][-]","-",attributeY$id[hasLeafIdY]), ":")), 1, -2)
+
         attributeY$as_group[hasASidY] <-
             unlist(lapply(str_split(attributeY$id[hasASidY], " "), '[[', 2))
 
@@ -538,8 +533,9 @@ attrChangeAltSpliced <- function(orfsX,
                     orfsXid <- orfsX$id
                     orfsXid[hasLeafIdX] <-
                         stringr::str_sub(gsub("\\-[^]]\\:*", ":",
-                                              paste0(orfsXid[hasLeafIdX], ":")),
+                                              paste0(gsub("[+-][-]","-",orfsXid[hasLeafIdX]), ":")),
                                          1, -2)
+
                     orfsXid[hasLeafIdX] <- gsub("dnre_","", orfsXid[hasLeafIdX])
 
                     if(compareBy == "gene"){
@@ -567,7 +563,7 @@ attrChangeAltSpliced <- function(orfsX,
                     orfsYid <- orfsY$id
                     orfsYid[hasLeafIdY] <-
                         stringr::str_sub(gsub("\\-[^]]\\:*", ":",
-                                              paste0(orfsYid[hasLeafIdY], ":")),
+                                              paste0(gsub("[+-][-]","-",orfsYid[hasLeafIdY]), ":")),
                                          1, -2)
                     orfsYid[hasLeafIdY] <- gsub("upre_","", orfsYid[hasLeafIdY])
 
