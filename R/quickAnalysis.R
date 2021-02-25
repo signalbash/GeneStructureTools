@@ -663,7 +663,7 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
     }
 }
 #' Compare open reading frames for whippet differentially spliced events
-#' @param significantEvents  data.frame containing information from the
+#' @param leafcutterEvents  data.frame containing information from the
 #' per_intron_results.tab file output from leafcutter.
 #' @param combineGeneEvents combine clusters occuring in the same gene?
 #' Currently not reccomended.
@@ -693,12 +693,13 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
 #' package = "GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
-#' leafcutterTranscriptChangeSummary(significantEvents = leafcutterIntrons,
+#' leafcutterTranscriptChangeSummary(leafcutterEvents = leafcutterIntrons,
 #' exons=exons,BSgenome = g,NMD=FALSE)
 
-leafcutterTranscriptChangeSummary <- function(significantEvents,
-                                              combineGeneEvents=FALSE,
+leafcutterTranscriptChangeSummary <- function(leafcutterEvents,
                                               exons,
+                                              FDR=NA,
+                                              combineGeneEvents=FALSE,
                                               BSgenome,
                                               NMD = FALSE,
                                               showProgressBar=TRUE,
@@ -706,8 +707,63 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
                                               exportGTF=NULL){
 
 
-    geneEvents <- as.data.frame(table(significantEvents$ensemblID,
-                                      significantEvents$clusterID))
+    if(is.na(FDR)){
+        warning("You haven't selected a FDR cutoff...")
+        warning("Using FDR<0.05 to reduce runtime. Change to FDR=1 to model all events.")
+        FDR = 0.05
+    }
+
+    leafcutterEvents = leafcutterEvents[leafcutterEvents$FDR <= 1e-7,]
+    leafcutterEvents$cluster = gsub("[_][+-]", "",leafcutterEvents$cluster)
+    leafcutterEvents$clusterID = gsub("[_][+-]", "",leafcutterEvents$clusterID)
+    leafcutterEvents$intron = gsub("[_][+-]", "",leafcutterEvents$intron)
+
+
+    ## find actual event strand
+    leafcutterGranges = GRanges(seqnames = leafcutterEvents$chr,
+                                ranges = IRanges(start=leafcutterEvents$start, end = leafcutterEvents$end),
+                                strand="*", clusterID=leafcutterEvents$clusterID, genes = leafcutterEvents$genes)
+
+    introns = exonsToIntrons(exons)
+    ol.intron = as.data.frame(findOverlaps.junc(leafcutterGranges, introns))
+    ol.intron$leaf = leafcutterGranges$clusterID[ol.intron$queryHits]
+    ol.intron$leaf_gene = leafcutterGranges$genes[ol.intron$queryHits]
+    ol.intron$ref = introns$gene_id[ol.intron$subjectHits]
+    ol.intron$ref_name = introns$gene_name[ol.intron$subjectHits]
+    ol.intron$ref_strand = as.character(strand(introns))[ol.intron$subjectHits]
+
+    ol.intron = ol.intron[!(duplicated(paste0(ol.intron$leaf, ol.intron$ref))),]
+    ol.intron$leaf_strand = str_sub(ol.intron$leaf, -1,-1)
+
+    refStrand = aggregate(ref_strand ~ leaf, ol.intron, function(x) paste0(sort(unique(x)), collapse = ","))
+    refStrand = refStrand[(refStrand$ref_strand %in% c("+", "-")),]
+
+    noJuncMatch = unique(leafcutterGranges$clusterID)[which(!(unique(leafcutterGranges$clusterID) %in% refStrand$leaf))]
+
+    if(length(noJuncMatch) > 0){
+        leafcutterGranges.nomatch = leafcutterGranges[leafcutterGranges$clusterID %in% noJuncMatch]
+        ol.intron = as.data.frame(findOverlaps(leafcutterGranges.nomatch, introns))
+        ol.intron$leaf = leafcutterGranges.nomatch$clusterID[ol.intron$queryHits]
+        ol.intron$leaf_gene = leafcutterGranges.nomatch$genes[ol.intron$queryHits]
+        ol.intron$ref = introns$gene_id[ol.intron$subjectHits]
+        ol.intron$ref_name = introns$gene_name[ol.intron$subjectHits]
+        ol.intron$ref_strand = as.character(strand(introns))[ol.intron$subjectHits]
+
+        ol.intron = ol.intron[!(duplicated(paste0(ol.intron$queryHits, ol.intron$ref))),]
+        ol.intron = as.data.frame(table(ol.intron$leaf, ol.intron$ref, ol.intron$ref_strand))
+        ol.intron = ol.intron[ol.intron$Freq > 0,]
+        ol.intron = arrange(ol.intron, Var1, desc(Freq))
+        ol.intron = ol.intron[!duplicated(ol.intron$Var1), c(1,3)]
+        refStrandv2 = ol.intron
+        colnames(refStrandv2) = colnames(refStrand)
+        refStrand = rbind(refStrandv2,refStrand)
+    }
+
+    leafcutterEvents$strand = refStrand$ref_strand[match(leafcutterEvents$clusterID, refStrandv2$leaf)]
+    ## DONE
+
+    geneEvents <- as.data.frame(table(leafcutterEvents$clusterID))
+
     geneEvents <- geneEvents[geneEvents$Freq!=0,]
 
     if(combineGeneEvents == FALSE){
@@ -718,18 +774,15 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
                                         style = 3)
         }
 
-        altIso <- alternativeIntronUsage(altIntronLocs = significantEvents[significantEvents$clusterID == geneEvents$Var2[1],],
+        altIso <- alternativeIntronUsage(altIntronLocs = leafcutterEvents[leafcutterEvents$clusterID == geneEvents$Var1[1],],
             exons, junctions=junctions)
 
         if(showProgressBar){utils::setTxtProgressBar(pb, 1)}
 
         if(nrow(geneEvents) > 1){
             for(i in 2:nrow(geneEvents)){
-                altIntronLocs = significantEvents[
-                    significantEvents$clusterID == geneEvents$Var2[i],]
-                if(!("deltapsi" %in% colnames(altIntronLocs))){
-                    altIntronLocs$deltapsi <- altIntronLocs$PSI_a - altIntronLocs$PSI_b
-                }
+                altIntronLocs = leafcutterEvents[
+                    leafcutterEvents$clusterID == geneEvents$Var1[i],]
                 if(all(altIntronLocs$deltapsi < 0) | all(altIntronLocs$deltapsi > 0)){
                     altIntronLocs <- altIntronLocs[-(1:nrow(altIntronLocs)),]
                 }
@@ -754,14 +807,14 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
         for(j in seq_along(genes)){
             clusters <- geneEvents[geneEvents$Var1==genes[j],]
 
-            altIso <- alternativeIntronUsage(significantEvents[
-                significantEvents$clusterID == clusters$Var2[1],],
+            altIso <- alternativeIntronUsage(leafcutterEvents[
+                leafcutterEvents$clusterID == clusters$Var2[1],],
                 exons)
 
             if(nrow(clusters) > 1){
                 for(i in 2:nrow(clusters)){
-                    altIntronLocs = significantEvents[
-                        significantEvents$clusterID == clusters$Var2[i],]
+                    altIntronLocs = leafcutterEvents[
+                        leafcutterEvents$clusterID == clusters$Var2[i],]
                     altIntronLocs <- altIntronLocs[altIntronLocs$verdict==
                                                        "annotated",]
                     if(nrow(altIntronLocs) > 1){
@@ -798,11 +851,11 @@ leafcutterTranscriptChangeSummary <- function(significantEvents,
                                        transcriptsY,
                                        BSgenome = BSgenome,
                                        NMD = NMD)
-    m <- match(gsub("_","",significantEvents$clusterID), orfDiff$id)
-    significantEvents.withORF <- cbind(significantEvents, orfDiff[m,-1])
-    #significantEvents.withORF <- significantEvents.withORF[!duplicated(m),]
+    m <- match(gsub("_","",leafcutterEvents$clusterID), orfDiff$id)
+    leafcutterEvents.withORF <- cbind(leafcutterEvents, orfDiff[m,-1])
+    #leafcutterEvents.withORF <- leafcutterEvents.withORF[!duplicated(m),]
 
-    return(significantEvents.withORF)
+    return(leafcutterEvents.withORF)
 }
 ################ FUCK
 
@@ -836,12 +889,6 @@ readRMATS = function(directory,
                                    cbind(diffSplice.A5SS, event = "A5SS"))
 
 }
-rMATSEvents = readRMATS(directory = "~/Projects/UTAS/IsoformModeller/rmats_00_48/", type="JC")
-
-rMATSEvents.signif = rMATSEvents[rMATSEvents$FDR < 0.01 & abs(rMATSEvents$IncLevelDifference) > 0.2,]
-table(rMATSEvents.signif$event)
-
-
 whippetTranscriptChangeSummary <- function(whippetDataSet,
                                            unfilteredWDS,
                                            gtf.all=NULL,

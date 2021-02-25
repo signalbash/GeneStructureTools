@@ -231,28 +231,15 @@ removeSameExon <- function(exons){
 #' unique(altIsoforms1396plus1395$transcript_id)
 alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRUE, junctions=NULL){
 
-    altIntronLocs$deltapsi <- altIntronLocs$PSI_a - altIntronLocs$PSI_b
-
     clusterGRanges <-
         GRanges(seqnames=S4Vectors::Rle(altIntronLocs$chr),
                 ranges=IRanges::IRanges(start=as.numeric(altIntronLocs$start),
                                         end=as.numeric(altIntronLocs$end)),
-                strand="*",
+                strand=altIntronLocs$strand,
                 id=altIntronLocs$clusterID,
                 direction=ifelse(altIntronLocs$deltapsi >0, "+","-"),
                 verdict=altIntronLocs$verdict,
                 deltapsi=altIntronLocs$deltapsi)
-
-
-    m <- match(altIntronLocs$gene, exons$gene_name)
-    if(all(!is.na(m))){
-    strand(clusterGRanges)[which(!is.na(m))] <-
-        strand(exons)[m][which(!is.na(m))]
-    }else{
-        near <- nearest(clusterGRanges, exons)
-        strand(clusterGRanges) <-
-            strand(exons)[near]
-    }
 
     # maximum spanning region
     clusterGRanges.max <- clusterGRanges
