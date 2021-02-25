@@ -164,3 +164,68 @@ transcriptsFromExons = function(exons){
     return(transcripts)
 
 }
+
+exonsToIntrons = function(exons){
+
+    exons_df = as.data.frame(exons)
+    exons_df = exons_df[,c("seqnames", "start", "end", "strand", "transcript_id", "exon_number")]
+    exons_df = arrange(exons_df, transcript_id, start, end)
+
+    exons_df$intron_start = exons_df$end
+    exons_df$intron_end = lead(exons_df$start)
+
+    rm = which(lead(exons_df$transcript_id) != exons_df$transcript_id)
+
+    exons_df = exons_df[-rm,]
+    exons_df = exons_df[-nrow(exons_df),]
+    min_exon_n = aggregate(exon_number ~ transcript_id, exons_df, min)
+    if(!all(min_exon_n$exon_number == 1)){
+        exons_df$exon_number[exons_df$strand=="-"] = as.numeric(exons_df$exon_number[exons_df$strand=="-"]) - 1
+    }
+
+    introns = GRanges(seqnames = exons_df$seqnames, ranges=IRanges(start=exons_df$intron_start, end = exons_df$intron_end),
+                      strand = exons_df$strand,transcript_id = exons_df$transcript_id, exon_number = exons_df$exon_number)
+    m = match(introns$transcript_id, exons$transcript_id)
+    introns$gene_id = exons$gene_id[m]
+    introns$gene_name = exons$gene_name[m]
+
+    mcols(introns) = DataFrame(left_join(as.data.frame(mcols(introns)),  as.data.frame(mcols(exons))))
+    return(introns)
+
+}
+
+findOverlaps.junc = function(query, subject, type = c("start", "end")){
+
+    if(any(type == "start")){
+
+        query.start = query
+        end(query.start) = start(query.start)
+        subject.start = subject
+        end(subject.start) = start(subject.start)
+
+        ol.start = findOverlaps(query.start, subject.start, type="equal")
+    }
+
+    if(any(type == "end")){
+
+        query.end = query
+        start(query.end) = end(query.end)
+        subject.end = subject
+        start(subject.end) = end(subject.end)
+
+        ol.end = findOverlaps(query.end, subject.end, type="equal")
+    }
+
+    if("start" %in% type & "end" %in% type){
+        ol.df = rbind(as.data.frame(ol.start), as.data.frame(ol.end))
+        ol.df = arrange(ol.df, queryHits, subjectHits)
+        ol = Hits(from=ol.df$queryHits, to=ol.df$subjectHits, nLnode = nLnode(ol.start), nRnode = nRnode(ol.start), sort.by.query = T)
+    }else if("start" %in% type){
+        ol = ol.start
+    }else if("end" %in% type){
+        ol = ol.end
+    }
+
+    return(ol)
+
+}
