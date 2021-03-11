@@ -170,3 +170,38 @@ setMethod("extractEvent", signature="rmatsDataSet",
           }
 )
 
+#' Class irfDataSet
+#'
+#' Class \code{irfDataSet} contains information read from irf output files
+#'
+#' @name irfDataSet-class
+#' @rdname irfDataSet-class
+#' @exportClass irfDataSet
+#' @imports methods
+setClass("irfDataSet", slots=list(coordinates="GRanges",
+                                  IRFresults="data.frame",
+                                  filePath="character"))
+
+#' Method irfResults
+#' @name irfResults
+#' @rdname irfResults-methods
+#' @exportMethod irfResults
+#' @imports methods
+#' @param irfDataSet irfDataSet generated from \code{readIRFDataSet()}
+setGeneric("irfResults",
+           def=function(irfDataSet)
+           {
+               standardGeneric("irfResults")
+           }
+)
+
+#' @rdname irfResults-methods
+#' @return differential splicing results data.frame
+#' (originally from a whippet .diff file)
+#' @family irf data processing
+setMethod("irfResults", signature="irfDataSet",
+          definition=function(irfDataSet)
+          {
+              return(slot(irfDataSet, "IRFresults"))
+          }
+)
