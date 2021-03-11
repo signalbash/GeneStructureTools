@@ -55,15 +55,15 @@ orfDiff <- function(orfsX,
                     uniprotData=NULL,
                     uniprotSeqFeatures=NULL){
     if(filterNMD == TRUE){
-        orfChanges <- attrChangeAltSpliced(orfsX[which(orfsX$nmd_prob < 0.5),],
-                                           orfsY[which(orfsY$nmd_prob < 0.5),],
+        orfChanges <- attrChangeAltSpliced(orfsX[which(orfsX$nmd_prob_manual < 0.5),],
+                                           orfsY[which(orfsY$nmd_prob_manual < 0.5),],
                                            attribute = "orf_length",
                                            compareBy = compareBy,
                                            useMax = TRUE,
                                            compareUTR = compareUTR)
 
         orfChanges.filterx <- attrChangeAltSpliced(
-            orfsX[which(orfsX$nmd_prob < 0.5),],
+            orfsX[which(orfsX$nmd_prob_manual < 0.5),],
             orfsY,
             attribute = "orf_length",
             compareBy = compareBy,
@@ -71,7 +71,7 @@ orfDiff <- function(orfsX,
             compareUTR = compareUTR)
         orfChanges.filtery <-
             attrChangeAltSpliced(orfsX,
-                                 orfsY[which(orfsY$nmd_prob < 0.5),],
+                                 orfsY[which(orfsY$nmd_prob_manual < 0.5),],
                                  attribute = "orf_length",
                                  compareBy = compareBy,
                                  useMax = TRUE,
