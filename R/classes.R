@@ -128,11 +128,13 @@ setMethod("coordinates", signature="whippetDataSet",
           }
 )
 
-#' Class rmatsDataSet
+
+
+##' Class rmatsDataSet
 #'
 #' Class \code{rmatsDataSet} contains information read from rmats output files
 #'
-#' @name rmatsDataSett-class
+#' @name rmatsDataSet-class
 #' @rdname rmatsDataSet-class
 #' @exportClass rmatsDataSet
 #' @imports methods
@@ -143,26 +145,28 @@ setClass("rmatsDataSet", slots=list(SE="data.frame",
                                     A5SS="data.frame",
                                     filePath="character"))
 
-#' Method rmatsResults
-#' @name rmatsResults
-#' @rdname rmatsResults-methods
-#' @exportMethod rmatsResults
+#' Method extractEvent
+#' @name extractEvent
+#' @rdname extractEvent-methods
+#' @exportMethod extractEvent
 #' @imports methods
-#' @param rmatsDataSet rmatsDataSet generated from \code{readrmatsDataSet()}
+#' @param rmatsDataSet rmatsDataSet generated from \code{readRmatsDataSet()}
 #' @param eventType specific event type to extract results for. Must be SE/MXE/RI/A5SS/A3SS.
-setGeneric("rmatsResults",
+setGeneric("extractEvent",
            def=function(rmatsDataSet, eventType)
            {
-               standardGeneric("rmatsResults")
+               standardGeneric("extractEvent")
            }
 )
 
-#' @rdname rmatsResults-methods
+#' @rdname extractEvent-methods
 #' @return differential splicing results data.frame
+#' (originally from a whippet .diff file)
 #' @family rmats data processing
-setMethod("rmatsResults", signature="rmatsDataSet",
+setMethod("extractEvent", signature="rmatsDataSet",
           definition=function(rmatsDataSet, eventType)
           {
               return(slot(rmatsDataSet, eventType))
           }
 )
+
