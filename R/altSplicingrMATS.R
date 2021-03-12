@@ -1,16 +1,25 @@
-skipExonByJunction <- function(input,
-                              eventType="CE",
-                              exons){
+#' Generate isoforms with and without a skipped exon (or mututally exclusive exons)
+#' @param rmatsEvents data.frame containing RMATS SE or MXE events
+#' @param eventType type of event to skip exons for. "SE" - skipped exons, or "MXE" - mutally exclusive exons
+#' @param exons reference exons GRanges
+#' @return data.frame with overlapping event/exons
+#' @export
+#' @import methods
+#' @family rmats data processing
+#' @author Beth Signal
+skipExonByJunction <- function(rmatsEvents,
+                               eventType="SE",
+                               exons){
 
     # find reference exons that overlap the up/downstream exons (junctions)
     # check for MXE
-    granges.upstream <- GRanges(seqnames=input$chr, ranges=IRanges(start=input$upstreamES+1, end=input$upstreamEE), strand=input$strand,
-                               id=input$ID, event_id=make.unique(paste0(input$exonStart_0base+1, "-", input$exonEnd), sep="_"))
-    granges.downstream <- GRanges(seqnames=input$chr, ranges=IRanges(start=input$downstreamES+1, end=input$downstreamEE), strand=input$strand,
-                                 id=input$ID, event_id=make.unique(paste0(input$exonStart_0base+1, "-", input$exonEnd), sep="_"))
+    granges.upstream <- GRanges(seqnames=rmatsEvents$chr, ranges=IRanges(start=rmatsEvents$upstreamES+1, end=rmatsEvents$upstreamEE), strand=rmatsEvents$strand,
+                               id=rmatsEvents$ID, event_id=make.unique(paste0(rmatsEvents$exonStart_0base+1, "-", rmatsEvents$exonEnd), sep="_"))
+    granges.downstream <- GRanges(seqnames=rmatsEvents$chr, ranges=IRanges(start=rmatsEvents$downstreamES+1, end=rmatsEvents$downstreamEE), strand=rmatsEvents$strand,
+                                 id=rmatsEvents$ID, event_id=make.unique(paste0(rmatsEvents$exonStart_0base+1, "-", rmatsEvents$exonEnd), sep="_"))
     if(eventType == "MXE"){
-        granges.upstream$event_id <- make.unique(paste0(input$`1stExonStart_0base`+1, "-", input$`2ndExonEnd`), sep="_")
-        granges.downstream$event_id <- make.unique(paste0(input$`1stExonStart_0base`+1, "-", input$`2ndExonEnd`), sep="_")
+        granges.upstream$event_id <- make.unique(paste0(rmatsEvents$`1stExonStart_0base`+1, "-", rmatsEvents$`2ndExonEnd`), sep="_")
+        granges.downstream$event_id <- make.unique(paste0(rmatsEvents$`1stExonStart_0base`+1, "-", rmatsEvents$`2ndExonEnd`), sep="_")
     }
 
     seqlevelsStyle(granges.upstream) <- seqlevelsStyle(exons)[1]
@@ -47,13 +56,13 @@ skipExonByJunction <- function(input,
     #### Add in alternatively skipped exons
 
     # make eventCoords
-    # check that input has upstream/downstream EE/ES
+    # check that rmatsEvents has upstream/downstream EE/ES
     if(eventType == "CE" | eventType =="SE"){
-        eventCoords <- GRanges(seqnames=input$chr, ranges=IRanges(start=input$exonStart_0base+1, end=input$exonEnd), strand=input$strand, id=input$ID)
+        eventCoords <- GRanges(seqnames=rmatsEvents$chr, ranges=IRanges(start=rmatsEvents$exonStart_0base+1, end=rmatsEvents$exonEnd), strand=rmatsEvents$strand, id=rmatsEvents$ID)
         seqlevelsStyle(eventCoords) <- seqlevelsStyle(exons)[1]
     }else if(eventType == "MXE"){
-        eventCoords <- GRanges(seqnames=input$chr, ranges=IRanges(start=input$`1stExonStart_0base`+1, end=input$`1stExonEnd`), strand=input$strand, id=input$ID)
-        eventCoords.mxe2 <- GRanges(seqnames=input$chr, ranges=IRanges(start=input$`2ndExonStart_0base`+1, end=input$`2ndExonEnd`), strand=input$strand, id=input$ID)
+        eventCoords <- GRanges(seqnames=rmatsEvents$chr, ranges=IRanges(start=rmatsEvents$`1stExonStart_0base`+1, end=rmatsEvents$`1stExonEnd`), strand=rmatsEvents$strand, id=rmatsEvents$ID)
+        eventCoords.mxe2 <- GRanges(seqnames=rmatsEvents$chr, ranges=IRanges(start=rmatsEvents$`2ndExonStart_0base`+1, end=rmatsEvents$`2ndExonEnd`), strand=rmatsEvents$strand, id=rmatsEvents$ID)
         seqlevelsStyle(eventCoords) <- seqlevelsStyle(exons)[1]
         seqlevelsStyle(eventCoords.mxe2) <- seqlevelsStyle(exons)[1]
     }
@@ -149,43 +158,55 @@ skipExonByJunction <- function(input,
     return(altSplicedTranscripts)
 }
 
-# shortcut function: uses the same base function for intron retention
-altIntronRmats <- function(input, exons){
-    events.RI <- GRanges(seqnames=input$chr, ranges=IRanges(start=input$upstreamEE+1,
-                                                               end=input$downstreamES),
-                        strand=input$strand)
+#' Generate isoforms with and without a retain intron from RMATS data
+#' shortcut function: uses the same base function for intron retention
+#' @param rmatsEvents data.frame containing RMATS RI events
+#' @param exons reference exons GRanges
+#' @return GRanges retained and skipped intron isoforms
+#' @export
+#' @import methods
+#' @family rmats data processing
+#' @author Beth Signal
+#'
+altIntronRmats <- function(rmatsEvents, exons){
+    events.RI <- GRanges(seqnames=rmatsEvents$chr, ranges=IRanges(start=rmatsEvents$upstreamEE+1,
+                                                               end=rmatsEvents$downstreamES),
+                        strand=rmatsEvents$strand)
     seqlevelsStyle(events.RI) <- seqlevelsStyle(exons)[1]
-    events.RI$id <- paste0(input$ID, "-",
+    events.RI$id <- paste0(rmatsEvents$ID, "-",
                           as.character(seqnames(events.RI)),":",
-                          input$riExonStart_0base+1, "-", input$riExonEnd)
+                          rmatsEvents$riExonStart_0base+1, "-", rmatsEvents$riExonEnd)
 
-    exons.intronRetention <- findIntronContainingTranscripts(input=events.RI, exons, match="exact")
+    exons.intronRetention <- findIntronContainingTranscripts(rmatsEvents=events.RI, exons, match="exact")
     isoforms.RI <- addIntronInTranscript(flankingExons=exons.intronRetention, exons, match="retain")
 
     return(isoforms.RI)
 
 }
 
-
-altSpliceSiteRmats <- function(input,
+#' Generate isoforms with different 5' or 3' splice site usage from RMATS data
+#' @param rmatsEvents data.frame containing RMATS RI events
+#' @param exons reference exons GRanges
+#' @param eventType type of event. "A5E" - alternative 5', or "A3E" - alternative 3'
+#' @return GRanges of isoforms
+#' @export
+#' @import methods
+#' @family rmats data processing
+#' @author Beth Signal
+altSpliceSiteRmats <- function(rmatsEvents,
                               exons,
                               eventType){
 
-    ### Find exons by surrounding junctions
-    #diffSpliced <- A5E.MATS %>% filter(FDR < 1e-6 & abs(IncLevelDifference) > 0.4)
-    #eventType<-"A5E"
-    #input <- diffSpliced
-
     # new event id.. .to match whippet
     if(eventType %in% c("A5E", "A5SS")){
-        input$event_range <- ifelse(input$strand == "+", paste0(input$shortEE, "-", input$longExonEnd), paste0(input$longExonStart_0base+1, "-", input$shortES+1))
+        rmatsEvents$event_range <- ifelse(rmatsEvents$strand == "+", paste0(rmatsEvents$shortEE, "-", rmatsEvents$longExonEnd), paste0(rmatsEvents$longExonStart_0base+1, "-", rmatsEvents$shortES+1))
     }else{
-        input$event_range <- ifelse(input$strand == "-", paste0(input$shortEE, "-", input$longExonEnd), paste0(input$longExonStart_0base+1, "-", input$shortES+1))
+        rmatsEvents$event_range <- ifelse(rmatsEvents$strand == "-", paste0(rmatsEvents$shortEE, "-", rmatsEvents$longExonEnd), paste0(rmatsEvents$longExonStart_0base+1, "-", rmatsEvents$shortES+1))
     }
 
-    granges.longExon <- GRanges(seqnames=input$chr, ranges=IRanges(start=input$longExonStart_0base+1, end=input$longExonEnd), strand=input$strand, id=input$ID, event_id=input$event_range)
-    granges.shortExon <- GRanges(seqnames=input$chr, ranges=IRanges(start=input$shortES+1, end=input$shortEE), strand=input$strand, id=input$ID, event_id=input$event_range)
-    granges.flankingExon <- GRanges(seqnames=input$chr, ranges=IRanges(start=input$flankingES+1, end=input$flankingEE), strand=input$strand, id=input$ID, event_id=input$event_range)
+    granges.longExon <- GRanges(seqnames=rmatsEvents$chr, ranges=IRanges(start=rmatsEvents$longExonStart_0base+1, end=rmatsEvents$longExonEnd), strand=rmatsEvents$strand, id=rmatsEvents$ID, event_id=rmatsEvents$event_range)
+    granges.shortExon <- GRanges(seqnames=rmatsEvents$chr, ranges=IRanges(start=rmatsEvents$shortES+1, end=rmatsEvents$shortEE), strand=rmatsEvents$strand, id=rmatsEvents$ID, event_id=rmatsEvents$event_range)
+    granges.flankingExon <- GRanges(seqnames=rmatsEvents$chr, ranges=IRanges(start=rmatsEvents$flankingES+1, end=rmatsEvents$flankingEE), strand=rmatsEvents$strand, id=rmatsEvents$ID, event_id=rmatsEvents$event_range)
 
 
     seqlevelsStyle(granges.longExon) <- seqlevelsStyle(exons)[1]
