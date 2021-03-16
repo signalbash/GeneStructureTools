@@ -177,8 +177,8 @@ altIntronRmats <- function(rmatsEvents, exons){
                           as.character(seqnames(events.RI)),":",
                           rmatsEvents$riExonStart_0base+1, "-", rmatsEvents$riExonEnd)
 
-    exons.intronRetention <- findIntronContainingTranscripts(rmatsEvents=events.RI, exons, match="exact")
-    isoforms.RI <- addIntronInTranscript(flankingExons=exons.intronRetention, exons, match="retain")
+    exons.intronRetention <- findIntronContainingTranscripts(events.RI, exons, match="exact")
+    isoforms.RI <- addIntronInTranscript(exons.intronRetention, exons, match="retain")
 
     return(isoforms.RI)
 
