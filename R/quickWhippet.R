@@ -154,13 +154,13 @@ filterWhippetEvents <- function(whippetDataSet,
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet/",
 #' package = "GeneStructureTools")
-#' wds <- readWhippetDataSet(whippetFiles)
-#' wds <- filterWhippetEvents(wds)
+#' wds.all <- readWhippetDataSet(whippetFiles)
+#' wds.signif <- filterWhippetEvents(wds.all)
 #'
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
 #' package = "GeneStructureTools"))
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
-#' whippetTranscriptChangeSummary(wds, gtf.all=gtf,BSgenome = g)
+#' whippetTranscriptChangeSummary(whippetDataSet = wds.signif, unfilteredWDS=wds.all ,BSgenome = g)
 #'
 #'
 whippetTranscriptChangeSummary <- function(whippetDataSet,
@@ -287,8 +287,6 @@ whippetTranscriptChangeSummary <- function(whippetDataSet,
         for(e in seq_along(events.significant)){
             event <- events.significant[e]
             whippetDataSet.t <- filterWhippetEvents(whippetDataSet,
-                                                    probability = 0.99,
-                                                    psiDelta = 0.4,
                                                     eventTypes=event)
             significantEvents.t <- diffSplicingResults(whippetDataSet.t)
 
