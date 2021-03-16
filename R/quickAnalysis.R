@@ -21,6 +21,7 @@
 #' @import GenomicRanges
 #' @importFrom rtracklayer import
 #' @importFrom utils installed.packages
+#' @importFrom dplyr distinct
 #' @family transcript isoform comparisons
 #' @author Beth Signal
 #' @examples

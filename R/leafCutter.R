@@ -592,7 +592,7 @@ alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRU
 #'
 #' @param exons GRanges object with exons
 #' @return GRanges object with transcripts
-#' @export
+#' @keywords internal
 #' @import GenomicRanges
 #' @importFrom IRanges IRanges
 #' @importFrom rtracklayer import

@@ -243,6 +243,8 @@ transcriptsFromExons = function(exons){
 #' @return reference introns GRanges
 #' @export
 #' @import methods
+#' @importFrom dplyr lead
+#' @importFrom dplyr left_join
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
@@ -253,9 +255,9 @@ exonsToIntrons = function(exons){
     exons_df <- arrange(exons_df, transcript_id, start, end)
 
     exons_df$intron_start <- exons_df$end
-    exons_df$intron_end <- lead(exons_df$start)
+    exons_df$intron_end <- dplyr::lead(exons_df$start)
 
-    rm <- which(lead(exons_df$transcript_id) != exons_df$transcript_id)
+    rm <- which(dplyr::lead(exons_df$transcript_id) != exons_df$transcript_id)
 
     exons_df <- exons_df[-rm,]
     exons_df <- exons_df[-nrow(exons_df),]
@@ -270,7 +272,7 @@ exonsToIntrons = function(exons){
     introns$gene_id <- exons$gene_id[m]
     introns$gene_name <- exons$gene_name[m]
 
-    mcols(introns) <- DataFrame(left_join(as.data.frame(mcols(introns)),  as.data.frame(mcols(exons))))
+    mcols(introns) <- DataFrame(dplyr::left_join(as.data.frame(mcols(introns)),  as.data.frame(mcols(exons))))
     return(introns)
 
 }

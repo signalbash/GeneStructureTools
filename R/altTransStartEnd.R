@@ -10,6 +10,8 @@
 #' @export
 #' @importFrom rtracklayer import
 #' @import GenomicRanges
+#' @importFrom dplyr inner_join
+#' @importFrom dplyr left_join
 #' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
