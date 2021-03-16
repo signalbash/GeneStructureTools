@@ -7,6 +7,7 @@
 #' @param exons GRanges object made from a GTF with ONLY exon annotations
 #' (no gene, transcript, CDS etc.)
 #' @param replaceInternalExons replace any internal transcript exons with inferred exons from multi-intron leafcutter intron sets?
+#' @param junctions GRanges object from readLeafcutterJunctions()
 #' @return GRanges object with all potential alternative isoforms skipping the
 #' introns specified in either the upregulated or downregulated locations
 #' @export
@@ -16,24 +17,18 @@
 #' @family leafcutter splicing isoform creation
 #' @author Beth Signal
 #' @examples
-#' leafcutterFiles <- list.files(system.file("extdata","leafcutter/",
+#' leafcutterFiles <- list.files(system.file("extdata","leaf_small/",
 #' package = "GeneStructureTools"), full.names = TRUE)
 #' leafcutterIntrons <- read.delim(leafcutterFiles[grep("intron_results",
 #' leafcutterFiles)],stringsAsFactors=FALSE)
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf",
 #' package = "GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' # single cluster processing
-#' cluster <- leafcutterIntrons[leafcutterIntrons$cluster=="chr16:clu_1396",]
-#' altIsoforms1396 <- alternativeIntronUsage(cluster, exons)
-#' unique(altIsoforms1396$transcript_id)
-#' cluster <- leafcutterIntrons[leafcutterIntrons$cluster=="chr16:clu_1395",]
-#' altIsoforms1395 <- alternativeIntronUsage(cluster, exons)
-#' unique(altIsoforms1395$transcript_id)
-#' # multiple cluster processing
-#' altIsoforms1396plus1395 <- alternativeIntronUsage(cluster, c(exons, altIsoforms1396))
-#' unique(altIsoforms1396plus1395$transcript_id)
-alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRUE, junctions=NULL){
+#' cluster <- leafcutterIntrons[leafcutterIntrons$cluster=="chr17:clu_20975_+",]
+#' altIsoforms20975<- alternativeIntronUsage(cluster, exons)
+#' unique(altIsoforms20975$transcript_id)
+alternativeIntronUsage <- function(altIntronLocs, exons, replaceInternalExons=TRUE, junctions=NULL){
 
     clusterGRanges <-
         GRanges(seqnames=S4Vectors::Rle(altIntronLocs$chr),
@@ -392,44 +387,6 @@ alternativeIntronUsage <- function(altIntronLocs, exons,replaceInternalExons=TRU
     }
 }
 
-#' Convert an exon-level gtf annotation to a transcript-level gtf annotation
-#'
-#' @param exons GRanges object with exons
-#' @return GRanges object with transcripts
-#' @keywords internal
-#' @import GenomicRanges
-#' @importFrom IRanges IRanges
-#' @importFrom rtracklayer import
-#' @family gtf manipulation
-#' @author Beth Signal
-#' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-#' package = "GeneStructureTools"))
-#' exons <- gtf[gtf$type=="exon" & gtf$transcript_id=="ENSMUST00000126412.1"]
-#' exons
-#' transcripts <- exonsToTranscripts(exons)
-#' transcripts
-exonsToTranscripts <- function(exons){
-    transcripts <- exons[!duplicated(exons$transcript_id)]
-
-    minStarts <- aggregate(start ~ transcript_id,
-                           as.data.frame(exons), min)
-    maxEnds <- aggregate(end ~ transcript_id,
-                         as.data.frame(exons), max)
-
-
-    ranges(transcripts) <-
-        IRanges::IRanges(start=as.numeric(
-            minStarts$start[match(transcripts$transcript_id,
-                                  minStarts$transcript_id)]),
-            end=as.numeric(
-                maxEnds$end[match(transcripts$transcript_id,
-                                  maxEnds$transcript_id)]))
-
-
-    return(transcripts)
-}
-
 #' Create junction ranges from STAR junction files
 #'
 #' Create junction ranges from STAR junction files
@@ -441,6 +398,12 @@ exonsToTranscripts <- function(exons){
 #' @import GenomicRanges
 #' @family leafcutter splicing isoform creation
 #' @author Beth Signal
+#'
+#'
+#' junction_files <- list.files(system.file("extdata","leaf_small",
+#' package = "GeneStructureTools"), full.names = TRUE, pattern=".junc")
+#' leaf_junc = readLeafcutterJunctions(junction_files)
+
 readLeafcutterJunctions <- function(junctionFiles, minReads=10){
 
     junctions.all <- NULL

@@ -747,3 +747,34 @@ makeNewLeafExonsUnanchored <- function(altIntronLocs, junctionRanges, clusterExo
     clusterExons <- c(clusterExons.alt3, clusterExons.alt5)
     return(clusterExons)
 }
+#' Convert an exon-level gtf annotation to a transcript-level gtf annotation
+#'
+#' @param exons GRanges object with exons
+#' @return GRanges object with transcripts
+#' @keywords internal
+#' @import GenomicRanges
+#' @importFrom IRanges IRanges
+#' @importFrom rtracklayer import
+#' @family gtf manipulation
+#' @author Beth Signal
+#' @examples
+exonsToTranscripts <- function(exons){
+    transcripts <- exons[!duplicated(exons$transcript_id)]
+
+    minStarts <- aggregate(start ~ transcript_id,
+                           as.data.frame(exons), min)
+    maxEnds <- aggregate(end ~ transcript_id,
+                         as.data.frame(exons), max)
+
+
+    ranges(transcripts) <-
+        IRanges::IRanges(start=as.numeric(
+            minStarts$start[match(transcripts$transcript_id,
+                                  minStarts$transcript_id)]),
+            end=as.numeric(
+                maxEnds$end[match(transcripts$transcript_id,
+                                  maxEnds$transcript_id)]))
+
+
+    return(transcripts)
+}
