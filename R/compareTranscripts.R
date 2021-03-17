@@ -18,26 +18,17 @@
 #' @author Beth Signal
 #' @examples
 #'
-#' whippetFiles <- system.file("extdata","whippet/",
-#' package = "GeneStructureTools")
-#' wds <- readWhippetDataSet(whippetFiles)
-#' wds <- filterWhippetEvents(wds)
-#'
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-#' package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
-#' transcripts <- gtf[gtf$type=="transcript"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
-#' orfsProteinCoding <- getOrfs(exons[exons$gene_name=="Prex2" &
-#' exons$transcript_type=="protein_coding"], BSgenome = g)
-#' orfsNMD <- getOrfs(exons[exons$gene_name=="Prex2" &
-#' exons$transcript_type=="nonsense_mediated_decay"], BSgenome = g)
-#' orfDiff(orfsProteinCoding, orfsNMD, filterNMD=FALSE)
+#' whippetFiles <- system.file("extdata","whippet_small/",
+#' package = "GeneStructureTools")
+#' wds <- readWhippetDataSet(whippetFiles)
 #'
 #' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
 #' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
-#' variableWidth=0, findIntrons=FALSE, transcripts)
+#' variableWidth=0, findIntrons=FALSE)
 #' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
 #'
 #' orfsSkipped <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
@@ -45,6 +36,12 @@
 #' orfsIncluded <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="included_exon"],
 #' BSgenome = g)
 #' orfDiff(orfsSkipped, orfsIncluded, filterNMD=FALSE)
+#'
+#' orfsProteinCoding <- getOrfs(exons[exons$gene_name=="Tmem208" &
+#' exons$transcript_type=="protein_coding"], BSgenome = g)
+#' orfsNMD <- getOrfs(exons[exons$gene_name=="Tmem208" &
+#' exons$transcript_type=="nonsense_mediated_decay"], BSgenome = g)
+#' orfDiff(orfsProteinCoding, orfsNMD, filterNMD=FALSE)
 orfDiff <- function(orfsX,
                     orfsY,
                     filterNMD = TRUE,
@@ -318,6 +315,7 @@ compareContains <- function(contains){
 
     return(c(uXvals, uYvals))
 }
+
 #' Evaluate changes to ORFs caused by alternative splicing
 #' @param seqFeatures data.frame of uniprot sequence features
 #' @param orf vector with open reading frame (amino acid sequence) string and gene_id
@@ -360,20 +358,17 @@ featureTypes <- function(seqFeatures, orf){
 #' @family transcript isoform comparisons
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet/",
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' exons <- gtf[gtf$type=="exon"]
+#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+#'
+#' whippetFiles <- system.file("extdata","whippet_small/",
 #' package = "GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
-#' wds <- filterWhippetEvents(wds)
-#'
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-#' package = "GeneStructureTools"))
-#' exons <- gtf[gtf$type=="exon"]
-#' transcripts <- gtf[gtf$type=="transcript"]
-#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
 #' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
-#' variableWidth=0, findIntrons=FALSE, transcripts)
+#' variableWidth=0, findIntrons=FALSE)
 #' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
 #'
 #' orfsSkipped <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],

@@ -12,27 +12,27 @@
 #' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet/",
-#' package = "GeneStructureTools")
-#' wds <- readWhippetDataSet(whippetFiles)
-#' wds <- filterWhippetEvents(wds)
 #'
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-#' package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+#'
+#' whippetFiles <- system.file("extdata","whippet_small/",
+#' package = "GeneStructureTools")
+#' wds <- readWhippetDataSet(whippetFiles)
 #'
 #' wds.intronRetention <- filterWhippetEvents(wds, eventTypes="RI")
 #' exons.intronRetention <- findIntronContainingTranscripts(input=wds.intronRetention, exons)
 #'
-#' exonsFromGRanges <- exons[exons$transcript_id=="ENSMUST00000139129.8" &
-#' exons$exon_number %in% c(3,4)]
+#' exonsFromGRanges <- exons[exons$transcript_id=="ENSMUST00000040372.13" &
+#' exons$exon_number %in% c(2,3)]
 #' intronFromGRanges <- exonsFromGRanges[1]
 #' GenomicRanges::start(intronFromGRanges) <-
-#' GenomicRanges::end(exonsFromGRanges[exonsFromGRanges$exon_number==3])
+#' GenomicRanges::end(exonsFromGRanges[exonsFromGRanges$exon_number==2])
 #' GenomicRanges::end(intronFromGRanges) <-
-#' GenomicRanges::start(exonsFromGRanges[exonsFromGRanges$exon_number==4])
+#' GenomicRanges::start(exonsFromGRanges[exonsFromGRanges$exon_number==3])
 #' exons.intronRetention <- findIntronContainingTranscripts(intronFromGRanges, exons)
+#'
 findIntronContainingTranscripts <- function(input,
                                             exons,
                                             match="exact"){
@@ -239,31 +239,28 @@ findIntronContainingTranscripts <- function(input,
 #' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet/",
-#' package = "GeneStructureTools")
-#' wds <- readWhippetDataSet(whippetFiles)
-#' wds <- filterWhippetEvents(wds)
 #'
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-#' package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
+#' whippetFiles <- system.file("extdata","whippet_small/",
+#' package = "GeneStructureTools")
+#' wds <- readWhippetDataSet(whippetFiles)
+#'
 #' wds.intronRetention <- filterWhippetEvents(wds, eventTypes="RI")
-#' exons.intronRetention <- findIntronContainingTranscripts(wds.intronRetention, exons)
+#' exons.intronRetention <- findIntronContainingTranscripts(input=wds.intronRetention, exons)
 #' IntronRetentionTranscripts <- addIntronInTranscript(exons.intronRetention, exons,
 #' whippetDataSet=wds.intronRetention)
 #'
-#' exonsFromGRanges <- exons[exons$transcript_id=="ENSMUST00000139129.8" &
-#' exons$exon_number %in% c(3,4)]
+#' exonsFromGRanges <- exons[exons$transcript_id=="ENSMUST00000040372.13" &
+#' exons$exon_number %in% c(2,3)]
 #' intronFromGRanges <- exonsFromGRanges[1]
 #' GenomicRanges::start(intronFromGRanges) <-
-#' GenomicRanges::end(exonsFromGRanges[exonsFromGRanges$exon_number==3])
+#' GenomicRanges::end(exonsFromGRanges[exonsFromGRanges$exon_number==2])
 #' GenomicRanges::end(intronFromGRanges) <-
-#' GenomicRanges::start(exonsFromGRanges[exonsFromGRanges$exon_number==4])
+#' GenomicRanges::start(exonsFromGRanges[exonsFromGRanges$exon_number==3])
 #' exons.intronRetention <- findIntronContainingTranscripts(intronFromGRanges, exons)
-#'
-#' IntronRetentionTranscripts <-
 #' addIntronInTranscript(exons.intronRetention, exons, match="retain")
 addIntronInTranscript <- function(flankingExons,
                                   exons,

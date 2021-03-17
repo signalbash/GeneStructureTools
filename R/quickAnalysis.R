@@ -23,20 +23,18 @@
 #' @family transcript isoform comparisons
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet/",
-#' package = "GeneStructureTools")
-#' wds <- readWhippetDataSet(whippetFiles)
-#' wds <- filterWhippetEvents(wds)
-#'
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-#' package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+#'
+#' whippetFiles <- system.file("extdata","whippet_small/",
+#' package = "GeneStructureTools")
+#' wds <- readWhippetDataSet(whippetFiles)
 #'
 #' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
 #'
 #' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
-#' variableWidth=0, findIntrons=FALSE, transcripts)
+#' variableWidth=0, findIntrons=FALSE)
 #' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
 #' transcriptChangeSummary(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="included_exon"],
 #' ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
@@ -282,7 +280,7 @@ transcriptChangeSummary <- function(transcriptsX,
                 m = match(whippetEvents$coord, tidToEvent$event_id)
                 whippetEvents$group_id = unlist(lapply(str_split(tidToEvent$tid[m], "[ ]"), "[[", 2))
 
-                whippetEvents = arrange(whippetEvents, .data$group_id, plyr::desc(.data$probability), plyr::desc(abs(.data$psi_delta)))
+                whippetEvents = arrange(whippetEvents, group_id, plyr::desc(probability), plyr::desc(abs(psi_delta)))
                 whippetEvents = whippetEvents[!duplicated(whippetEvents$group_id),]
 
                 m = match(orfChange$id, whippetEvents$group_id)
@@ -388,7 +386,7 @@ leafcutterTranscriptChangeSummary <- function(leafcutterEvents,
         ol.intron = ol.intron[!(duplicated(paste0(ol.intron$queryHits, ol.intron$ref))),]
         ol.intron = as.data.frame(table(ol.intron$leaf, ol.intron$ref, ol.intron$ref_strand))
         ol.intron = ol.intron[ol.intron$Freq > 0,]
-        ol.intron = arrange(ol.intron, .data$Var1, desc(.data$Freq))
+        ol.intron = arrange(ol.intron, Var1, desc(Freq))
         ol.intron = ol.intron[!duplicated(ol.intron$Var1), c(1,3)]
         refStrandv2 = ol.intron
         colnames(refStrandv2) = colnames(refStrand)

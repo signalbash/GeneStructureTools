@@ -16,17 +16,16 @@
 #' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet/",
-#' package = "GeneStructureTools")
-#' wds <- readWhippetDataSet(whippetFiles)
-#'
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-#' package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
-#' #TODO: ADD EXAMPLES
-#alterTranscriptStartEnds(whippetDataSet = whippetDataSet.t, exons, unfilteredWDS, type=event)
+#' whippetFiles <- system.file("extdata","whippet_small/",
+#' package = "GeneStructureTools")
+#' wds <- readWhippetDataSet(whippetFiles)
+#'
+#' wds.TS <- filterWhippetEvents(wds, eventTypes="TS", psiDelta=0.1, probability = 0.95)
+#' alterTranscriptStartEnds(whippetDataSet = wds.TS, exons = exons, unfilteredWDS=wds, type="TS")
 alterTranscriptStartEnds <- function(whippetDataSet,
                                      exons,
                                      unfilteredWDS,
@@ -126,9 +125,9 @@ alterTranscriptStartEnds <- function(whippetDataSet,
     allSignifEvents = allSignifEvents[which(!(allSignifEvents$coord %in% signifEvents$coord)),]
     allSignifEvents$direction = ifelse(allSignifEvents$psi_delta > 0, "up", "down")
     # add event with next largest psi_delta (in the correct direction)
-    allSignifEvents = plyr::arrange(allSignifEvents, .data$psi_delta)
+    allSignifEvents = plyr::arrange(allSignifEvents, psi_delta)
     signifEvents = plyr::rbind.fill(signifEvents, allSignifEvents[match(add.down, allSignifEvents$group_name),])
-    allSignifEvents = plyr::arrange(allSignifEvents, plyr::desc(.data$psi_delta))
+    allSignifEvents = plyr::arrange(allSignifEvents, plyr::desc(psi_delta))
     signifEvents = plyr::rbind.fill(signifEvents, allSignifEvents[match(add.up, allSignifEvents$group_name),])
 
     ## find/replace transcription start sites

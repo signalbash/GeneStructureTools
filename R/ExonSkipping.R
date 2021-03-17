@@ -12,24 +12,21 @@
 #' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet/",
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' exons <- gtf[gtf$type=="exon"]
+#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+#'
+#' whippetFiles <- system.file("extdata","whippet_small/",
 #' package = "GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
-#' wds <- filterWhippetEvents(wds)
-#'
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-#' package = "GeneStructureTools"))
-#' exons <- gtf[gtf$type=="exon"]
-#' transcripts <- gtf[gtf$type=="transcript"]
-#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
 #' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
-#' variableWidth=0, findIntrons=FALSE, transcripts)
+#' variableWidth=0, findIntrons=FALSE)
 #'
-#' exonFromGRanges <- exons[exons$exon_id == "ENSMUSE00001271768.1"]
+#' exonFromGRanges <- exons[exons$exon_id == "ENSMUSE00000414559.2"]
 #' exons.exonSkip <- findExonContainingTranscripts(exonFromGRanges, exons,
-#' variableWidth=0, findIntrons=FALSE, transcripts)
+#' variableWidth=0, findIntrons=FALSE)
 findExonContainingTranscripts <- function(input,
                                           exons,
                                           variableWidth=0,
@@ -220,25 +217,22 @@ findExonContainingTranscripts <- function(input,
 #' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet/",
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' exons <- gtf[gtf$type=="exon"]
+#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+#'
+#' whippetFiles <- system.file("extdata","whippet_small/",
 #' package = "GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
-#' wds <- filterWhippetEvents(wds)
-#'
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-#' package = "GeneStructureTools"))
-#' exons <- gtf[gtf$type=="exon"]
-#' transcripts <- gtf[gtf$type=="transcript"]
-#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
 #' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
-#' variableWidth=0, findIntrons=FALSE, transcripts)
+#' variableWidth=0, findIntrons=FALSE)
 #' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
-#'
-#' exonFromGRanges <- exons[exons$exon_id == "ENSMUSE00001271768.1"]
+
+#' exonFromGRanges <- exons[exons$exon_id == "ENSMUSE00000414559.2"]
 #' exons.exonSkip <- findExonContainingTranscripts(exonFromGRanges, exons,
-#' variableWidth=0, findIntrons=FALSE, transcripts)
+#' variableWidth=0, findIntrons=FALSE)
 #' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, match="skip")
 skipExonInTranscript <- function(skippedExons,
                                  exons,
@@ -493,8 +487,7 @@ skipExonInTranscript <- function(skippedExons,
 #' @family gtf manipulation
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-#' package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' exons <- reorderExonNumbers(exons)
 reorderExonNumbers <- function(exons, by="transcript_id"){

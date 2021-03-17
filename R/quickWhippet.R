@@ -16,10 +16,10 @@
 #' @family whippet data processing
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet/",
+#' whippetFiles <- system.file("extdata","whippet_small/",
 #' package = "GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
-#' wds <- filterWhippetEvents(wds)
+#' wds.signif <- filterWhippetEvents(wds)
 filterWhippetEvents <- function(whippetDataSet,
                                 probability = 0.95,
                                 psiDelta = 0.1,
@@ -147,15 +147,15 @@ filterWhippetEvents <- function(whippetDataSet,
 #' @family whippet data processing
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet/",
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' exons <- gtf[gtf$type=="exon"]
+#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+#'
+#' whippetFiles <- system.file("extdata","whippet_small/",
 #' package = "GeneStructureTools")
 #' wds.all <- readWhippetDataSet(whippetFiles)
 #' wds.signif <- filterWhippetEvents(wds.all)
-#'
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-#' package = "GeneStructureTools"))
-#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
-#' whippetTranscriptChangeSummary(whippetDataSet = wds.signif, unfilteredWDS=wds.all ,BSgenome = g)
+#' whippetTranscriptChangeSummary(whippetDataSet = wds.signif, unfilteredWDS=wds.all, exons=exons, BSgenome = g)
 #'
 #'
 whippetTranscriptChangeSummary <- function(whippetDataSet,
