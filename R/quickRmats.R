@@ -7,21 +7,21 @@
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
-#' rmats_directory <- system.file("extdata","rmats_small/", package = "GeneStructureTools")
-#' rds <- readRmatsDataSet(rmats_directory)
-readRmatsDataSet <- function(directory, type="JC"){
+#' rmats_filePath <- system.file("extdata","rmats_small/", package = "GeneStructureTools")
+#' rds <- readRmatsDataSet(rmats_filePath)
+readRmatsDataSet <- function(filePath, type="JC"){
 
-    rds <- new("rmatsDataSet", filePath=directory)
+    rds <- new("rmatsDataSet", filePath=filePath)
     rmatsEventTypes <- c("SE", "MXE", "RI", "A3SS", "A5SS")
     rmatsFileList <- paste0(rmatsEventTypes, ".MATS.", type, ".txt")
-    allFiles <- list.files(directory, full.names=TRUE)
+    allFiles <- list.files(filePath, full.names=TRUE)
     diffSpliceFiles <- allFiles[basename(allFiles) %in% rmatsFileList]
 
     if(length(diffSpliceFiles) == 0){
-        stop("no rmats files in the specified directory")
+        stop("no rmats files in the specified filePath")
     }else if(!all(rmatsFileList %in% basename(diffSpliceFiles))){
         for(f in rmatsFileList[which(!(rmatsFileList %in% basename(diffSpliceFiles)))]){
-            message(paste0("Can't find file: ", f, " please check if this file should exist in the directory"))
+            message(paste0("Can't find file: ", f, " please check if this file should exist in the filePath"))
         }
     }
 
@@ -124,7 +124,6 @@ filterRmatsEvents <- function(rmatsDataSet,
 #' @param rmatsDataSet rmatsDataSet generated from \code{readRmatsDataSet()}
 #' @param eventTypes which event type to filter for? default="all"
 #' @param exons GRanges gtf annotation of exons
-#' @param gtf.all GRanges gtf annotation (can be used instead of specifying exons and transcripts)
 #' @param BSgenome BSGenome object containing the genome for the species analysed
 #' @param NMD Use NMD predictions? (Note: notNMD must be installed to use this feature)
 #' @param exportGTF file name to export alternative isoform GTFs (default=NULL)

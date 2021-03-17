@@ -5,16 +5,13 @@
 #' all transcripts to be compared for the 'alternative' condition
 #' @param BSgenome BSGenome object containing the genome for the species analysed
 #' @param exons GRanges object made from a GTF containing exon coordinates
-#' @param NMD Use NMD predictions? (Note: notNMD must be installed to use this feature)
-#' @param NMDModel Use the "base" or "lncRNA" NMD model?
+#' @param NMD Use NMD predictions? This will filter ORFs out of comparisons if they are likely to be NMD-targeted.
 #' @param orfPrediction What type of orf predictions to return. default= \code{"allFrames"}
 #' @param compareBy compare isoforms by 'transcript' id, or aggregate all changes occuring by 'gene'
 #' @param compareToGene compare alternative isoforms to all normal gene isoforms (in exons)
 #' @param dataSet whippetDataSet/rMATSDataSet generated from \code{readWhippetDataSet() or \code{readrMATSDataSet()}}
 #' Use if PSI directionality should be taken into account when comparing isoforms.
 #' @param exportGTF file name to export alternative isoform GTFs (default=\code{NULL})
-#' @param uniprotData data.frame of uniprot sequence information
-#' @param uniprotSeqFeatures data.frame of uniprot sequence features
 #' @param selectLongest passed to getORFs()
 #' @return Summarised ORF changes data.frame
 #' @export
@@ -307,16 +304,15 @@ transcriptChangeSummary <- function(transcriptsX,
 #' Compare open reading frames for whippet differentially spliced events
 #' @param leafcutterEvents  data.frame containing information from the
 #' per_intron_results.tab file output from leafcutter.
+#' @param exons GRanges gtf annotation of exons
+#' @param FDR minimum FDR for events. If left as default (NA), will use FDR=0.05. To stop FDR filtering set to 1.
 #' @param combineGeneEvents combine clusters occuring in the same gene?
 #' Currently not reccomended.
-#' @param exons GRanges gtf annotation of exons
 #' @param BSgenome BSGenome object containing the genome for the species analysed
 #' @param NMD Use NMD predictions? (Note: notNMD must be installed to use this feature)
 #' @param showProgressBar show a progress bar of alternative isoform generation?
 #' @param junctions junctions GRanges object from readLeafcutterJunctions()
 #' @param exportGTF file name to export alternative isoform GTFs (default=NULL)
-#' @param uniprotData data.frame of uniprot sequence information
-#' @param uniprotSeqFeatures data.frame of uniprot sequence features
 #' @return data.frame containing signficant whippet diff data and ORF change summaries
 #' @export
 #' @importFrom utils setTxtProgressBar

@@ -8,11 +8,11 @@
 #' @examples
 #' irfinder_file <- list.files(system.file("extdata","irf_small/", package = "GeneStructureTools"), full.names=TRUE)
 #' irf <- readIrfDataSet(irfinder_file)
-readIrfDataSet <- function(path){
+readIrfDataSet <- function(filePath){
 
-    irf <- new("irfDataSet", filePath=path)
+    irf <- new("irfDataSet", filePath=filePath)
 
-    irfResultsFile <- fread(path, data.table=F)
+    irfResultsFile <- fread(filePath, data.table=F)
     irfResultsFile$FDR <- p.adjust(irfResultsFile$`p-diff`, "fdr")
     irfResultsFile$psi_diff <- irfResultsFile$`A-IRratio` - irfResultsFile$`B-IRratio`
     irfResultsFile$gene_name <- unlist(lapply(str_split(irfResultsFile$`Intron-GeneName/GeneID`, "/"), "[[", 1))
@@ -82,7 +82,6 @@ filterIrfEvents <- function(irfDataSet,
 
 #' Compare open reading frames for RMATS differentially spliced events
 #' @param irfDataSet irfsDataSet generated from \code{readIrfDataSet()}
-#' @param eventTypes which event type to filter for? default="all"
 #' @param exons GRanges gtf annotation of exons
 #' @param BSgenome BSGenome object containing the genome for the species analysed
 #' @param intronMatchType what type of matching to perform in findIntronContainingTranscripts?

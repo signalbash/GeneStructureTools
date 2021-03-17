@@ -136,14 +136,9 @@ filterWhippetEvents <- function(whippetDataSet,
 #' Note that this should contain ALL TS/TE events, regardless of significance, as these are used to construct the entire exon range.
 #' @param eventTypes which event type to filter for? default = "all"
 #' @param exons GRanges gtf annotation of exons
-#' @param transcripts GRanges gtf annotation of transcripts
-#' @param gtf.all GRanges gtf annotation (can be used instead of specifying exons and transcripts)
 #' @param BSgenome BSGenome object containing the genome for the species analysed
 #' @param NMD Use NMD predictions? (Note: notNMD must be installed to use this feature)
 #' @param exportGTF file name to export alternative isoform GTFs (default=NULL)
-#' @param rearrangeXY should PSI directionality be taken into account?
-#' @param uniprotData data.frame of uniprot sequence information
-#' @param uniprotSeqFeatures data.frame of uniprot sequence features
 #' @param selectLongest passed to getORFs()
 #' @return data.frame containing signficant whippet diff data and ORF change summaries
 #' @export
