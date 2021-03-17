@@ -1,12 +1,26 @@
-#' Generate isoforms with and without a skipped exon (or mututally exclusive exons)
+#' Generate isoforms with and without a skipped exon (or mutually exclusive exons)
 #' @param rmatsEvents data.frame containing RMATS SE or MXE events
-#' @param eventType type of event to skip exons for. "SE" - skipped exons, or "MXE" - mutally exclusive exons
+#' @param eventType type of event to skip exons for. "SE" - skipped exons, or "MXE" - mutually exclusive exons
 #' @param exons reference exons GRanges
 #' @return data.frame with overlapping event/exons
 #' @export
 #' @import methods
 #' @family rmats data processing
 #' @author Beth Signal
+#' @examples
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' exons <- gtf[gtf$type=="exon"]
+#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+#'
+#' rmats_directory <- system.file("extdata","rmats_small/", package = "GeneStructureTools")
+#' rds <- readRmatsDataSet(rmats_directory)
+#' rds.filtered <- filterRmatsEvents(rds, FDR=0.01, psiDelta=0.1)
+#'
+#' diffSplice.MXE<- extractEvent(rds.filtered, "MXE")
+#' isoforms.MXE <- skipExonByJunction(diffSplice.MXE, eventType="MXE", exons=exons)
+#'
+#' diffSplice.SE<- extractEvent(rds.filtered, "SE")
+#' isoforms.SE <- skipExonByJunction(diffSplice.SE, eventType="SE", exons=exons)
 skipExonByJunction <- function(rmatsEvents,
                                eventType="SE",
                                exons){
@@ -167,7 +181,17 @@ skipExonByJunction <- function(rmatsEvents,
 #' @import methods
 #' @family rmats data processing
 #' @author Beth Signal
+#' @examples
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' exons <- gtf[gtf$type=="exon"]
+#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
+#' rmats_directory <- system.file("extdata","rmats_small/", package = "GeneStructureTools")
+#' rds <- readRmatsDataSet(rmats_directory)
+#' rds.filtered <- filterRmatsEvents(rds, FDR=0.01, psiDelta=0.1)
+#'
+#' diffSplice.RI<- extractEvent(rds.filtered, "RI")
+#' isoforms.RI <- altIntronRmats(diffSplice.RI, exons=exons)
 altIntronRmats <- function(rmatsEvents, exons){
     events.RI <- GRanges(seqnames=rmatsEvents$chr, ranges=IRanges(start=rmatsEvents$upstreamEE+1,
                                                                end=rmatsEvents$downstreamES),
@@ -193,6 +217,20 @@ altIntronRmats <- function(rmatsEvents, exons){
 #' @import methods
 #' @family rmats data processing
 #' @author Beth Signal
+#' @examples
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' exons <- gtf[gtf$type=="exon"]
+#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+#'
+#' rmats_directory <- system.file("extdata","rmats_small/", package = "GeneStructureTools")
+#' rds <- readRmatsDataSet(rmats_directory)
+#' rds.filtered <- filterRmatsEvents(rds, FDR=0.01, psiDelta=0.1)
+#'
+#' diffSplice.A5E<- extractEvent(rds.filtered, "A5SS")
+#' isoforms.A5E <- altSpliceSiteRmats(diffSplice.A5E, exons=exons, eventType="A5SS")
+#'
+#' diffSplice.A3E<- extractEvent(rds.filtered, "A3SS")
+#' isoforms.A3E <- altSpliceSiteRmats(diffSplice.A3E, exons=exons, eventType="A3SS")
 altSpliceSiteRmats <- function(rmatsEvents,
                               exons,
                               eventType){
