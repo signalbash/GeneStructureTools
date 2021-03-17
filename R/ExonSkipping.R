@@ -103,7 +103,7 @@ findExonContainingTranscripts <- function(input,
 
     if(findIntrons == TRUE){
         # make a transcripts GRanges
-        transcripts <- transcriptsFromExons(exons)
+        transcripts <- exonsToTranscripts(exons)
         # overlaps a transcript (i.e. can overlap an intron)
         overlaps <- GenomicRanges::findOverlaps(eventCoords, transcripts)
         overlapsDF <- as.data.frame(overlaps)

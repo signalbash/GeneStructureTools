@@ -71,35 +71,6 @@ exonsToIntrons = function(exons){
 #' @author Beth Signal
 #' @examples
 exonsToTranscripts <- function(exons){
-    transcripts <- exons[!duplicated(exons$transcript_id)]
-
-    minStarts <- aggregate(start ~ transcript_id,
-                           as.data.frame(exons), min)
-    maxEnds <- aggregate(end ~ transcript_id,
-                         as.data.frame(exons), max)
-
-
-    ranges(transcripts) <-
-        IRanges::IRanges(start=as.numeric(
-            minStarts$start[match(transcripts$transcript_id,
-                                  minStarts$transcript_id)]),
-            end=as.numeric(
-                maxEnds$end[match(transcripts$transcript_id,
-                                  maxEnds$transcript_id)]))
-
-
-    return(transcripts)
-}
-
-#' Generate a transcripts Granges from an exons Granges
-#' @param exons reference exons GRanges
-#' @return reference transcripts GRanges
-#' @export
-#' @import methods
-#' @family rmats data processing
-#' @author Beth Signal
-#' @examples
-transcriptsFromExons = function(exons){
 
     exons.df <- data.frame(t_id=exons$transcript_id, start=start(exons), end=end(exons))
     txRanges <- aggregate(start ~ t_id, exons.df, min)
@@ -115,4 +86,6 @@ transcriptsFromExons = function(exons){
 
     return(transcripts)
 
+
+    return(transcripts)
 }
