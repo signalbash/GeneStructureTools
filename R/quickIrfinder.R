@@ -13,7 +13,7 @@ readIrfDataSet <- function(filePath){
     irf <- new("irfDataSet", filePath=filePath)
 
     irfResultsFile <- fread(filePath, data.table=F)
-    irfResultsFile$FDR <- p.adjust(irfResultsFile$`p-diff`, "fdr")
+    irfResultsFile$FDR <- stats::p.adjust(irfResultsFile$`p-diff`, "fdr")
     irfResultsFile$psi_diff <- irfResultsFile$`A-IRratio` - irfResultsFile$`B-IRratio`
     irfResultsFile$gene_name <- unlist(lapply(str_split(irfResultsFile$`Intron-GeneName/GeneID`, "/"), "[[", 1))
     irfResultsFile$gene_id <- unlist(lapply(str_split(irfResultsFile$`Intron-GeneName/GeneID`, "/"), "[[", 2))
@@ -112,14 +112,14 @@ irfTranscriptChangeSummary <- function(irfDataSet,
 
     irfCoords <- slot(irfDataSet, "coordinates")
 
-    seqlevelsStyle(irfCoords) <- seqlevelsStyle(exons)[1]
+    GenomeInfoDb::seqlevelsStyle(irfCoords) <- GenomeInfoDb::seqlevelsStyle(exons)[1]
 
     exons.intronRetention <- findIntronContainingTranscripts(input=irfCoords, exons, match=intronMatchType )
     isoforms.RI <- addIntronInTranscript(flankingExons=exons.intronRetention, exons, match="retain")
 
     orfChanges.RI <- transcriptChangeSummary(isoforms.RI[isoforms.RI$set == "retained_intron"],
                                              isoforms.RI[isoforms.RI$set == "spliced_intron"],
-                                             BSgenome=g, NMD=NMD, exportGTF=NULL, dataSet=irfDataSet)
+                                             BSgenome=BSgenome, NMD=NMD, exportGTF=NULL, dataSet=irfDataSet)
 
     irf.signif <- irfResults(irfDataSet)
     m <- match(orfChanges.RI$id, irf.signif$intron_id)

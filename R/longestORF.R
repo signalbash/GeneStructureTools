@@ -84,7 +84,7 @@ getOrfs <- function(transcripts,
         longest = 1
     }
 
-    seqlevelsStyle(transcripts) = seqlevelsStyle(BSgenome)[1]
+    GenomeInfoDb::seqlevelsStyle(transcripts) = GenomeInfoDb::seqlevelsStyle(BSgenome)[1]
     # check -ve dist to junction b calls
     # check exon number ORF start/ends
 

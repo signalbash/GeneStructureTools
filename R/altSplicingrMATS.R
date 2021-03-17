@@ -5,6 +5,8 @@
 #' @return data.frame with overlapping event/exons
 #' @export
 #' @import methods
+#' @import GenomicRanges
+#' @importFrom stringr str_split
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
@@ -36,8 +38,8 @@ skipExonByJunction <- function(rmatsEvents,
         granges.downstream$event_id <- make.unique(paste0(rmatsEvents$`1stExonStart_0base`+1, "-", rmatsEvents$`2ndExonEnd`), sep="_")
     }
 
-    seqlevelsStyle(granges.upstream) <- seqlevelsStyle(exons)[1]
-    seqlevelsStyle(granges.downstream) <- seqlevelsStyle(exons)[1]
+    GenomeInfoDb::seqlevelsStyle(granges.upstream) <- GenomeInfoDb::seqlevelsStyle(exons)[1]
+    GenomeInfoDb::seqlevelsStyle(granges.downstream) <- GenomeInfoDb::seqlevelsStyle(exons)[1]
     #
     ol.upstream <- annotateOverlapRmats(granges.upstream, exons, exon_number=1)
     ol.upstream$new_end <- end(granges.upstream)[ol.upstream$queryHits]
@@ -73,12 +75,12 @@ skipExonByJunction <- function(rmatsEvents,
     # check that rmatsEvents has upstream/downstream EE/ES
     if(eventType == "CE" | eventType =="SE"){
         eventCoords <- GRanges(seqnames=rmatsEvents$chr, ranges=IRanges(start=rmatsEvents$exonStart_0base+1, end=rmatsEvents$exonEnd), strand=rmatsEvents$strand, id=rmatsEvents$ID)
-        seqlevelsStyle(eventCoords) <- seqlevelsStyle(exons)[1]
+        GenomeInfoDb::seqlevelsStyle(eventCoords) <- GenomeInfoDb::seqlevelsStyle(exons)[1]
     }else if(eventType == "MXE"){
         eventCoords <- GRanges(seqnames=rmatsEvents$chr, ranges=IRanges(start=rmatsEvents$`1stExonStart_0base`+1, end=rmatsEvents$`1stExonEnd`), strand=rmatsEvents$strand, id=rmatsEvents$ID)
         eventCoords.mxe2 <- GRanges(seqnames=rmatsEvents$chr, ranges=IRanges(start=rmatsEvents$`2ndExonStart_0base`+1, end=rmatsEvents$`2ndExonEnd`), strand=rmatsEvents$strand, id=rmatsEvents$ID)
-        seqlevelsStyle(eventCoords) <- seqlevelsStyle(exons)[1]
-        seqlevelsStyle(eventCoords.mxe2) <- seqlevelsStyle(exons)[1]
+        GenomeInfoDb::seqlevelsStyle(eventCoords) <- GenomeInfoDb::seqlevelsStyle(exons)[1]
+        GenomeInfoDb::seqlevelsStyle(eventCoords.mxe2) <- GenomeInfoDb::seqlevelsStyle(exons)[1]
     }
 
     eventCoords <- annotateEventCoords(eventCoords, betweenExons, exons)
@@ -161,7 +163,7 @@ skipExonByJunction <- function(rmatsEvents,
     altSplicedTranscripts <- reorderExonNumbers(altSplicedTranscripts)
 
     altSplicedTranscripts$event_id <-
-        unlist(lapply(str_split(lapply(stringr::str_split(altSplicedTranscripts$transcript_id, " "),"[[",2), "-"), "[[" , 1))
+        unlist(lapply(stringr::str_split(lapply(stringr::str_split(altSplicedTranscripts$transcript_id, " "),"[[",2), "-"), "[[" , 1))
 
     mcols(altSplicedTranscripts) <-
         mcols(altSplicedTranscripts)[,c('gene_id','transcript_id',
@@ -179,6 +181,7 @@ skipExonByJunction <- function(rmatsEvents,
 #' @return GRanges retained and skipped intron isoforms
 #' @export
 #' @import methods
+#' @import GenomicRanges
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
@@ -196,7 +199,7 @@ altIntronRmats <- function(rmatsEvents, exons){
     events.RI <- GRanges(seqnames=rmatsEvents$chr, ranges=IRanges(start=rmatsEvents$upstreamEE+1,
                                                                end=rmatsEvents$downstreamES),
                         strand=rmatsEvents$strand)
-    seqlevelsStyle(events.RI) <- seqlevelsStyle(exons)[1]
+    GenomeInfoDb::seqlevelsStyle(events.RI) <- GenomeInfoDb::seqlevelsStyle(exons)[1]
     events.RI$id <- paste0(rmatsEvents$ID, "-",
                           as.character(seqnames(events.RI)),":",
                           rmatsEvents$riExonStart_0base+1, "-", rmatsEvents$riExonEnd)
@@ -215,6 +218,8 @@ altIntronRmats <- function(rmatsEvents, exons){
 #' @return GRanges of isoforms
 #' @export
 #' @import methods
+#' @import GenomicRanges
+#' @importFrom stringr str_split
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
@@ -247,9 +252,9 @@ altSpliceSiteRmats <- function(rmatsEvents,
     granges.flankingExon <- GRanges(seqnames=rmatsEvents$chr, ranges=IRanges(start=rmatsEvents$flankingES+1, end=rmatsEvents$flankingEE), strand=rmatsEvents$strand, id=rmatsEvents$ID, event_id=rmatsEvents$event_range)
 
 
-    seqlevelsStyle(granges.longExon) <- seqlevelsStyle(exons)[1]
-    seqlevelsStyle(granges.shortExon) <- seqlevelsStyle(exons)[1]
-    seqlevelsStyle(granges.flankingExon) <- seqlevelsStyle(exons)[1]
+    GenomeInfoDb::seqlevelsStyle(granges.longExon) <- GenomeInfoDb::seqlevelsStyle(exons)[1]
+    GenomeInfoDb::seqlevelsStyle(granges.shortExon) <- GenomeInfoDb::seqlevelsStyle(exons)[1]
+    GenomeInfoDb::seqlevelsStyle(granges.flankingExon) <- GenomeInfoDb::seqlevelsStyle(exons)[1]
 
 
     ol.longExon <- annotateOverlapRmats(granges.longExon, exons, exon_number=1)
@@ -333,7 +338,7 @@ altSpliceSiteRmats <- function(rmatsEvents,
     altSplicedTranscripts <- reorderExonNumbers(altSplicedTranscripts)
 
     altSplicedTranscripts$event_id <-
-        unlist(lapply(str_split(lapply(stringr::str_split(altSplicedTranscripts$transcript_id, " "),"[[",2), "-"), "[[" , 1))
+        unlist(lapply(stringr::str_split(lapply(stringr::str_split(altSplicedTranscripts$transcript_id, " "),"[[",2), "-"), "[[" , 1))
 
     mcols(altSplicedTranscripts) <-
         mcols(altSplicedTranscripts)[,c('gene_id','transcript_id',

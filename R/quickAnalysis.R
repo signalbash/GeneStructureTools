@@ -19,6 +19,7 @@
 #' @importFrom rtracklayer import
 #' @importFrom utils installed.packages
 #' @importFrom dplyr distinct
+#' @importFrom rlang .data
 #' @family transcript isoform comparisons
 #' @author Beth Signal
 #' @examples
@@ -112,7 +113,7 @@ transcriptChangeSummary <- function(transcriptsX,
             # combine all events (only PSI direction/eventID)
             allEvents = NULL
             for(eventType in c("SE", "MXE", "RI", "A3SS", "A5SS")){
-                psiDiffs = slot(rds, eventType)[,c("ID","GeneID","geneSymbol", "PValue","FDR","IncLevelDifference")]
+                psiDiffs = slot(dataSet, eventType)[,c("ID","GeneID","geneSymbol", "PValue","FDR","IncLevelDifference")]
                 psiDiffs$type = eventType
                 allEvents = rbind(allEvents, psiDiffs)
             }
@@ -281,7 +282,7 @@ transcriptChangeSummary <- function(transcriptsX,
                 m = match(whippetEvents$coord, tidToEvent$event_id)
                 whippetEvents$group_id = unlist(lapply(str_split(tidToEvent$tid[m], "[ ]"), "[[", 2))
 
-                whippetEvents = arrange(whippetEvents, group_id, plyr::desc(probability), plyr::desc(abs(psi_delta)))
+                whippetEvents = arrange(whippetEvents, .data$group_id, plyr::desc(.data$probability), plyr::desc(abs(.data$psi_delta)))
                 whippetEvents = whippetEvents[!duplicated(whippetEvents$group_id),]
 
                 m = match(orfChange$id, whippetEvents$group_id)
@@ -319,6 +320,7 @@ transcriptChangeSummary <- function(transcriptsX,
 #' @importFrom utils txtProgressBar
 #' @importFrom stringr str_split
 #' @importFrom rtracklayer import
+#' @importFrom rlang .data
 #' @import GenomicRanges
 #' @family leafcutter data processing
 #' @author Beth Signal
@@ -386,7 +388,7 @@ leafcutterTranscriptChangeSummary <- function(leafcutterEvents,
         ol.intron = ol.intron[!(duplicated(paste0(ol.intron$queryHits, ol.intron$ref))),]
         ol.intron = as.data.frame(table(ol.intron$leaf, ol.intron$ref, ol.intron$ref_strand))
         ol.intron = ol.intron[ol.intron$Freq > 0,]
-        ol.intron = arrange(ol.intron, Var1, desc(Freq))
+        ol.intron = arrange(ol.intron, .data$Var1, desc(.data$Freq))
         ol.intron = ol.intron[!duplicated(ol.intron$Var1), c(1,3)]
         refStrandv2 = ol.intron
         colnames(refStrandv2) = colnames(refStrand)

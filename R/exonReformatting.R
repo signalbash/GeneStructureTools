@@ -28,6 +28,7 @@ reformatExons = function(exons){
 #' @import methods
 #' @importFrom dplyr lead
 #' @importFrom dplyr left_join
+#' @importFrom rlang .data
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
@@ -35,7 +36,7 @@ exonsToIntrons = function(exons){
 
     exons_df <- as.data.frame(exons)
     exons_df <- exons_df[,c("seqnames", "start", "end", "strand", "transcript_id", "exon_number")]
-    exons_df <- arrange(exons_df, transcript_id, start, end)
+    exons_df <- arrange(exons_df, .data$transcript_id, start, end)
 
     exons_df$intron_start <- exons_df$end
     exons_df$intron_end <- dplyr::lead(exons_df$start)

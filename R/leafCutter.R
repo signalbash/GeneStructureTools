@@ -408,7 +408,7 @@ readLeafcutterJunctions <- function(junctionFiles, minReads=10){
 
     junctions.all <- NULL
     for(f in seq_along(junctionFiles)){
-        junctions <- read.delim(junctionFiles[f], header=F)
+        junctions <- utils::read.delim(junctionFiles[f], header=F)
 
         index <- match(paste(junctions$V1,junctions$V2,junctions$V3,junctions$V6, sep="_"),
                        paste(junctions.all$V1,junctions.all$V2,junctions.all$V3,junctions.all$V6, sep="_"))

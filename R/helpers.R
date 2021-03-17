@@ -23,6 +23,7 @@ annotateOverlapRmats <- function(rmatsGRanges, exons, exon_number=1){
 #' @return data.frame with related differential splicing event ids and reference transcript_ids
 #' @keywords internal
 #' @import methods
+#' @importFrom rlang .data
 #' @family rmats data processing
 #' @author Beth Signal
 removeDuplicatePairs <- function(betweenExons){
@@ -31,7 +32,7 @@ removeDuplicatePairs <- function(betweenExons){
     if(length(hasDups) > 0){
         betweenExons.duplicates <- betweenExons[betweenExons$new_transcript_id %in% betweenExons$new_transcript_id[hasDups],]
         betweenExons.duplicates$exon_num_range <- abs(as.numeric(betweenExons.duplicates$exon_number1) - as.numeric(betweenExons.duplicates$exon_number2))
-        betweenExons.duplicates <- arrange(betweenExons.duplicates, new_transcript_id, plyr::desc(exon_num_range))
+        betweenExons.duplicates <- arrange(betweenExons.duplicates, .data$new_transcript_id, plyr::desc(.data$exon_num_range))
         betweenExons.duplicates <- betweenExons.duplicates[!duplicated(betweenExons.duplicates$new_transcript_id),]
         betweenExons.duplicates$exon_num_range <- NULL
 
@@ -190,6 +191,7 @@ annotateEventCoords <- function(eventCoords, betweenExons, exons){
 #' @return Hits object
 #' @keywords internal
 #' @import methods
+#' @importFrom rlang .data
 #' @family data processing
 #' @author Beth Signal
 findOverlaps.junc = function(query, subject, type=c("start", "end")){
@@ -216,8 +218,8 @@ findOverlaps.junc = function(query, subject, type=c("start", "end")){
 
     if("start" %in% type & "end" %in% type){
         ol.df <- rbind(as.data.frame(ol.start), as.data.frame(ol.end))
-        ol.df <- arrange(ol.df, queryHits, subjectHits)
-        ol <- Hits(from=ol.df$queryHits, to=ol.df$subjectHits, nLnode=nLnode(ol.start), nRnode=nRnode(ol.start), sort.by.query=TRUE)
+        ol.df <- arrange(ol.df, .data$queryHits, .data$subjectHits)
+        ol <- S4Vectors::Hits(from=ol.df$queryHits, to=ol.df$subjectHits, nLnode=S4Vectors::nLnode(ol.start), nRnode=S4Vectors::nRnode(ol.start), sort.by.query=TRUE)
     }else if("start" %in% type){
         ol <- ol.start
     }else if("end" %in% type){

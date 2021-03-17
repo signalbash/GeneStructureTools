@@ -12,6 +12,7 @@
 #' @import GenomicRanges
 #' @importFrom dplyr inner_join
 #' @importFrom dplyr left_join
+#' @importFrom rlang .data
 #' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
@@ -125,9 +126,9 @@ alterTranscriptStartEnds <- function(whippetDataSet,
     allSignifEvents = allSignifEvents[which(!(allSignifEvents$coord %in% signifEvents$coord)),]
     allSignifEvents$direction = ifelse(allSignifEvents$psi_delta > 0, "up", "down")
     # add event with next largest psi_delta (in the correct direction)
-    allSignifEvents = plyr::arrange(allSignifEvents, psi_delta)
+    allSignifEvents = plyr::arrange(allSignifEvents, .data$psi_delta)
     signifEvents = plyr::rbind.fill(signifEvents, allSignifEvents[match(add.down, allSignifEvents$group_name),])
-    allSignifEvents = plyr::arrange(allSignifEvents, plyr::desc(psi_delta))
+    allSignifEvents = plyr::arrange(allSignifEvents, plyr::desc(.data$psi_delta))
     signifEvents = plyr::rbind.fill(signifEvents, allSignifEvents[match(add.up, allSignifEvents$group_name),])
 
     ## find/replace transcription start sites
