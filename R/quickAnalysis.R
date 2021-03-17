@@ -327,16 +327,12 @@ transcriptChangeSummary <- function(transcriptsX,
 #' @family leafcutter data processing
 #' @author Beth Signal
 #' @examples
-#' leafcutterFiles <- list.files(system.file("extdata","leafcutter/",
-#' package = "GeneStructureTools"), full.names = TRUE)
-#' leafcutterIntrons <- read.delim(leafcutterFiles[
-#' grep("intron_results", leafcutterFiles)],stringsAsFactors=FALSE)
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-#' package = "GeneStructureTools"))
-#' exons <- gtf[gtf$type=="exon"]
-#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
-#' leafcutterTranscriptChangeSummary(leafcutterEvents = leafcutterIntrons,
-#' exons=exons,BSgenome = g,NMD=FALSE)
+#'leafcutterFiles <- list.files(system.file("extdata","leaf_small/",package = "GeneStructureTools"), full.names = TRUE)
+#'leafcutterIntrons <- read.delim(leafcutterFiles[grep("intron_results", leafcutterFiles)],stringsAsFactors=FALSE)
+#'gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#'exons <- gtf[gtf$type=="exon"]
+#'g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+#'leafcutterTranscriptChangeSummary(leafcutterEvents = leafcutterIntrons, exons=exons,BSgenome = g,NMD=FALSE)
 
 leafcutterTranscriptChangeSummary <- function(leafcutterEvents,
                                               exons,
