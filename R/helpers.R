@@ -3,11 +3,10 @@
 #' @param exons reference exons GRanges
 #' @param exon_number which exon in the rmats event this is for (only used for annotating output)
 #' @return data.frame with overlapping event/exons
-#' @export
+#' @keywords internal
 #' @import methods
 #' @family rmats data processing
 #' @author Beth Signal
-#' @examples
 annotateOverlapRmats <- function(rmatsGRanges, exons, exon_number=1){
     ol <- as.data.frame(findOverlaps(rmatsGRanges, exons))
     ol$from_id <- rmatsGRanges$id[ol$queryHits]
@@ -22,11 +21,10 @@ annotateOverlapRmats <- function(rmatsGRanges, exons, exon_number=1){
 #' remove any duplicate pairs of events/reference transcripts (i.e. long event range which overlaps 2+ exons)
 #' @param betweenExons data.frame with related differential splicing event ids and reference transcript_ids
 #' @return data.frame with related differential splicing event ids and reference transcript_ids
-#' @export
+#' @keywords internal
 #' @import methods
 #' @family rmats data processing
 #' @author Beth Signal
-#' @examples
 removeDuplicatePairs <- function(betweenExons){
 
     hasDups <- which(duplicated(paste0(betweenExons$new_transcript_id)))
@@ -49,11 +47,10 @@ removeDuplicatePairs <- function(betweenExons){
 #' @param betweenExons data.frame with related differential splicing event ids and reference transcript_ids
 #' @param exons reference exons GRanges
 #' @return
-#' @export
+#' @keywords internal
 #' @import methods
 #' @family rmats data processing
 #' @author Beth Signal
-#' @examples
 duplicateReference <- function(betweenExons, exons){
     # transcripts containing the exon pairs
     transcripts <- as.data.frame(table(betweenExons$transcript_id))
@@ -98,11 +95,10 @@ duplicateReference <- function(betweenExons, exons){
 #' @param a first integer
 #' @param b second integer
 #' @return vector of integers
-#' @export
+#' @keywords internal
 #' @import methods
 #' @family rmats data processing
 #' @author Beth Signal
-#' @examples
 betweenNumbers <- function(a, b){
     ab.range <- seq(as.numeric(a),as.numeric(b))
     ab.range <- ab.range[!(ab.range %in% c(a,b))]
@@ -114,11 +110,10 @@ betweenNumbers <- function(a, b){
 #' @param betweenExons data.frame with related differential splicing event ids and reference transcript_ids
 #' @param gtfTranscripts Granges with altered transcript structures
 #' @return Granges with altered transcript structures
-#' @export
+#' @keywords internal
 #' @import methods
 #' @family rmats data processing
 #' @author Beth Signal
-#' @examples
 removeExonsBetween <- function(betweenExons, gtfTranscripts){
     remove <- apply(betweenExons[,c('exon_number1', 'exon_number2', 'new_transcript_id')], 1, function(x) paste0(x[3], " ", betweenNumbers(x[1], x[2])))
     gtfTranscripts.rm <- gtfTranscripts[which(!(paste0(gtfTranscripts$new_transcript_id, " ", gtfTranscripts$exon_number) %in% unlist(remove)))]
@@ -129,11 +124,10 @@ removeExonsBetween <- function(betweenExons, gtfTranscripts){
 #' @param betweenExons data.frame with related differential splicing event ids and reference transcript_ids
 #' @param gtfTranscripts Granges with altered transcript structures
 #' @return Granges with altered transcript structures
-#' @export
+#' @keywords internal
 #' @import methods
 #' @family rmats data processing
 #' @author Beth Signal
-#' @examples
 splitLongExons <- function(betweenExons, gtfTranscripts){
     # make sure there is > 1 exon in the pair (i.e. split a single long exon into two)
     duplicate.index <- which(betweenExons$exon_number1 == betweenExons$exon_number2)
@@ -165,11 +159,10 @@ splitLongExons <- function(betweenExons, gtfTranscripts){
 #' @param betweenExons data.frame with related differential splicing event ids and reference transcript_ids
 #' @param exons reference exons GRanges
 #' @return eventCoords Granges with annotations
-#' @export
+#' @keywords internal
 #' @import methods
 #' @family rmats data processing
 #' @author Beth Signal
-#' @examples
 annotateEventCoords <- function(eventCoords, betweenExons, exons){
 
     #eventCoords <- GRanges(seqnames=input$chr, ranges=IRanges(start=input$exonStart_0base+1, end=input$exonEnd), strand=input$strand, id=input$ID)
@@ -191,101 +184,14 @@ annotateEventCoords <- function(eventCoords, betweenExons, exons){
 
 }
 
-#' reformat a exons GRanges with first/last annotations and force 'biotype' to 'type'
-#' @param exons reference exons GRanges
-#' @return reference exons GRanges
-#' @export
-#' @import methods
-#' @family rmats data processing
-#' @author Beth Signal
-#' @examples
-reformatExons = function(exons){
-
-    # add first/last annotation (speeds up later steps)
-    if(!("first_last" %in% colnames(mcols(exons)))){
-        t <- as.data.frame(table(exons$transcript_id))
-        exons$first_last <- NA
-        exons$first_last[exons$exon_number == 1] <- "first"
-        exons$first_last[exons$exon_number == t$Freq[match(exons$transcript_id, t$Var1)]] <- "last"
-    }
-
-    colnames(mcols(exons)) <- gsub("biotype", "type", colnames(mcols(exons)))
-    return(exons)
-}
-
-#' Generate a transcripts Granges from an exons Granges
-#' @param exons reference exons GRanges
-#' @return reference transcripts GRanges
-#' @export
-#' @import methods
-#' @family rmats data processing
-#' @author Beth Signal
-#' @examples
-transcriptsFromExons = function(exons){
-
-    exons.df <- data.frame(t_id=exons$transcript_id, start=start(exons), end=end(exons))
-    txRanges <- aggregate(start ~ t_id, exons.df, min)
-    txRanges$end <- aggregate(end ~ t_id, exons.df, max)[,2]
-
-    transcripts <- exons[!duplicated(exons$transcript_id),]
-    transcripts$exon_id <- NULL
-    transcripts$exon_number <- NULL
-    transcripts$first_last <- NULL
-
-    start(transcripts) <- txRanges$start[match(transcripts$transcript_id, txRanges$t_id)]
-    end(transcripts) <- txRanges$end[match(transcripts$transcript_id, txRanges$t_id)]
-
-    return(transcripts)
-
-}
-#' Generate a introns Granges from an exons Granges
-#' @param exons reference exons GRanges
-#' @return reference introns GRanges
-#' @export
-#' @import methods
-#' @importFrom dplyr lead
-#' @importFrom dplyr left_join
-#' @family rmats data processing
-#' @author Beth Signal
-#' @examples
-exonsToIntrons = function(exons){
-
-    exons_df <- as.data.frame(exons)
-    exons_df <- exons_df[,c("seqnames", "start", "end", "strand", "transcript_id", "exon_number")]
-    exons_df <- arrange(exons_df, transcript_id, start, end)
-
-    exons_df$intron_start <- exons_df$end
-    exons_df$intron_end <- dplyr::lead(exons_df$start)
-
-    rm <- which(dplyr::lead(exons_df$transcript_id) != exons_df$transcript_id)
-
-    exons_df <- exons_df[-rm,]
-    exons_df <- exons_df[-nrow(exons_df),]
-    min_exon_n <- aggregate(exon_number ~ transcript_id, exons_df, min)
-    if(!all(min_exon_n$exon_number == 1)){
-        exons_df$exon_number[exons_df$strand=="-"] <- as.numeric(exons_df$exon_number[exons_df$strand=="-"]) - 1
-    }
-
-    introns <- GRanges(seqnames=exons_df$seqnames, ranges=IRanges(start=exons_df$intron_start, end=exons_df$intron_end),
-                      strand=exons_df$strand, transcript_id=exons_df$transcript_id, exon_number=exons_df$exon_number)
-    m <- match(introns$transcript_id, exons$transcript_id)
-    introns$gene_id <- exons$gene_id[m]
-    introns$gene_name <- exons$gene_name[m]
-
-    mcols(introns) <- DataFrame(dplyr::left_join(as.data.frame(mcols(introns)),  as.data.frame(mcols(exons))))
-    return(introns)
-
-}
-
 #' Find overlaps where the start/end coordinates are the same
 #' @param query a GRanges object
 #' @param subject a GRanges object
 #' @return Hits object
-#' @export
+#' @keywords internal
 #' @import methods
 #' @family data processing
 #' @author Beth Signal
-#' @examples
 findOverlaps.junc = function(query, subject, type=c("start", "end")){
 
     if(any(type == "start")){
@@ -746,35 +652,4 @@ makeNewLeafExonsUnanchored <- function(altIntronLocs, junctionRanges, clusterExo
 
     clusterExons <- c(clusterExons.alt3, clusterExons.alt5)
     return(clusterExons)
-}
-#' Convert an exon-level gtf annotation to a transcript-level gtf annotation
-#'
-#' @param exons GRanges object with exons
-#' @return GRanges object with transcripts
-#' @keywords internal
-#' @import GenomicRanges
-#' @importFrom IRanges IRanges
-#' @importFrom rtracklayer import
-#' @family gtf manipulation
-#' @author Beth Signal
-#' @examples
-exonsToTranscripts <- function(exons){
-    transcripts <- exons[!duplicated(exons$transcript_id)]
-
-    minStarts <- aggregate(start ~ transcript_id,
-                           as.data.frame(exons), min)
-    maxEnds <- aggregate(end ~ transcript_id,
-                         as.data.frame(exons), max)
-
-
-    ranges(transcripts) <-
-        IRanges::IRanges(start=as.numeric(
-            minStarts$start[match(transcripts$transcript_id,
-                                  minStarts$transcript_id)]),
-            end=as.numeric(
-                maxEnds$end[match(transcripts$transcript_id,
-                                  maxEnds$transcript_id)]))
-
-
-    return(transcripts)
 }
