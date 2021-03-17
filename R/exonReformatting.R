@@ -89,3 +89,17 @@ exonsToTranscripts <- function(exons){
 
     return(transcripts)
 }
+
+#' Remove version number from ensembl gene/transcript ids
+#'
+#' @param ids vector of ensembl ids
+#' @return vector of ensembl ids without the version number
+#' @import stringr
+#' @export
+#' @author Beth Signal
+#' @examples
+#' removeVersion("ENSMUSG00000001017.15")
+
+removeVersion <- function(ids){
+    return(unlist(lapply(stringr::str_split(ids, "[.]"), "[[", 1)))
+}
