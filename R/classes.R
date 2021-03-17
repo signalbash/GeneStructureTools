@@ -5,7 +5,7 @@
 #' @name whippetDataSet-class
 #' @rdname whippetDataSet-class
 #' @exportClass whippetDataSet
-#' @imports methods
+#' @import methods
 setClass("whippetDataSet", slots=list(coordinates="GRanges",
                                       diffSplicingResults="data.frame",
                                       comparisons="character",
@@ -17,7 +17,7 @@ setClass("whippetDataSet", slots=list(coordinates="GRanges",
 #' @name diffSplicingResults
 #' @rdname diffSplicingResults-methods
 #' @exportMethod diffSplicingResults
-#' @imports methods
+#' @import methods
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 setGeneric("diffSplicingResults",
            def=function(whippetDataSet)
@@ -47,7 +47,7 @@ setMethod("diffSplicingResults", signature="whippetDataSet",
 #' @name readCounts
 #' @rdname readCounts-methods
 #' @exportMethod readCounts
-#' @imports methods
+#' @import methods
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 setGeneric("readCounts",
            def=function(whippetDataSet)
@@ -76,7 +76,7 @@ setMethod("readCounts", signature="whippetDataSet",
 #' @name junctions
 #' @rdname junctions-methods
 #' @exportMethod junctions
-#' @imports methods
+#' @import methods
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 setGeneric("junctions",
            def=function(whippetDataSet)
@@ -137,7 +137,7 @@ setMethod("coordinates", signature="whippetDataSet",
 #' @name rmatsDataSet-class
 #' @rdname rmatsDataSet-class
 #' @exportClass rmatsDataSet
-#' @imports methods
+#' @import methods
 setClass("rmatsDataSet", slots=list(SE="data.frame",
                                     MXE="data.frame",
                                     RI="data.frame",
@@ -149,7 +149,7 @@ setClass("rmatsDataSet", slots=list(SE="data.frame",
 #' @name extractEvent
 #' @rdname extractEvent-methods
 #' @exportMethod extractEvent
-#' @imports methods
+#' @import methods
 #' @param rmatsDataSet rmatsDataSet generated from \code{readRmatsDataSet()}
 #' @param eventType specific event type to extract results for. Must be SE/MXE/RI/A5SS/A3SS.
 setGeneric("extractEvent",
@@ -177,7 +177,7 @@ setMethod("extractEvent", signature="rmatsDataSet",
 #' @name irfDataSet-class
 #' @rdname irfDataSet-class
 #' @exportClass irfDataSet
-#' @imports methods
+#' @import methods
 setClass("irfDataSet", slots=list(coordinates="GRanges",
                                   IRFresults="data.frame",
                                   filePath="character"))
@@ -186,7 +186,7 @@ setClass("irfDataSet", slots=list(coordinates="GRanges",
 #' @name irfResults
 #' @rdname irfResults-methods
 #' @exportMethod irfResults
-#' @imports methods
+#' @import methods
 #' @param irfDataSet irfDataSet generated from \code{readIRFDataSet()}
 setGeneric("irfResults",
            def=function(irfDataSet)

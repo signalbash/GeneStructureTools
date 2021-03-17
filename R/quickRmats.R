@@ -49,7 +49,7 @@ readRmatsDataSet <- function(directory, type="JC"){
 #' @return filtered rmatsDataSet
 #' @export
 #' @importFrom stats median
-#' @iport stringr
+#' @import stringr
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
