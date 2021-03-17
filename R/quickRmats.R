@@ -7,6 +7,8 @@
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
+#' rmats_directory <- system.file("extdata","rmats_small/", package = "GeneStructureTools")
+#' rds <- readRmatsDataSet(rmats_directory)
 readRmatsDataSet <- function(directory, type="JC"){
 
     rds <- new("rmatsDataSet", filePath=directory)
@@ -51,6 +53,11 @@ readRmatsDataSet <- function(directory, type="JC"){
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
+#' rmats_directory <- system.file("extdata","rmats_small/", package = "GeneStructureTools")
+#' rds <- readRmatsDataSet(rmats_directory)
+#' rds.filtered <- filterRmatsEvents(rds, FDR=0.01, psiDelta=0.1)
+#' # filter by gene name/id
+#' rds.Tmem208 <- filterRmatsEvents(rds, idList="Tmem208", FDR=1, psiDelta=0)
 filterRmatsEvents <- function(rmatsDataSet,
                                 FDR=0.05,
                                 psiDelta=0.1,
@@ -127,6 +134,14 @@ filterRmatsEvents <- function(rmatsDataSet,
 #' @import GenomicRanges
 #' @family rmats data processing
 #' @author Beth Signal
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' exons <- gtf[gtf$type=="exon"]
+#' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+#'
+#' rmats_directory <- system.file("extdata","rmats_small/", package = "GeneStructureTools")
+#' rds <- readRmatsDataSet(rmats_directory)
+#' rds.filtered <- filterRmatsEvents(rds, FDR=0.01, psiDelta=0.1)
+#' rmats_summary <- rmatsTranscriptChangeSummary(rmatsDataSet = rds.filtered, exons, BSgenome=g)
 
 rmatsTranscriptChangeSummary <- function(rmatsDataSet,
                                          exons=NULL,
