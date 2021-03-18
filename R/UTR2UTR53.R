@@ -9,7 +9,7 @@
 #' @importFrom rtracklayer import
 #' @examples
 #' gtfFile <- system.file("extdata","example_gtf.gtf",
-#' package"GeneStructureTools")
+#' package="GeneStructureTools")
 #' gtf <- rtracklayer::import(gtfFile)
 #' gtf <- UTR2UTR53(gtf)
 #' table(gtf$type)

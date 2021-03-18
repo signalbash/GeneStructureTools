@@ -281,8 +281,7 @@ transcriptChangeSummary <- function(transcriptsX,
                 whippetEvents <- whippetEvents[which(!is.na(m)),]
                 m <- match(whippetEvents$coord, tidToEvent$event_id)
                 whippetEvents$group_id <- unlist(lapply(str_split(tidToEvent$tid[m], "[ ]"), "[[", 2))
-
-                whippetEvents <- arrange(whippetEvents, group_id, plyr::desc(probability), plyr::desc(abs(psi_delta)))
+                whippetEvents <- whippetEvents[order(whippetEvents$group_id, whippetEvents$probability, abs(whippetEvents$psi_delta)*-1),]
                 whippetEvents <- whippetEvents[!duplicated(whippetEvents$group_id),]
 
                 m <- match(orfChange$id, whippetEvents$group_id)
@@ -388,7 +387,7 @@ leafcutterTranscriptChangeSummary <- function(leafcutterEvents,
         ol.intron <- ol.intron[!(duplicated(paste0(ol.intron$queryHits, ol.intron$ref))),]
         ol.intron <- as.data.frame(table(ol.intron$leaf, ol.intron$ref, ol.intron$ref_strand))
         ol.intron <- ol.intron[ol.intron$Freq > 0,]
-        ol.intron <- arrange(ol.intron, Var1, desc(Freq))
+        ol.intron <- ol.intron[order(ol.intron$Var1, ol.intron$Freq*-1),]
         ol.intron <- ol.intron[!duplicated(ol.intron$Var1), c(1,3)]
         refStrandv2 <- ol.intron
         colnames(refStrandv2) <- colnames(refStrand)

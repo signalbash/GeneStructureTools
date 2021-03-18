@@ -32,7 +32,7 @@ removeDuplicatePairs <- function(betweenExons){
     if(length(hasDups) > 0){
         betweenExons.duplicates <- betweenExons[betweenExons$new_transcript_id %in% betweenExons$new_transcript_id[hasDups],]
         betweenExons.duplicates$exon_num_range <- abs(as.numeric(betweenExons.duplicates$exon_number1) - as.numeric(betweenExons.duplicates$exon_number2))
-        betweenExons.duplicates <- arrange(betweenExons.duplicates, new_transcript_id, plyr::desc(exon_num_range))
+        betweenExons.duplicates <- betweenExons.duplicates[order(betweenExons.duplicates$new_transcript_id, betweenExons.duplicates$exon_num_range*-1),]
         betweenExons.duplicates <- betweenExons.duplicates[!duplicated(betweenExons.duplicates$new_transcript_id),]
         betweenExons.duplicates$exon_num_range <- NULL
 
