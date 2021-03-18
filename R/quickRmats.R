@@ -145,7 +145,7 @@ rmatsTranscriptChangeSummary <- function(rmatsDataSet,
                                          eventTypes = "all",
                                          BSgenome,
                                          NMD = TRUE,
-                                         exportGTF = NULL) {
+                                         exportGTF = exportGTF) {
     if (eventTypes[1] == "all") {
         eventTypes <- c("SE", "MXE", "RI", "A3SS", "A5SS")
     }
@@ -159,7 +159,7 @@ rmatsTranscriptChangeSummary <- function(rmatsDataSet,
         isoforms.SE <- skipExonByJunction(diffSplice.SE.signif, eventType = "SE", exons = exons)
         orfChanges.SE <- transcriptChangeSummary(isoforms.SE[isoforms.SE$set == "included_exon"],
             isoforms.SE[isoforms.SE$set == "skipped_exon"],
-            BSgenome = BSgenome, NMD = NMD, exportGTF = NULL, dataSet = rmatsDataSet
+            BSgenome = BSgenome, NMD = NMD, exportGTF = exportGTF, dataSet = rmatsDataSet
         )
         m <- match(unlist(lapply(stringr::str_split(orfChanges.SE$id, "[-]"), "[[", 1)), diffSplice.SE.signif$ID)
         orfChanges <- rbind(orfChanges, cbind(diffSplice.SE.signif[m, c("ID", "GeneID", "geneSymbol", "PValue", "FDR", "IncLevelDifference")], type = "SE", orfChanges.SE))
@@ -172,7 +172,7 @@ rmatsTranscriptChangeSummary <- function(rmatsDataSet,
         isoforms.MXE <- skipExonByJunction(diffSplice.MXE.signif, eventType = "MXE", exons = exons)
         orfChanges.MXE <- transcriptChangeSummary(isoforms.MXE[isoforms.MXE$set == "included_exon1"],
             isoforms.MXE[isoforms.MXE$set == "included_exon2"],
-            BSgenome = BSgenome, NMD = NMD, exportGTF = NULL, dataSet = rmatsDataSet
+            BSgenome = BSgenome, NMD = NMD, exportGTF = exportGTF, dataSet = rmatsDataSet
         )
         m <- match(unlist(lapply(stringr::str_split(orfChanges.MXE$id, "[-]"), "[[", 1)), diffSplice.MXE.signif$ID)
         orfChanges <- rbind(orfChanges, cbind(diffSplice.MXE.signif[m, c("ID", "GeneID", "geneSymbol", "PValue", "FDR", "IncLevelDifference")], type = "MXE", orfChanges.MXE))
@@ -185,7 +185,7 @@ rmatsTranscriptChangeSummary <- function(rmatsDataSet,
         isoforms.RI <- altIntronRmats(diffSplice.RI.signif, exons = exons)
         orfChanges.RI <- transcriptChangeSummary(isoforms.RI[isoforms.RI$set == "spliced_intron"],
             isoforms.RI[isoforms.RI$set == "retained_intron"],
-            BSgenome = BSgenome, NMD = NMD, exportGTF = NULL, dataSet = rmatsDataSet
+            BSgenome = BSgenome, NMD = NMD, exportGTF = exportGTF, dataSet = rmatsDataSet
         )
         m <- match(unlist(lapply(stringr::str_split(orfChanges.RI$id, "[-]"), "[[", 1)), diffSplice.RI.signif$ID)
         orfChanges <- rbind(orfChanges, cbind(diffSplice.RI.signif[m, c("ID", "GeneID", "geneSymbol", "PValue", "FDR", "IncLevelDifference")], type = "RI", orfChanges.RI))
@@ -198,7 +198,7 @@ rmatsTranscriptChangeSummary <- function(rmatsDataSet,
         isoforms.A3SS <- altSpliceSiteRmats(diffSplice.A3SS.signif, eventType = "A3SS", exons = exons)
         orfChanges.A3SS <- transcriptChangeSummary(isoforms.A3SS[isoforms.A3SS$set == "alt3_splicesite_long"],
             isoforms.A3SS[isoforms.A3SS$set == "alt3_splicesite_short"],
-            BSgenome = BSgenome, NMD = NMD, exportGTF = NULL, dataSet = rmatsDataSet
+            BSgenome = BSgenome, NMD = NMD, exportGTF = exportGTF, dataSet = rmatsDataSet
         )
         m <- match(unlist(lapply(stringr::str_split(orfChanges.A3SS$id, "[-]"), "[[", 1)), diffSplice.A3SS.signif$ID)
         orfChanges <- rbind(orfChanges, cbind(diffSplice.A3SS.signif[m, c("ID", "GeneID", "geneSymbol", "PValue", "FDR", "IncLevelDifference")], type = "A3SS", orfChanges.A3SS))
@@ -211,7 +211,7 @@ rmatsTranscriptChangeSummary <- function(rmatsDataSet,
         isoforms.A5SS <- altSpliceSiteRmats(diffSplice.A5SS.signif, eventType = "A5SS", exons = exons)
         orfChanges.A5SS <- transcriptChangeSummary(isoforms.A5SS[isoforms.A5SS$set == "alt5_splicesite_long"],
             isoforms.A5SS[isoforms.A5SS$set == "alt5_splicesite_short"],
-            BSgenome = BSgenome, NMD = NMD, exportGTF = NULL, dataSet = rmatsDataSet
+            BSgenome = BSgenome, NMD = NMD, exportGTF = exportGTF, dataSet = rmatsDataSet
         )
         m <- match(unlist(lapply(stringr::str_split(orfChanges.A5SS$id, "[-]"), "[[", 1)), diffSplice.A5SS.signif$ID)
         orfChanges <- rbind(orfChanges, cbind(diffSplice.A5SS.signif[m, c("ID", "GeneID", "geneSymbol", "PValue", "FDR", "IncLevelDifference")], type = "A5SS", orfChanges.A5SS))
