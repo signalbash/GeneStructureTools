@@ -106,14 +106,16 @@ transcriptChangeSummary <- function(transcriptsX,
 
         }
 
-        if(class(dataSet)[1] == "rMATSDataSet"){
+        if(class(dataSet)[1] == "rmatsDataSet"){
 
             # combine all events (only PSI direction/eventID)
             allEvents = NULL
             for(eventType in c("SE", "MXE", "RI", "A3SS", "A5SS")){
                 psiDiffs = slot(dataSet, eventType)[,c("ID","GeneID","geneSymbol", "PValue","FDR","IncLevelDifference")]
-                psiDiffs$type = eventType
-                allEvents = rbind(allEvents, psiDiffs)
+                if(nrow(psiDiffs) > 0){
+                    psiDiffs$type = eventType
+                    allEvents = rbind(allEvents, psiDiffs)
+                }
             }
 
             allTranscripts <- c(transcriptsX, transcriptsY)
@@ -126,9 +128,11 @@ transcriptChangeSummary <- function(transcriptsX,
 
             eventId = unlist(lapply(str_split(lapply(str_split(allTranscripts$transcript_id, "[ ]"),"[[", 2), "[-]"),"[[", 1))
 
-            allEvents$event_id = unlist(lapply(str_split(allTranscripts$transcript_id[match(paste0(allEvents$ID, "_", allEvents$type),
-                                                                                            paste0(eventId, "_", allTranscripts$type))],
-                                                         "[ ]"), "[[" ,2))
+            allEvents$event_id = allTranscripts$transcript_id[match(paste0(allEvents$ID, "_", allEvents$type),
+                                                                                            paste0(eventId, "_", allTranscripts$type))]
+
+            allEvents$event_id[which(!is.na(allEvents$event_id))] = unlist(lapply(str_split(allEvents$event_id[which(!is.na(allEvents$event_id))],
+                                                                                            "[ ]"), "[[" ,2))
 
             m = match(paste0(eventId, "_", allTranscripts$type),
                       paste0(allEvents$ID, "_", allEvents$type))
@@ -137,7 +141,7 @@ transcriptChangeSummary <- function(transcriptsX,
             normB = which(allEvents$IncLevelDifference < 0)
 
             setsA = c("included_exon", "included_exon2", "retained_intron","alt3_splicesite_long","alt5_splicesite_long")
-            setsB = c("Skipped_exon", "included_exon1", "spliced_intron","alt3_splicesite_short","alt5_splicesite_short")
+            setsB = c("skipped_exon", "included_exon1", "spliced_intron","alt3_splicesite_short","alt5_splicesite_short")
 
             transcriptsX <- allTranscripts[
                 which((m %in% normA & allTranscripts$set %in% setsA) |
