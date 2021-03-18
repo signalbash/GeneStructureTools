@@ -6,6 +6,10 @@
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf",
+#' package = "GeneStructureTools"))
+#' exons <- gtf[gtf$type=="exon"]
+#' exons.reformat <- reformatExons(exons)
 reformatExons = function(exons){
 
     # add first/last annotation (speeds up later steps)
@@ -32,6 +36,10 @@ reformatExons = function(exons){
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf",
+#' package = "GeneStructureTools"))
+#' exons <- gtf[gtf$type=="exon"]
+#' introns <- exonsToIntrons(exons)
 exonsToIntrons = function(exons){
 
     exons_df <- as.data.frame(exons)
@@ -71,6 +79,10 @@ exonsToIntrons = function(exons){
 #' @family gtf manipulation
 #' @author Beth Signal
 #' @examples
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf",
+#' package = "GeneStructureTools"))
+#' exons <- gtf[gtf$type=="exon"]
+#' transcritps <- exonsToTranscripts(exons)
 exonsToTranscripts <- function(exons){
 
     exons.df <- data.frame(t_id=exons$transcript_id, start=start(exons), end=end(exons))

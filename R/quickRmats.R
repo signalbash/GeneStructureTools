@@ -133,6 +133,7 @@ filterRmatsEvents <- function(rmatsDataSet,
 #' @import GenomicRanges
 #' @family rmats data processing
 #' @author Beth Signal
+#' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10

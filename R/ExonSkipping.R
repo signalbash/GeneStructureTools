@@ -32,7 +32,7 @@ findExonContainingTranscripts <- function(input,
                                           variableWidth=0,
                                           findIntrons=FALSE){
 
-    if(class(input) == "whippetDataSet"){
+    if(is(input, "whippetDataSet")){
         # check all are CE
         whippetDataSet <- filterWhippetEvents(input,
                                               probability = 0,
@@ -40,7 +40,7 @@ findExonContainingTranscripts <- function(input,
                                               eventTypes="CE")
 
         eventCoords <- coordinates(whippetDataSet)
-    }else if(class(input) == "GRanges"){
+    }else if(is(input,"GRanges")){
         eventCoords <- input
         if(!("id" %in% names(mcols(eventCoords))) &
            "exon_id" %in% names(mcols(eventCoords))){

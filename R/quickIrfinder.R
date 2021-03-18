@@ -93,6 +93,7 @@ filterIrfEvents <- function(irfDataSet,
 #' @importFrom rtracklayer export.gff
 #' @family IRFinder data processing
 #' @author Beth Signal
+#' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
@@ -101,8 +102,6 @@ filterIrfEvents <- function(irfDataSet,
 #' irf <- readIrfDataSet(irfinder_file)
 #' irf.filtered <- filterIrfEvents(irf, FDR=0.01, psiDelta=0.1)
 #' irf_summary <- irfTranscriptChangeSummary(irf.filtered, exons, BSgenome=g)
-
-
 irfTranscriptChangeSummary <- function(irfDataSet,
                                        exons=NULL,
                                        BSgenome,

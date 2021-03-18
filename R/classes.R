@@ -31,7 +31,7 @@ setGeneric("diffSplicingResults",
 #' (originally from a whippet .diff file)
 #' @family whippet data processing
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet/",
+#' whippetFiles <- system.file("extdata","whippet_small/",
 #' package = "GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
@@ -60,7 +60,7 @@ setGeneric("readCounts",
 #' (originally from a whippet .psi file)
 #' @family whippet data processing
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet/",
+#' whippetFiles <- system.file("extdata","whippet_small/",
 #' package = "GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
@@ -89,7 +89,7 @@ setGeneric("junctions",
 #' (originally from a whippet .jnc file)
 #' @family whippet data processing
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet/",
+#' whippetFiles <- system.file("extdata","whippet_small/",
 #' package = "GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
@@ -116,7 +116,7 @@ setGeneric("coordinates",
 #' @return whippet splicing event coordinates as a GRanges object
 #' @family whippet data processing
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet/",
+#' whippetFiles <- system.file("extdata","whippet_small/",
 #' package = "GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
@@ -151,7 +151,8 @@ setClass("rmatsDataSet", slots=list(SE="data.frame",
 #' @exportMethod extractEvent
 #' @import methods
 #' @param rmatsDataSet rmatsDataSet generated from \code{readRmatsDataSet()}
-#' @param eventType specific event type to extract results for. Must be SE/MXE/RI/A5SS/A3SS.
+#' @param eventType specific event type to extract results for.
+#' Must be SE/MXE/RI/A5SS/A3SS.
 setGeneric("extractEvent",
            def=function(rmatsDataSet, eventType)
            {
@@ -163,6 +164,11 @@ setGeneric("extractEvent",
 #' @return differential splicing results data.frame
 #' (originally from a whippet .diff file)
 #' @family rmats data processing
+#' @examples
+#' rmats_directory <- system.file("extdata","rmats_small/",
+#' package = "GeneStructureTools")
+#' rds <- readRmatsDataSet(rmats_directory)
+#' rds.SE <- extractEvent(rds, "SE")
 setMethod("extractEvent", signature="rmatsDataSet",
           definition=function(rmatsDataSet, eventType)
           {
@@ -199,6 +205,10 @@ setGeneric("irfResults",
 #' @return differential splicing results data.frame
 #' (originally from a whippet .diff file)
 #' @family irf data processing
+#' irfinder_file <- list.files(system.file("extdata","irf_small/",
+#' package = "GeneStructureTools"), full.names=TRUE)
+#' irf <- readIrfDataSet(irfinder_file)
+#' irf.results <- irfResults(irfDataSet)
 setMethod("irfResults", signature="irfDataSet",
           definition=function(irfDataSet)
           {
