@@ -220,7 +220,7 @@ orfDiff <- function(orfsX,
                                   which(!is.na(match(allORFs$gene_id, x))))
 
         idMatches <- unlist(mapply(function(x,y)
-            rep(x,length(y)) ,(1:length(orfChanges$gene_id)),
+            rep(x,length(y)) ,(seq_along(length(orfChanges$gene_id))),
             geneMatches))
 
         geneMatches <- unlist(geneMatches)

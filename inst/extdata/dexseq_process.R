@@ -1,6 +1,6 @@
 library(stringr)
 library(DEXSeq)
-options(stringsAsFactors = F)
+options(stringsAsFactors = FALSE)
 
 setwd("~/Downloads/GeneStructureTools_tuts/")
 

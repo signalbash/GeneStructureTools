@@ -38,7 +38,7 @@ findIntronContainingTranscripts <- function(input,
                                             match="exact"){
     moved <- FALSE
 
-    if(class(input)=="whippetDataSet"){
+    if(is(input, "whippetDataSet")){
         whippetDataSet <- filterWhippetEvents(input,
                                               probability = 0,
                                               psiDelta = 0,
@@ -46,7 +46,7 @@ findIntronContainingTranscripts <- function(input,
 
         eventCoords <- coordinates(whippetDataSet)
 
-    }else if(class(input) == "GRanges"){
+    }else if(is(input, "GRanges")){
         eventCoords <- input
         if(!("id" %in% names(mcols(eventCoords)))){
             if("exon_id" %in% names(mcols(eventCoords))){

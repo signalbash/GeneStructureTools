@@ -19,7 +19,7 @@ library(data.table)
 library(stringr)
 
 effectSizes <- fread(effect.sizes.file, data.table=F )
-effectSizesSplit <-  as.data.frame(str_split_fixed(effectSizes$intron, ":", 4), stringsAsFactors = FALSE )
+effectSizesSplit <-  as.data.frame(str_split_fixed(effectSizes$intron, ":", 4), stringsAsFactors = FALSE)
 names(effectSizesSplit) <- c("chr","start","end","clusterID")
 
 effectSizes <- cbind( effectSizes, effectSizesSplit)
@@ -43,5 +43,5 @@ all.introns$cluster = NULL
 all.introns$intron = NULL
 all.introns = all.introns[,c(which(colnames(all.introns) == "clusterID"), which(!colnames(all.introns) == "clusterID"))]
 
-write.table(all.introns, file = results_file, quote=F, row.names = F, sep="\t")
+write.table(all.introns, file = results_file, quote=FALSE, row.names = FALSE, sep="\t")
 

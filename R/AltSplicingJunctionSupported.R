@@ -276,11 +276,11 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
         tidTable <- as.data.frame(table(ol.junction$queryHits,
                                         ol.junction$transcript_id))
         tidTable <- tidTable[tidTable$Freq > 0,]
-        colnames(tidTable)[1:2] <- c("from_index","to_transcript_id")
+        colnames(tidTable)[c(1,2)] <- c("from_index","to_transcript_id")
         tids <- unique(tidTable$to_transcript_id)
 
         #all combinations of transcripts + junctions
-        tidTable <- data.frame(from_index=rep(1:length(junctionPairs),
+        tidTable <- data.frame(from_index=rep(seq_along(length(junctionPairs)),
                                               each=length(tids)),
                                to_transcript_id=rep(tids,
                                                     length(junctionPairs)),
@@ -473,7 +473,7 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
         tidTable <- as.data.frame(table(ol.junction$queryHits,
                                         ol.junction$transcript_id))
         tidTable <- tidTable[tidTable$Freq > 0,]
-        colnames(tidTable)[1:2] <- c("from_index","to_transcript_id")
+        colnames(tidTable)[c(1,2)] <- c("from_index","to_transcript_id")
         tids <- unique(tidTable$to_transcript_id)
 
         tidTable$junction_id <- range$id[tidTable$from_index]
@@ -624,8 +624,8 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
                               start_2 = start(junctionReplacementExons),
                               end_1 = end(replacementExonsFirstLast),
                               end_2 = end(junctionReplacementExons))
-        start(longRange) <- apply(rangeDF[,1:2], 1, min)
-        end(longRange) <- apply(rangeDF[,3:4], 1, max)
+        start(longRange) <- apply(rangeDF[,c(1,2)], 1, min)
+        end(longRange) <- apply(rangeDF[,c(3,4)], 1, max)
 
         ol <- as.data.frame(findOverlaps(longRange, gtfTranscripts.altered))
         ol$from_id <- longRange$new_transcript_id[ol$queryHits]

@@ -41,8 +41,8 @@ readWhippetJNCfiles <- function(files, minCount=0){
         }
     }
 
-    colnames(whip.all)[-(1:5)] <- gsub(".jnc.gz","", basename(files))
-    whip.all$count <- rowSums(whip.all[,-c(1:5)], na.rm = T)
+    colnames(whip.all)[-c(1:5)] <- gsub(".jnc.gz","", basename(files))
+    whip.all$count <- rowSums(whip.all[,-c(1:5)], na.rm = TRUE)
 
     whip.all <- whip.all[which(whip.all$count >= minCount),]
 
@@ -102,12 +102,12 @@ readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
                 whip.all <- cbind(whip.all, whip[m,wantedCol])
 
                 # add additional rows for non-matches
-                addRows <- which(!((1:nrow(whip)) %in% m))
+                addRows <- which(!((seq_len(nrow(whip))) %in% m))
 
                 # make a 'blank' data.frame
                 whip.add <- whip.all[1:length(addRows),]
                 whip.add[,c(1:5)] <- whip[addRows,c(1:5)]
-                for(r in 6:(ncol(whip.add)-1)){
+                for(r in seq(6, (ncol(whip.add)-1))){
                     whip.add[,r] <- NA
                 }
                 whip.add[,ncol(whip.add)] <- whip[addRows,wantedCol]

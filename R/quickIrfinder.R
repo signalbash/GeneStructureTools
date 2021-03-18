@@ -12,7 +12,7 @@ readIrfDataSet <- function(filePath){
 
     irf <- new("irfDataSet", filePath=filePath)
 
-    irfResultsFile <- fread(filePath, data.table=F)
+    irfResultsFile <- fread(filePath, data.table=FALSE)
     irfResultsFile$FDR <- stats::p.adjust(irfResultsFile$`p-diff`, "fdr")
     irfResultsFile$psi_diff <- irfResultsFile$`A-IRratio` - irfResultsFile$`B-IRratio`
     irfResultsFile$gene_name <- unlist(lapply(str_split(irfResultsFile$`Intron-GeneName/GeneID`, "/"), "[[", 1))

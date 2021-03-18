@@ -238,7 +238,7 @@ findOverlaps.junc = function(query, subject, type=c("start", "end")){
 overlap2matrix <- function(ol, maxn=7){
     mat <- matrix(nrow = maxn, ncol = maxn, data = 1)
 
-    for(i in 1:nrow(mat)){
+    for(i in seq_len(nrow(mat))){
         mat[i,i] <- 0
         mat[i, ol$subjectHits[ol$queryHits == i]] <- 0
     }
@@ -257,7 +257,7 @@ matrix2combinations <-function(mat){
     newMat <- matrix(nrow=1, ncol=maxn, data=NA)
     newMatLine <- newMat
 
-    for(j in 1:maxn){
+    for(j in seq_len(maxn)){
 
         if(all(is.na(newMatLine[,j]))){
             newMatLine[,j] <- 1
@@ -333,7 +333,7 @@ matrix2combinations <-function(mat){
     #     newMat <- newMat[-rm,]
     # }
 
-    for(x in 1:nrow(mat)){
+    for(x in seq_len(nrow(mat))){
 
         dontCombine <- which(mat[x,] == 0)
         dontCombine <- dontCombine[dontCombine != x]
@@ -350,7 +350,7 @@ matrix2combinations <-function(mat){
     combos <- (apply(newMat, 1, function(x) which(!is.na(x))))
     if(is.matrix(combos)){
         combinationList <- list()
-        for(i in 1:ncol(combos)){
+        for(i in seq_len(ncol(combos))){
             combinationList[[i]] <- combos[,i]
         }
         return(combinationList)
@@ -381,7 +381,7 @@ addSets <- function(clusterGRanges.noset){
     if(nrow(ol) > 0){
         combinationList <- matrix2combinations(overlap2matrix(ol, maxn=length(clusterGRanges.noset)))
 
-        sets <- unlist(mapply(function(x,y) rep(x,y), 1:length(combinationList), lapply(combinationList, length)))
+        sets <- unlist(mapply(function(x,y) rep(x,y), seq_along(combinationList), lapply(combinationList, length)))
 
         clusterGRanges.sets <- clusterGRanges.noset[unlist(combinationList)]
         clusterGRanges.sets$set <- sets
@@ -391,7 +391,7 @@ addSets <- function(clusterGRanges.noset){
     }
 
     setlist <- unique(clusterGRanges.sets$set)
-    newSetList <- 1:length(setlist)
+    newSetList <- seq_along(setlist)
 
     clusterGRanges.sets$set <- newSetList[match(clusterGRanges.sets$set, setlist)]
 
@@ -573,7 +573,7 @@ makeNewLeafExons <- function(altIntronLocs, junctionRanges, clusterExons, splice
 
         #rep ids so transcript id will match across junctions
         clusterExons.alt <- rep(clusterExons.alt, length(ids)+1)
-        clusterExons.alt$transcript_id[-(1:ce.alt.length)] <-
+        clusterExons.alt$transcript_id[-(seq_len(ce.alt.length))] <-
             rep(ids, each=ce.alt.length)
 
         exon.ids <- paste(start(clusterExons.alt), end(clusterExons.alt), clusterExons.alt$transcript_id)
@@ -602,7 +602,7 @@ makeNewLeafExons <- function(altIntronLocs, junctionRanges, clusterExons, splice
 
         #rep ids so transcript id will match across junctions
         clusterExons.alt <- rep(clusterExons.alt, length(ids)+1)
-        clusterExons.alt$transcript_id[-(1:ce.alt.length)] <-
+        clusterExons.alt$transcript_id[-(seq_len(ce.alt.length))] <-
             rep(ids, each=ce.alt.length)
 
         exon.ids <- paste(start(clusterExons.alt), end(clusterExons.alt), clusterExons.alt$transcript_id)
@@ -638,7 +638,7 @@ makeNewLeafExonsUnanchored <- function(altIntronLocs, junctionRanges, clusterExo
     ce.alt.length <- length(clusterExons.alt3)
     #rep ids so transcript id will match across junctions
     clusterExons.alt3 <- rep(clusterExons.alt3, length(ids)+1)
-    clusterExons.alt3$transcript_id[-(1:ce.alt.length)] <-
+    clusterExons.alt3$transcript_id[-(seq_len(ce.alt.length))] <-
         rep(ids, each=ce.alt.length)
     exon.ids <- paste(start(clusterExons.alt3), end(clusterExons.alt3), clusterExons.alt3$transcript_id)
     clusterExons.alt3 <- clusterExons.alt3[!duplicated(exon.ids)]
@@ -647,7 +647,7 @@ makeNewLeafExonsUnanchored <- function(altIntronLocs, junctionRanges, clusterExo
     ce.alt.length <- length(clusterExons.alt5)
     #rep ids so transcript id will match across junctions
     clusterExons.alt5 <- rep(clusterExons.alt5, length(ids)+1)
-    clusterExons.alt5$transcript_id[-(1:ce.alt.length)] <-
+    clusterExons.alt5$transcript_id[-(seq_len(ce.alt.length))] <-
         rep(ids, each=ce.alt.length)
     exon.ids <- paste(start(clusterExons.alt5), end(clusterExons.alt5), clusterExons.alt5$transcript_id)
     clusterExons.alt5 <- clusterExons.alt5[!duplicated(exon.ids)]

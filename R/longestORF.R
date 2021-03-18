@@ -29,7 +29,7 @@ maxLocation <- function(startSite, stopSite, longest = 1){
         pairs <- pairs[order(plyr::desc(pairs$len)),]
         #pairs <- plyr::arrange(pairs, plyr::desc(len))
         pairs <- pairs[!duplicated(pairs$stop),]
-        return(as.numeric(pairs[longest,1:2]))    }else{
+        return(as.numeric(pairs[longest,c(1,2)]))    }else{
             return(c(NA,NA))
         }
 }
@@ -347,7 +347,7 @@ getOrfs <- function(transcripts,
             }
             m <- match(paste0(orfDF$id, orfDF$frame), paste0(uORFS.bytranscript$id,
                                                              uORFS.bytranscript$frame))
-            orfDF <- cbind(orfDF, uORFS.bytranscript[m,-c(1:2)])
+            orfDF <- cbind(orfDF, uORFS.bytranscript[m,-c(1,2)])
         }else{
             orfDF$total_uorfs <- NA
             orfDF$upstream_count <- NA

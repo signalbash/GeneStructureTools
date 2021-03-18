@@ -107,7 +107,7 @@ alternativeIntronUsage <- function(altIntronLocs, exons, replaceInternalExons=TR
                     ranges(newExons) <- IRanges(start=end(clusterGRanges.newExon)[-length(clusterGRanges.newExon)],
                                                 end=start(clusterGRanges.newExon)[-1])
 
-                    newExons$exon_id <- paste0("newEXON_", c(1:(length(clusterGRanges.newExon)-1)))
+                    newExons$exon_id <- paste0("newEXON_", c(seq_len(length(clusterGRanges.newExon)-1)))
 
                     tids <- unique(clusterExons$transcript_id)
                     newExons <- rep(newExons, length(tids))
@@ -408,7 +408,7 @@ readLeafcutterJunctions <- function(junctionFiles, minReads=10){
 
     junctions.all <- NULL
     for(f in seq_along(junctionFiles)){
-        junctions <- utils::read.delim(junctionFiles[f], header=F)
+        junctions <- utils::read.delim(junctionFiles[f], header=FALSE)
 
         index <- match(paste(junctions$V1,junctions$V2,junctions$V3,junctions$V6, sep="_"),
                        paste(junctions.all$V1,junctions.all$V2,junctions.all$V3,junctions.all$V6, sep="_"))

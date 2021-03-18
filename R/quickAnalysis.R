@@ -70,8 +70,8 @@ transcriptChangeSummary <- function(transcriptsX,
                 allTranscripts <- allTranscripts[-which(txEvents %in% c("TED", "TSD","TEU", "TSU"))]
             }else{
                 # clear transcripts X/Y
-                transcriptsX <- transcriptsX[-(1:length(transcriptsX))]
-                transcriptsY <- transcriptsY[-(1:length(transcriptsY))]
+                transcriptsX <- transcriptsX[-(seq_along(transcriptsX))]
+                transcriptsY <- transcriptsY[-(seq_along(transcriptsY))]
             }
 
             # for non-TS/TE events
@@ -422,7 +422,7 @@ leafcutterTranscriptChangeSummary <- function(leafcutterEvents,
                 altIntronLocs = leafcutterEvents[
                     leafcutterEvents$clusterID == geneEvents$Var1[i],]
                 if(all(altIntronLocs$deltapsi < 0) | all(altIntronLocs$deltapsi > 0)){
-                    altIntronLocs <- altIntronLocs[-(1:nrow(altIntronLocs)),]
+                    altIntronLocs <- altIntronLocs[-(seq_len(nrow(altIntronLocs))),]
                 }
 
                 if(nrow(altIntronLocs) > 1){

@@ -59,7 +59,7 @@ annotateGeneModel <- function(transcripts, orfs){
     transcriptsLocation.bySite$site <-
         unlist(lapply(aggregate(width ~ transcript_id,
                                 transcriptsLocation, sum)[,2],
-                      function(x) 1:x))
+                      function(x) seq_len(x)))
 
     # run through each transcript individually
     transcriptIds <- unique(transcriptsLocation.bySite$transcript)
