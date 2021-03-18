@@ -71,7 +71,7 @@ exonsToIntrons <- function(exons){
 #'
 #' @param exons GRanges object with exons
 #' @return GRanges object with transcripts
-#' @keywords internal
+#' @export
 #' @import GenomicRanges
 #' @importFrom IRanges IRanges
 #' @importFrom rtracklayer import

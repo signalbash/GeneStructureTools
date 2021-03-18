@@ -59,9 +59,9 @@ maxLocation <- function(startSite, stopSite, longest=1){
 #' @family ORF annotation
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata", "example_gtf.gtf",
+#' gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf",
 #' package="GeneStructureTools"))
-#' transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Neurl1a"]
+#' transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Tmem208"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #' # longest ORF for each transcripts
 #' orfs <- getOrfs(transcript, BSgenome=g, returnLongestOnly=TRUE)
@@ -397,9 +397,9 @@ cumsumANDpad <- function(x, padLength){
 #' @family ORF annotation
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata", "example_gtf.gtf",
+#' gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf",
 #' package="GeneStructureTools"))
-#' transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Neurl1a"]
+#' transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Tmem208"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #' # longest ORF for each transcripts
 #' orfs <- getOrfs(transcript, BSgenome=g, returnLongestOnly=FALSE)

@@ -47,7 +47,7 @@ removeDuplicatePairs <- function(betweenExons){
 #' Duplicate a reference Granges (exon-level) for each diff-splicing event/transcript combination required.
 #' @param betweenExons data.frame with related differential splicing event ids and reference transcript_ids
 #' @param exons reference exons GRanges
-#' @return
+#' @return Granges with transcripts duplicated
 #' @keywords internal
 #' @import methods
 #' @family rmats data processing
@@ -409,7 +409,7 @@ addSets <- function(clusterGRanges.noset){
 #' @family gtf manipulation
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf",
 #' package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' exons.duplicated <- c(exons[1:4], exons[1:4])

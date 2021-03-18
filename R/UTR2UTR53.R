@@ -8,7 +8,7 @@
 #' @import GenomicRanges
 #' @importFrom rtracklayer import
 #' @examples
-#' gtfFile <- system.file("extdata","example_gtf.gtf",
+#' gtfFile <- system.file("extdata","gencode.vM25.small.gtf",
 #' package="GeneStructureTools")
 #' gtf <- rtracklayer::import(gtfFile)
 #' gtf <- UTR2UTR53(gtf)

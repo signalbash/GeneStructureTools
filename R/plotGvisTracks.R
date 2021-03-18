@@ -9,9 +9,9 @@
 #' @family Gviz gene structure visualisation
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata", "example_gtf.gtf",
+#' gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf",
 #' package="GeneStructureTools"))
-#' transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Neurl1a"]
+#' transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Tmem208"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #' # longest ORF for each transcripts
 #' orfs <- getOrfs(transcript, BSgenome=g, returnLongestOnly=TRUE)
@@ -175,9 +175,9 @@ annotateGeneModel <- function(transcripts, orfs){
 #' @family Gviz gene structure visualisation
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata", "example_gtf.gtf",
+#' gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf",
 #' package="GeneStructureTools"))
-#' transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Neurl1a"]
+#' transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Tmem208"]
 #' geneModel <- makeGeneModel(transcript)
 makeGeneModel <- function(transcript){
     transcript <- as.data.frame(transcript)

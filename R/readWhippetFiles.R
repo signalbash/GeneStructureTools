@@ -10,7 +10,7 @@
 #' @family whippet data processing
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- list.files(system.file("extdata","whippet/",
+#' whippetFiles <- list.files(system.file("extdata","whippet_small/",
 #' package="GeneStructureTools"), full.names=TRUE)
 #' jncFiles <- whippetFiles[grep(".jnc", whippetFiles)]
 #' whippetJNC <- readWhippetJNCfiles(jncFiles)
@@ -68,7 +68,7 @@ readWhippetJNCfiles <- function(files, minCount=0){
 #' @family whippet data processing
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- list.files(system.file("extdata","whippet/",
+#' whippetFiles <- list.files(system.file("extdata","whippet_small/",
 #' package="GeneStructureTools"), full.names=TRUE)
 #' psiFiles <- whippetFiles[grep(".psi", whippetFiles)]
 #' whippetPSI <- readWhippetPSIfiles(psiFiles)
@@ -139,7 +139,7 @@ readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
 #' @family whippet data processing
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- list.files(system.file("extdata","whippet/",
+#' whippetFiles <- list.files(system.file("extdata","whippet_small/",
 #' package="GeneStructureTools"), full.names=TRUE)
 #' diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
 #' whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
@@ -190,7 +190,7 @@ readWhippetDIFFfiles <- function(files){
 #' @family whippet data processing
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- list.files(system.file("extdata","whippet/",
+#' whippetFiles <- list.files(system.file("extdata","whippet_small/",
 #' package="GeneStructureTools"), full.names=TRUE)
 #' diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
 #' whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
@@ -220,7 +220,7 @@ formatWhippetEvents <- function(whippet){
 #' @family whippet data processing
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet/",
+#' whippetFiles <- system.file("extdata","whippet_small/",
 #' package="GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 readWhippetDataSet <- function(filePath="."){
