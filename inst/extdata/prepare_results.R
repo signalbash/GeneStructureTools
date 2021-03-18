@@ -81,7 +81,7 @@ if(file.exists(groups_file)){ # can we run without this?
 exons_table=if (!is.null( exon_file )) {
   cat("Loading exons from",exon_file,"\n")
   #read_table(exon_file)
-  as.data.frame(fread(exon_file), data.table=F )
+  as.data.frame(fread(exon_file), data.table=FALSE)
 } else {
   cat("No exon_file provided.\n")
   NULL
@@ -97,12 +97,12 @@ names(effectSizesSplit) <- c("chr","start","end","clusterID")
 effectSizes <- cbind( effectSizes, effectSizesSplit)
 effectSizes$cluster <- paste(effectSizesSplit$chr, effectSizesSplit$clusterID, sep = ":")
 
-results <- fread(cluster_significance_file, data.table=F )
+results <- fread(cluster_significance_file, data.table=FALSE)
 results$FDR <- p.adjust( results$p, method = "fdr")
 
 # If there were no significant results, stop here and provide feedback to the user by printing
 # an error message indicating that no significant clusters were found at this FDR threshold
-if( !any(results$FDR < FDR_limit, na.rm=T) ){
+if( !any(results$FDR < FDR_limit, na.rm=TRUE) ){
    stop("No significant clusters found\n");
 }
 

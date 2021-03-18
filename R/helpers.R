@@ -23,7 +23,6 @@ annotateOverlapRmats <- function(rmatsGRanges, exons, exon_number = 1) {
 #' @return data.frame with related differential splicing event ids and reference transcript_ids
 #' @keywords internal
 #' @import methods
-#' @importFrom rlang .data
 #' @family rmats data processing
 #' @author Beth Signal
 removeDuplicatePairs <- function(betweenExons) {
@@ -203,7 +202,9 @@ annotateEventCoords <- function(eventCoords, betweenExons, exons) {
 #' @return Hits object
 #' @keywords internal
 #' @import methods
-#' @importFrom rlang .data
+#' @importFrom S4Vectors Hits
+#' @importFrom S4Vectors nLnode
+#' @importFrom S4Vectors nRnode
 #' @family data processing
 #' @author Beth Signal
 findOverlaps.junc <- function(query, subject, type = c("start", "end")) {
@@ -227,8 +228,11 @@ findOverlaps.junc <- function(query, subject, type = c("start", "end")) {
 
     if ("start" %in% type & "end" %in% type) {
         ol.df <- rbind(as.data.frame(ol.start), as.data.frame(ol.end))
-        ol.df <- arrange(ol.df, queryHits, subjectHits)
-        ol <- S4Vectors::Hits(from = ol.df$queryHits, to = ol.df$subjectHits, nLnode = S4Vectors::nLnode(ol.start), nRnode = S4Vectors::nRnode(ol.start), sort.by.query = TRUE)
+        ol.df <- ol.df[order(ol.df$queryHits, ol.df$subjectHits),]
+        ol <- S4Vectors::Hits(from = ol.df$queryHits, to = ol.df$subjectHits,
+                              nLnode = S4Vectors::nLnode(ol.start),
+                              nRnode = S4Vectors::nRnode(ol.start),
+                              sort.by.query = TRUE)
     } else if ("start" %in% type) {
         ol <- ol.start
     } else if ("end" %in% type) {

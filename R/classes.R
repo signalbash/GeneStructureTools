@@ -210,6 +210,7 @@ setGeneric("irfResults",
 #' @return differential splicing results data.frame
 #' (originally from a whippet .diff file)
 #' @family irf data processing
+#' @examples
 #' irfinder_file <- list.files(system.file("extdata","irf_small/",
 #' package="GeneStructureTools"), full.names=TRUE)
 #' irf <- readIrfDataSet(irfinder_file)

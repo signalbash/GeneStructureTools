@@ -1,15 +1,16 @@
 Package: GeneStructureTools
 Type: Package
 Title: Tools for spliced gene structure manipulation and analysis
-Version: 0.1.1
-Author: Beth Signal
-Maintainer: Beth Signal <b.signal@garvan.org.au>
+Version: 1.0.0
+Authors@R: person("Beth", "Signal",
+	email="beth.signal@gmail.com",
+	role=c("aut", "cre"))
 Description: GeneStructureTools can be used to create in silico alternative splicing events, and analyse potential effects this has on functional gene products. 
 License: BSD_3_clause + file LICENSE
 Encoding: UTF-8
 LazyData: true
 VignetteBuilder: knitr
-RoxygenNote: 6.1.0
-Imports: Biostrings,GenomicRanges,IRanges,data.table,plyr,stringdist,stringr,S4Vectors,BSgenome.Mmusculus.UCSC.mm10,stats,utils,Gviz,rtracklayer,methods
+RoxygenNote: 7.1.1
+Imports: Biostrings,GenomicRanges,IRanges,data.table,plyr,stringdist,stringr,S4Vectors,stats,utils,Gviz,rtracklayer,methods,dplyr
 biocViews: Software, DifferentialSplicing, FunctionalPrediction, Transcriptomics, AlternativeSplicing, RNASeq
-Suggests: BiocStyle, knitr, rmarkdown
+Suggests: BiocStyle, knitr, rmarkdown,BSgenome.Mmusculus.UCSC.mm10

@@ -18,14 +18,14 @@ results_file = parsed_args$options$output
 library(data.table)
 library(stringr)
 
-effectSizes <- fread(effect.sizes.file, data.table=F )
+effectSizes <- fread(effect.sizes.file, data.table=FALSE)
 effectSizesSplit <-  as.data.frame(str_split_fixed(effectSizes$intron, ":", 4), stringsAsFactors = FALSE)
 names(effectSizesSplit) <- c("chr","start","end","clusterID")
 
 effectSizes <- cbind( effectSizes, effectSizesSplit)
 effectSizes$cluster <- paste(effectSizesSplit$chr, effectSizesSplit$clusterID, sep = ":")
 
-results <- fread(cluster_significance_file, data.table=F )
+results <- fread(cluster_significance_file, data.table=FALSE)
 results$FDR <- p.adjust( results$p, method = "fdr")
 
 # Gather introns meeting the FDR threshold

@@ -19,7 +19,6 @@
 #' @importFrom rtracklayer import
 #' @importFrom utils installed.packages
 #' @importFrom dplyr distinct
-#' @importFrom rlang .data
 #' @family transcript isoform comparisons
 #' @author Beth Signal
 #' @examples
@@ -350,7 +349,6 @@ transcriptChangeSummary <- function(transcriptsX,
 #' @importFrom utils txtProgressBar
 #' @importFrom stringr str_split
 #' @importFrom rtracklayer import
-#' @importFrom rlang .data
 #' @import GenomicRanges
 #' @family leafcutter data processing
 #' @author Beth Signal

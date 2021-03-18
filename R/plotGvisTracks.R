@@ -5,6 +5,7 @@
 #' @export
 #' @importFrom plyr desc
 #' @import GenomicRanges
+#' @import Gviz
 #' @importFrom rtracklayer import
 #' @family Gviz gene structure visualisation
 #' @author Beth Signal

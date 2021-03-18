@@ -422,8 +422,7 @@ alternativeIntronUsage <- function(altIntronLocs, exons, replaceInternalExons = 
 #' @import GenomicRanges
 #' @family leafcutter splicing isoform creation
 #' @author Beth Signal
-#'
-#'
+#' @examples
 #' junction_files <- list.files(system.file("extdata","leaf_small",
 #' package="GeneStructureTools"), full.names=TRUE, pattern=".junc")
 #' leaf_junc <- readLeafcutterJunctions(junction_files)

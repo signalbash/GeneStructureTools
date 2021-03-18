@@ -12,7 +12,6 @@
 #' @import GenomicRanges
 #' @importFrom dplyr inner_join
 #' @importFrom dplyr left_join
-#' @importFrom rlang .data
 #' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples

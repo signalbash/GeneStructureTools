@@ -33,7 +33,6 @@ reformatExons <- function(exons) {
 #' @import methods
 #' @importFrom dplyr lead
 #' @importFrom dplyr left_join
-#' @importFrom rlang .data
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
