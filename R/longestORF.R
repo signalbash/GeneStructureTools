@@ -12,14 +12,14 @@
 #' starts <- c(1,10,15,25)
 #' stops <- c(4,16,50,55)
 #' # longest start site = 25, longest stop site = 50
-#' maxLocation(starts, stops, longest = 1)
+#' maxLocation(starts, stops, longest=1)
 #' starts <- c(1,10,15,25)
 #' stops <- c(4,14,50,55)
 #' # longest start site = 15, longest stop site = 50
-#' maxLocation(starts, stops, longest = 1)
+#' maxLocation(starts, stops, longest=1)
 #' # 2nd longest start site = 10, 2nd longest stop site = 14
-#' maxLocation(starts, stops, longest = 2)
-maxLocation <- function(startSite, stopSite, longest = 1){
+#' maxLocation(starts, stops, longest=2)
+maxLocation <- function(startSite, stopSite, longest=1){
     if(length(startSite) > 0){
         # make start / stop pairs
         stopPairIndex <-
@@ -64,27 +64,27 @@ maxLocation <- function(startSite, stopSite, longest = 1){
 #' transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Neurl1a"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #' # longest ORF for each transcripts
-#' orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = TRUE)
+#' orfs <- getOrfs(transcript, BSgenome=g, returnLongestOnly=TRUE)
 #' # longest ORF in all 3 frames for each transcript
-#' orfs <- getOrfs(transcript, BSgenome = g, allFrames = TRUE)
+#' orfs <- getOrfs(transcript, BSgenome=g, allFrames=TRUE)
 #' # longest 3 ORFS in eacht transcript
-#' orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = FALSE, longest=3)
+#' orfs <- getOrfs(transcript, BSgenome=g, returnLongestOnly=FALSE, longest=3)
 getOrfs <- function(transcripts,
-                    BSgenome = NULL,
+                    BSgenome=NULL,
                     returnLongestOnly=TRUE,
                     allFrames=FALSE,
                     longest=1,
                     exportFasta=FALSE,
                     fastaFile=NULL,
                     uORFs=FALSE,
-                    selectLongest = 1){
+                    selectLongest=1){
 
     if (allFrames == TRUE) {
-        returnLongestOnly = FALSE
-        longest = 1
+        returnLongestOnly <- FALSE
+        longest <- 1
     }
 
-    GenomeInfoDb::seqlevelsStyle(transcripts) = GenomeInfoDb::seqlevelsStyle(BSgenome)[1]
+    GenomeInfoDb::seqlevelsStyle(transcripts) <- GenomeInfoDb::seqlevelsStyle(BSgenome)[1]
     # check -ve dist to junction b calls
     # check exon number ORF start/ends
 
@@ -98,7 +98,7 @@ getOrfs <- function(transcripts,
 
     seqCat <-
         aggregate(seq ~ transcript_id, mcols(transcripts), function(x)
-            (paste(x, collapse = "")))
+            (paste(x, collapse="")))
     ids <- as.character(seqCat$transcript_id)
 
     if(exportFasta & !is.null(fastaFile)){
@@ -109,8 +109,8 @@ getOrfs <- function(transcripts,
 
         # gzip files to save some space
         gz <- gzfile(fastaFile, "w")
-        utils::write.table(fa, gz, col.names = FALSE,
-                           row.names = FALSE, quote=FALSE, sep="\n")
+        utils::write.table(fa, gz, col.names=FALSE,
+                           row.names=FALSE, quote=FALSE, sep="\n")
         close(gz)
     }else if(exportFasta & is.null(fastaFile)){
         message("skipping writing .fa file")
@@ -131,7 +131,7 @@ getOrfs <- function(transcripts,
     # 3 frames
     seqCat <-
         c(seqCat, stringr::str_sub(seqCat, 2), stringr::str_sub(seqCat, 3))
-    frames <- rep(c(1, 2, 3), each = length(ids))
+    frames <- rep(c(1, 2, 3), each=length(ids))
     ids <- c(ids, ids, ids)
 
     orf <-
@@ -139,10 +139,10 @@ getOrfs <- function(transcripts,
             as.character(Biostrings::translate(Biostrings::DNAString(x))))))
 
     orfDF <- data.frame(
-        id = ids,
-        aa_sequence = orf,
-        frame = frames,
-        stringsAsFactors = FALSE
+        id=ids,
+        aa_sequence=orf,
+        frame=frames,
+        stringsAsFactors=FALSE
     )
 
     orfDF$seq_length <- nchar(orfDF$aa_sequence)
@@ -174,14 +174,14 @@ getOrfs <- function(transcripts,
             maxLoc <- cbind(maxLoc,
                             mapply(
                                 function(x, y)
-                                    maxLocation(x, y, longest = i),
+                                    maxLocation(x, y, longest=i),
                                 startSites,
                                 stopSites
                             ))
             orfDF.longest <- rbind(orfDF.longest, orfDF)
         }
 
-        o <- order(maxLoc[2, ] - maxLoc[1, ], decreasing = TRUE)
+        o <- order(maxLoc[2, ] - maxLoc[1, ], decreasing=TRUE)
 
         orfDF.longest$start_site <- maxLoc[1, ]
         orfDF.longest$stop_site <- maxLoc[2, ]
@@ -218,8 +218,8 @@ getOrfs <- function(transcripts,
     orfDF$utr3_length <-
         (orfDF$seq_length_nt - orfDF$stop_site_nt) + 1
 
-    widths <- data.frame(w = width(transcripts),
-                         id = transcripts$transcript_id)
+    widths <- data.frame(w=width(transcripts),
+                         id=transcripts$transcript_id)
     pad <- max(table(widths$id))
     if (pad > 1) {
         if (length(unique(transcripts$transcript_id)) == 1) {
@@ -228,7 +228,7 @@ getOrfs <- function(transcripts,
                 lapply(orfDF$stop_site_nt, function(x)
                     x - w)
             diffs <-
-                matrix(unlist(diffs), ncol = length(orfDF$id))
+                matrix(unlist(diffs), ncol=length(orfDF$id))
         } else{
             w2 <-
                 aggregate(w ~ id, widths, function(x)
@@ -294,9 +294,9 @@ getOrfs <- function(transcripts,
         transcripts.uorf <- transcripts[transcripts$transcript_id %in% orfDF$id]
 
         upstreamORFs <- getUOrfs(transcripts=transcripts.uorf,
-                                 BSgenome = BSgenome,
-                                 orfs = orfDF,
-                                 findExonB = TRUE)
+                                 BSgenome=BSgenome,
+                                 orfs=orfDF,
+                                 findExonB=TRUE)
 
         if(nrow(upstreamORFs) > 0){
             uORFS.bytranscript <- aggregate(
@@ -402,10 +402,10 @@ cumsumANDpad <- function(x, padLength){
 #' transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Neurl1a"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #' # longest ORF for each transcripts
-#' orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = FALSE)
-#' uORFS <- getUOrfs(transcript, BSgenome = g, orfs = orfs, findExonB = TRUE)
+#' orfs <- getOrfs(transcript, BSgenome=g, returnLongestOnly=FALSE)
+#' uORFS <- getUOrfs(transcript, BSgenome=g, orfs=orfs, findExonB=TRUE)
 getUOrfs <- function(transcripts,
-                     BSgenome = NULL,
+                     BSgenome=NULL,
                      orfs, findExonB=FALSE){
 
     transcripts$exon_number <-
@@ -418,7 +418,7 @@ getUOrfs <- function(transcripts,
 
     seqCat <-
         aggregate(seq ~ transcript_id, mcols(transcripts), function(x)
-            (paste(x, collapse = "")))
+            (paste(x, collapse="")))
     ids <- as.character(seqCat$transcript_id)
     seqCat <- seqCat$seq
     rm <- which(grepl("N", seqCat))
@@ -434,7 +434,7 @@ getUOrfs <- function(transcripts,
     # 3 frames
     seqCat <-
         c(seqCat, stringr::str_sub(seqCat, 2), stringr::str_sub(seqCat, 3))
-    frames <- rep(c(1, 2, 3), each = length(ids))
+    frames <- rep(c(1, 2, 3), each=length(ids))
     ids <- c(ids, ids, ids)
 
     orf <-
@@ -442,10 +442,10 @@ getUOrfs <- function(transcripts,
             as.character(Biostrings::translate(Biostrings::DNAString(x))))))
 
     orfDF <- data.frame(
-        id = ids,
-        aa_sequence = orf,
-        frame = frames,
-        stringsAsFactors = FALSE
+        id=ids,
+        aa_sequence=orf,
+        frame=frames,
+        stringsAsFactors=FALSE
     )
 
     orfDF$seq_length <- nchar(orfDF$aa_sequence)
@@ -493,8 +493,8 @@ getUOrfs <- function(transcripts,
             (orfs$seq_length_nt[match(upstreamORFs$id,orfs$id,)] -
                  upstreamORFs$stop_site_nt) + 1
 
-        widths <- data.frame(w = width(transcripts),
-                             id = transcripts$transcript_id)
+        widths <- data.frame(w=width(transcripts),
+                             id=transcripts$transcript_id)
 
         pad <- max(table(widths$id))
         if (pad > 1) {
@@ -504,7 +504,7 @@ getUOrfs <- function(transcripts,
                     lapply(upstreamORFs$stop_site_nt, function(x)
                         x - w)
                 diffs <-
-                    matrix(unlist(diffs), ncol = length(upstreamORFs$id))
+                    matrix(unlist(diffs), ncol=length(upstreamORFs$id))
             } else{
                 w2 <-
                     aggregate(w ~ id, widths, function(x)

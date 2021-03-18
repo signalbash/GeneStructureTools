@@ -24,15 +24,15 @@
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf",
-#' package = "GeneStructureTools"))
+#' package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' whippetFiles <- system.file("extdata","whippet_small/",
-#' package = "GeneStructureTools")
+#' package="GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
-#' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
+#' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta=0.2)
 #'
 #' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
 #' variableWidth=0, findIntrons=FALSE)
@@ -45,15 +45,12 @@ transcriptChangeSummary <- function(transcriptsX,
                                     transcriptsY,
                                     BSgenome,
                                     exons,
-                                    dataSet = NULL,
-                                    exportGTF = NULL,
-
-                                    NMD = FALSE,
-
+                                    dataSet=NULL,
+                                    exportGTF=NULL,
+                                    NMD=FALSE,
                                     compareBy="gene",
-                                    orfPrediction = "allFrames",
-                                    compareToGene = FALSE,
-
+                                    orfPrediction="allFrames",
+                                    compareToGene=FALSE,
                                     selectLongest=1){
 
 
@@ -110,39 +107,39 @@ transcriptChangeSummary <- function(transcriptsX,
         if(class(dataSet)[1] == "rmatsDataSet"){
 
             # combine all events (only PSI direction/eventID)
-            allEvents = NULL
+            allEvents <- NULL
             for(eventType in c("SE", "MXE", "RI", "A3SS", "A5SS")){
-                psiDiffs = slot(dataSet, eventType)[,c("ID","GeneID","geneSymbol", "PValue","FDR","IncLevelDifference")]
+                psiDiffs <- slot(dataSet, eventType)[,c("ID","GeneID","geneSymbol", "PValue","FDR","IncLevelDifference")]
                 if(nrow(psiDiffs) > 0){
-                    psiDiffs$type = eventType
-                    allEvents = rbind(allEvents, psiDiffs)
+                    psiDiffs$type <- eventType
+                    allEvents <- rbind(allEvents, psiDiffs)
                 }
             }
 
             allTranscripts <- c(transcriptsX, transcriptsY)
-            allTranscripts$type = NA
-            allTranscripts$type[allTranscripts$set %in% c("included_exon","skipped_exon")] = "SE"
-            allTranscripts$type[allTranscripts$set %in% c("included_exon1","included_exon2")] = "MXE"
-            allTranscripts$type[allTranscripts$set %in% c("spliced_intron","retained_intron")] = "RI"
-            allTranscripts$type[allTranscripts$set %in% c("alt3_splicesite_long","alt3_splicesite_short")] = "A3SS"
-            allTranscripts$type[allTranscripts$set %in% c("alt5_splicesite_long","alt5_splicesite_short")] = "A5SS"
+            allTranscripts$type <- NA
+            allTranscripts$type[allTranscripts$set %in% c("included_exon","skipped_exon")] <- "SE"
+            allTranscripts$type[allTranscripts$set %in% c("included_exon1","included_exon2")] <- "MXE"
+            allTranscripts$type[allTranscripts$set %in% c("spliced_intron","retained_intron")] <- "RI"
+            allTranscripts$type[allTranscripts$set %in% c("alt3_splicesite_long","alt3_splicesite_short")] <- "A3SS"
+            allTranscripts$type[allTranscripts$set %in% c("alt5_splicesite_long","alt5_splicesite_short")] <- "A5SS"
 
-            eventId = unlist(lapply(str_split(lapply(str_split(allTranscripts$transcript_id, "[ ]"),"[[", 2), "[-]"),"[[", 1))
+            eventId <- unlist(lapply(str_split(lapply(str_split(allTranscripts$transcript_id, "[ ]"),"[[", 2), "[-]"),"[[", 1))
 
-            allEvents$event_id = allTranscripts$transcript_id[match(paste0(allEvents$ID, "_", allEvents$type),
+            allEvents$event_id <- allTranscripts$transcript_id[match(paste0(allEvents$ID, "_", allEvents$type),
                                                                                             paste0(eventId, "_", allTranscripts$type))]
 
-            allEvents$event_id[which(!is.na(allEvents$event_id))] = unlist(lapply(str_split(allEvents$event_id[which(!is.na(allEvents$event_id))],
+            allEvents$event_id[which(!is.na(allEvents$event_id))] <- unlist(lapply(str_split(allEvents$event_id[which(!is.na(allEvents$event_id))],
                                                                                             "[ ]"), "[[" ,2))
 
-            m = match(paste0(eventId, "_", allTranscripts$type),
+            m <- match(paste0(eventId, "_", allTranscripts$type),
                       paste0(allEvents$ID, "_", allEvents$type))
 
-            normA = which(allEvents$IncLevelDifference > 0)
-            normB = which(allEvents$IncLevelDifference < 0)
+            normA <- which(allEvents$IncLevelDifference > 0)
+            normB <- which(allEvents$IncLevelDifference < 0)
 
-            setsA = c("included_exon", "included_exon2", "retained_intron","alt3_splicesite_long","alt5_splicesite_long")
-            setsB = c("skipped_exon", "included_exon1", "spliced_intron","alt3_splicesite_short","alt5_splicesite_short")
+            setsA <- c("included_exon", "included_exon2", "retained_intron","alt3_splicesite_long","alt5_splicesite_long")
+            setsB <- c("skipped_exon", "included_exon1", "spliced_intron","alt3_splicesite_short","alt5_splicesite_short")
 
             transcriptsX <- allTranscripts[
                 which((m %in% normA & allTranscripts$set %in% setsA) |
@@ -156,27 +153,27 @@ transcriptChangeSummary <- function(transcriptsX,
         if(class(dataSet)[1] == "irfDataSet"){
 
             # combine all events (only PSI direction/eventID)
-            allEvents = slot(dataSet, "IRFresults")
-            allEvents$type="RI"
+            allEvents <- slot(dataSet, "IRFresults")
+            allEvents$type <- "RI"
 
             allTranscripts <- c(transcriptsX, transcriptsY)
-            allTranscripts$type = NA
-            allTranscripts$type[allTranscripts$set %in% c("spliced_intron","retained_intron")] = "RI"
+            allTranscripts$type <- NA
+            allTranscripts$type[allTranscripts$set %in% c("spliced_intron","retained_intron")] <- "RI"
 
-            eventId = unlist(lapply(str_split(allTranscripts$transcript_id, "[ ]"),"[[", 2))
+            eventId <- unlist(lapply(str_split(allTranscripts$transcript_id, "[ ]"),"[[", 2))
 
-            allEvents$event_id = unlist(lapply(str_split(allTranscripts$transcript_id[match(paste0(allEvents$intron_id, "_", allEvents$type),
+            allEvents$event_id <- unlist(lapply(str_split(allTranscripts$transcript_id[match(paste0(allEvents$intron_id, "_", allEvents$type),
                                                                                             paste0(eventId, "_", allTranscripts$type))],
                                                          "[ ]"), "[[" ,2))
 
-            m = match(paste0(eventId, "_", allTranscripts$type),
+            m <- match(paste0(eventId, "_", allTranscripts$type),
                       paste0(allEvents$intron_id, "_", allEvents$type))
 
-            normA = which(allEvents$psi_diff > 0)
-            normB = which(allEvents$psi_diff < 0)
+            normA <- which(allEvents$psi_diff > 0)
+            normB <- which(allEvents$psi_diff < 0)
 
-            setsA = c( "retained_intron")
-            setsB = c("spliced_intron")
+            setsA <- c( "retained_intron")
+            setsB <- c("spliced_intron")
 
             transcriptsX <- allTranscripts[
                 which((m %in% normA & allTranscripts$set %in% setsA) |
@@ -201,17 +198,17 @@ transcriptChangeSummary <- function(transcriptsX,
     }
 
     if(orfPrediction == "allFrames"){
-        orfsX <- getOrfs(transcriptsX, BSgenome, returnLongestOnly = FALSE,
-                         allFrames = TRUE, uORFs = TRUE,
-                         selectLongest = selectLongest)
-        orfsY <- getOrfs(transcriptsY, BSgenome, returnLongestOnly = FALSE,
-                         allFrames = TRUE, uORFs = TRUE,
-                         selectLongest = selectLongest)
+        orfsX <- getOrfs(transcriptsX, BSgenome, returnLongestOnly=FALSE,
+                         allFrames=TRUE, uORFs=TRUE,
+                         selectLongest=selectLongest)
+        orfsY <- getOrfs(transcriptsY, BSgenome, returnLongestOnly=FALSE,
+                         allFrames=TRUE, uORFs=TRUE,
+                         selectLongest=selectLongest)
     }else{
-        orfsX <- getOrfs(transcriptsX, BSgenome,returnLongestOnly = TRUE,
-                         uORFs = TRUE, selectLongest = selectLongest)
-        orfsY <- getOrfs(transcriptsY, BSgenome,returnLongestOnly = TRUE,
-                         uORFs = TRUE, selectLongest = selectLongest)
+        orfsX <- getOrfs(transcriptsX, BSgenome,returnLongestOnly=TRUE,
+                         uORFs=TRUE, selectLongest=selectLongest)
+        orfsY <- getOrfs(transcriptsY, BSgenome,returnLongestOnly=TRUE,
+                         uORFs=TRUE, selectLongest=selectLongest)
     }
 
     if(all(!grepl("[+]", orfsX$id))){
@@ -241,19 +238,19 @@ transcriptChangeSummary <- function(transcriptsX,
 
     if(compareToGene == TRUE){
         orfAllGenes <- getOrfs(exons[exons$gene_id %in% unique(c(transcriptsX$gene_id, transcriptsY$gene_id)) & exons$transcript_type=="protein_coding"],
-                               BSgenome=BSgenome, returnLongestOnly = TRUE)
+                               BSgenome=BSgenome, returnLongestOnly=TRUE)
 
         if(NMD == TRUE){
             orfAllGenes <- manualNMD(orfAllGenes)
         }
 
-        orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "gene",
-                             geneSimilarity = TRUE,
-                             allORFs = orfAllGenes, compareUTR = TRUE)
+        orfChange <- orfDiff(orfsX, orfsY, filterNMD=NMD, compareBy="gene",
+                             geneSimilarity=TRUE,
+                             allORFs=orfAllGenes, compareUTR=TRUE)
     }else{
 
-        orfChange <- orfDiff(orfsX, orfsY, filterNMD = NMD, compareBy = "gene",
-                             compareUTR = TRUE)
+        orfChange <- orfDiff(orfsX, orfsY, filterNMD=NMD, compareBy="gene",
+                             compareUTR=TRUE)
     }
 
 
@@ -275,30 +272,30 @@ transcriptChangeSummary <- function(transcriptsX,
             # need to collapse/re-match to a 'group' id, otherwise you get lots of doubleups
             if(all(is.na(m))){
 
-                tidToEvent = data.frame(tid=c(transcriptsX$transcript_id, transcriptsY$transcript_id),
+                tidToEvent <- data.frame(tid=c(transcriptsX$transcript_id, transcriptsY$transcript_id),
                                         event_id=c(transcriptsX$event_id, transcriptsY$event_id))
-                tidToEvent = dplyr::distinct(tidToEvent)
+                tidToEvent <- dplyr::distinct(tidToEvent)
 
-                #m = match(orfChange$id, unlist(lapply(str_split(tidToEvent$tid, "[ ]"), "[[", 2)))
-                m = match(whippetEvents$coord, tidToEvent$event_id)
-                whippetEvents = whippetEvents[which(!is.na(m)),]
-                m = match(whippetEvents$coord, tidToEvent$event_id)
-                whippetEvents$group_id = unlist(lapply(str_split(tidToEvent$tid[m], "[ ]"), "[[", 2))
+                #m <- match(orfChange$id, unlist(lapply(str_split(tidToEvent$tid, "[ ]"), "[[", 2)))
+                m <- match(whippetEvents$coord, tidToEvent$event_id)
+                whippetEvents <- whippetEvents[which(!is.na(m)),]
+                m <- match(whippetEvents$coord, tidToEvent$event_id)
+                whippetEvents$group_id <- unlist(lapply(str_split(tidToEvent$tid[m], "[ ]"), "[[", 2))
 
-                whippetEvents = arrange(whippetEvents, group_id, plyr::desc(probability), plyr::desc(abs(psi_delta)))
-                whippetEvents = whippetEvents[!duplicated(whippetEvents$group_id),]
+                whippetEvents <- arrange(whippetEvents, group_id, plyr::desc(probability), plyr::desc(abs(psi_delta)))
+                whippetEvents <- whippetEvents[!duplicated(whippetEvents$group_id),]
 
-                m = match(orfChange$id, whippetEvents$group_id)
+                m <- match(orfChange$id, whippetEvents$group_id)
 
                 orfChange <- cbind(whippetEvents[m,], orfChange)
-                orfChange$group_id = NULL
+                orfChange$group_id <- NULL
 
             }else{
                 orfChange <- cbind(whippetEvents[m,], orfChange)
             }
         }else if(class(dataSet)[1] == "rMATSDataSet"){
             m <- match(orfChange$id, allEvents$event_id)
-            orfChange = cbind(allEvents[m,], orfChange[,-1])
+            orfChange <- cbind(allEvents[m,], orfChange[,-1])
         }
     }
     return(orfChange)
@@ -328,19 +325,19 @@ transcriptChangeSummary <- function(transcriptsX,
 #' @family leafcutter data processing
 #' @author Beth Signal
 #' @examples
-#'leafcutterFiles <- list.files(system.file("extdata","leaf_small/",package = "GeneStructureTools"), full.names = TRUE)
+#'leafcutterFiles <- list.files(system.file("extdata","leaf_small/",package="GeneStructureTools"), full.names=TRUE)
 #'leafcutterIntrons <- read.delim(leafcutterFiles[grep("intron_results", leafcutterFiles)],stringsAsFactors=FALSE)
-#'gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#'gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package="GeneStructureTools"))
 #'exons <- gtf[gtf$type=="exon"]
 #'g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
-#'leafcutterTranscriptChangeSummary(leafcutterEvents = leafcutterIntrons, exons=exons,BSgenome = g,NMD=FALSE)
+#'leafcutterTranscriptChangeSummary(leafcutterEvents=leafcutterIntrons, exons=exons,BSgenome=g,NMD=FALSE)
 
 leafcutterTranscriptChangeSummary <- function(leafcutterEvents,
                                               exons,
                                               FDR=NA,
                                               combineGeneEvents=FALSE,
                                               BSgenome,
-                                              NMD = FALSE,
+                                              NMD=FALSE,
                                               showProgressBar=TRUE,
                                               junctions=NULL,
                                               exportGTF=NULL){
@@ -349,56 +346,56 @@ leafcutterTranscriptChangeSummary <- function(leafcutterEvents,
     if(is.na(FDR)){
         warning("You haven't selected a FDR cutoff...")
         warning("Using FDR<0.05 to reduce runtime. Change to FDR=1 to model all events.")
-        FDR = 0.05
+        FDR <- 0.05
     }
 
-    leafcutterEvents = leafcutterEvents[leafcutterEvents$FDR <= FDR,]
-    leafcutterEvents$cluster = gsub("[_][+-]", "",leafcutterEvents$cluster)
-    leafcutterEvents$clusterID = gsub("[_][+-]", "",leafcutterEvents$clusterID)
-    leafcutterEvents$intron = gsub("[_][+-]", "",leafcutterEvents$intron)
+    leafcutterEvents <- leafcutterEvents[leafcutterEvents$FDR <= FDR,]
+    leafcutterEvents$cluster <- gsub("[_][+-]", "",leafcutterEvents$cluster)
+    leafcutterEvents$clusterID <- gsub("[_][+-]", "",leafcutterEvents$clusterID)
+    leafcutterEvents$intron <- gsub("[_][+-]", "",leafcutterEvents$intron)
 
 
     ## find actual event strand
-    leafcutterGranges = GRanges(seqnames = leafcutterEvents$chr,
-                                ranges = IRanges(start=leafcutterEvents$start, end = leafcutterEvents$end),
-                                strand="*", clusterID=leafcutterEvents$clusterID, genes = leafcutterEvents$genes)
+    leafcutterGranges <- GRanges(seqnames=leafcutterEvents$chr,
+                                ranges=IRanges(start=leafcutterEvents$start, end=leafcutterEvents$end),
+                                strand="*", clusterID=leafcutterEvents$clusterID, genes=leafcutterEvents$genes)
 
-    introns = exonsToIntrons(exons)
-    ol.intron = as.data.frame(findOverlaps.junc(leafcutterGranges, introns))
-    ol.intron$leaf = leafcutterGranges$clusterID[ol.intron$queryHits]
-    ol.intron$leaf_gene = leafcutterGranges$genes[ol.intron$queryHits]
-    ol.intron$ref = introns$gene_id[ol.intron$subjectHits]
-    ol.intron$ref_name = introns$gene_name[ol.intron$subjectHits]
-    ol.intron$ref_strand = as.character(strand(introns))[ol.intron$subjectHits]
+    introns <- exonsToIntrons(exons)
+    ol.intron <- as.data.frame(findOverlaps.junc(leafcutterGranges, introns))
+    ol.intron$leaf <- leafcutterGranges$clusterID[ol.intron$queryHits]
+    ol.intron$leaf_gene <- leafcutterGranges$genes[ol.intron$queryHits]
+    ol.intron$ref <- introns$gene_id[ol.intron$subjectHits]
+    ol.intron$ref_name <- introns$gene_name[ol.intron$subjectHits]
+    ol.intron$ref_strand <- as.character(strand(introns))[ol.intron$subjectHits]
 
-    ol.intron = ol.intron[!(duplicated(paste0(ol.intron$leaf, ol.intron$ref))),]
-    ol.intron$leaf_strand = str_sub(ol.intron$leaf, -1,-1)
+    ol.intron <- ol.intron[!(duplicated(paste0(ol.intron$leaf, ol.intron$ref))),]
+    ol.intron$leaf_strand <- str_sub(ol.intron$leaf, -1,-1)
 
-    refStrand = aggregate(ref_strand ~ leaf, ol.intron, function(x) paste0(sort(unique(x)), collapse = ","))
-    refStrand = refStrand[(refStrand$ref_strand %in% c("+", "-")),]
+    refStrand <- aggregate(ref_strand ~ leaf, ol.intron, function(x) paste0(sort(unique(x)), collapse=","))
+    refStrand <- refStrand[(refStrand$ref_strand %in% c("+", "-")),]
 
-    noJuncMatch = unique(leafcutterGranges$clusterID)[which(!(unique(leafcutterGranges$clusterID) %in% refStrand$leaf))]
+    noJuncMatch <- unique(leafcutterGranges$clusterID)[which(!(unique(leafcutterGranges$clusterID) %in% refStrand$leaf))]
 
     if(length(noJuncMatch) > 0){
-        leafcutterGranges.nomatch = leafcutterGranges[leafcutterGranges$clusterID %in% noJuncMatch]
-        ol.intron = as.data.frame(findOverlaps(leafcutterGranges.nomatch, introns))
-        ol.intron$leaf = leafcutterGranges.nomatch$clusterID[ol.intron$queryHits]
-        ol.intron$leaf_gene = leafcutterGranges.nomatch$genes[ol.intron$queryHits]
-        ol.intron$ref = introns$gene_id[ol.intron$subjectHits]
-        ol.intron$ref_name = introns$gene_name[ol.intron$subjectHits]
-        ol.intron$ref_strand = as.character(strand(introns))[ol.intron$subjectHits]
+        leafcutterGranges.nomatch <- leafcutterGranges[leafcutterGranges$clusterID %in% noJuncMatch]
+        ol.intron <- as.data.frame(findOverlaps(leafcutterGranges.nomatch, introns))
+        ol.intron$leaf <- leafcutterGranges.nomatch$clusterID[ol.intron$queryHits]
+        ol.intron$leaf_gene <- leafcutterGranges.nomatch$genes[ol.intron$queryHits]
+        ol.intron$ref <- introns$gene_id[ol.intron$subjectHits]
+        ol.intron$ref_name <- introns$gene_name[ol.intron$subjectHits]
+        ol.intron$ref_strand <- as.character(strand(introns))[ol.intron$subjectHits]
 
-        ol.intron = ol.intron[!(duplicated(paste0(ol.intron$queryHits, ol.intron$ref))),]
-        ol.intron = as.data.frame(table(ol.intron$leaf, ol.intron$ref, ol.intron$ref_strand))
-        ol.intron = ol.intron[ol.intron$Freq > 0,]
-        ol.intron = arrange(ol.intron, Var1, desc(Freq))
-        ol.intron = ol.intron[!duplicated(ol.intron$Var1), c(1,3)]
-        refStrandv2 = ol.intron
-        colnames(refStrandv2) = colnames(refStrand)
-        refStrand = rbind(refStrandv2,refStrand)
+        ol.intron <- ol.intron[!(duplicated(paste0(ol.intron$queryHits, ol.intron$ref))),]
+        ol.intron <- as.data.frame(table(ol.intron$leaf, ol.intron$ref, ol.intron$ref_strand))
+        ol.intron <- ol.intron[ol.intron$Freq > 0,]
+        ol.intron <- arrange(ol.intron, Var1, desc(Freq))
+        ol.intron <- ol.intron[!duplicated(ol.intron$Var1), c(1,3)]
+        refStrandv2 <- ol.intron
+        colnames(refStrandv2) <- colnames(refStrand)
+        refStrand <- rbind(refStrandv2,refStrand)
     }
 
-    leafcutterEvents$strand = as.character(refStrand$ref_strand[match(leafcutterEvents$clusterID, as.character(refStrand$leaf))])
+    leafcutterEvents$strand <- as.character(refStrand$ref_strand[match(leafcutterEvents$clusterID, as.character(refStrand$leaf))])
     ## DONE
 
     geneEvents <- as.data.frame(table(leafcutterEvents$clusterID))
@@ -409,18 +406,18 @@ leafcutterTranscriptChangeSummary <- function(leafcutterEvents,
         if(showProgressBar){
             message(paste0("Generating alternative isoforms for ",
                            nrow(geneEvents), " clusters:"))
-            pb <- utils::txtProgressBar(min = 0, max = nrow(geneEvents),
-                                        style = 3)
+            pb <- utils::txtProgressBar(min=0, max=nrow(geneEvents),
+                                        style=3)
         }
 
-        altIso <- alternativeIntronUsage(altIntronLocs = leafcutterEvents[leafcutterEvents$clusterID == geneEvents$Var1[1],],
+        altIso <- alternativeIntronUsage(altIntronLocs=leafcutterEvents[leafcutterEvents$clusterID == geneEvents$Var1[1],],
             exons, junctions=junctions)
 
         if(showProgressBar){utils::setTxtProgressBar(pb, 1)}
 
         if(nrow(geneEvents) > 1){
             for(i in 2:nrow(geneEvents)){
-                altIntronLocs = leafcutterEvents[
+                altIntronLocs <- leafcutterEvents[
                     leafcutterEvents$clusterID == geneEvents$Var1[i],]
                 if(all(altIntronLocs$deltapsi < 0) | all(altIntronLocs$deltapsi > 0)){
                     altIntronLocs <- altIntronLocs[-(seq_len(nrow(altIntronLocs))),]
@@ -441,7 +438,7 @@ leafcutterTranscriptChangeSummary <- function(leafcutterEvents,
         if(showProgressBar){
             message(paste0("Generating alternative isoforms for ",
                            nrow(geneEvents), " genes:"))
-            pb <- utils::txtProgressBar(min = 0, max = length(genes), style = 3)
+            pb <- utils::txtProgressBar(min=0, max=length(genes), style=3)
         }
         for(j in seq_along(genes)){
             clusters <- geneEvents[geneEvents$Var1==genes[j],]
@@ -452,7 +449,7 @@ leafcutterTranscriptChangeSummary <- function(leafcutterEvents,
 
             if(nrow(clusters) > 1){
                 for(i in 2:nrow(clusters)){
-                    altIntronLocs = leafcutterEvents[
+                    altIntronLocs <- leafcutterEvents[
                         leafcutterEvents$clusterID == clusters$Var2[i],]
                     altIntronLocs <- altIntronLocs[altIntronLocs$verdict==
                                                        "annotated",]
@@ -488,8 +485,8 @@ leafcutterTranscriptChangeSummary <- function(leafcutterEvents,
 
     orfDiff <- transcriptChangeSummary(transcriptsX,
                                        transcriptsY,
-                                       BSgenome = BSgenome,
-                                       NMD = NMD)
+                                       BSgenome=BSgenome,
+                                       NMD=NMD)
     m <- match(gsub("_","",leafcutterEvents$clusterID), orfDiff$id)
     leafcutterEvents.withORF <- cbind(leafcutterEvents, orfDiff[m,-1])
     #leafcutterEvents.withORF <- leafcutterEvents.withORF[!duplicated(m),]
@@ -498,14 +495,14 @@ leafcutterTranscriptChangeSummary <- function(leafcutterEvents,
 }
 ################ FUCK
 
-readRMATS = function(directory,
-                     type = "JC"){
+readRMATS <- function(directory,
+                     type="JC"){
 
-    RMATSEventTypes = c("SE", "MXE", "RI", "A3SS", "A5SS")
-    RMATSFileList = paste0(RMATSEventTypes, ".MATS.", type, ".txt")
+    RMATSEventTypes <- c("SE", "MXE", "RI", "A3SS", "A5SS")
+    RMATSFileList <- paste0(RMATSEventTypes, ".MATS.", type, ".txt")
 
-    allFiles = list.files(directory, full.names = TRUE)
-    diffSpliceFiles = allFiles[basename(allFiles) %in% RMATSFileList]
+    allFiles <- list.files(directory, full.names=TRUE)
+    diffSpliceFiles <- allFiles[basename(allFiles) %in% RMATSFileList]
 
     if(length(diffSpliceFiles)==0){
         stop("no RMATs files in the specified directory")
@@ -515,16 +512,16 @@ readRMATS = function(directory,
         }
     }
 
-    diffSplice.SE = fread(diffSpliceFiles[basename(diffSpliceFiles) == RMATSFileList[RMATSEventTypes=="SE"]], header=TRUE, data.table=FALSE)
-    diffSplice.MXE = fread(diffSpliceFiles[basename(diffSpliceFiles) == RMATSFileList[RMATSEventTypes=="MXE"]], header=TRUE, data.table=FALSE)
-    diffSplice.RI = fread(diffSpliceFiles[basename(diffSpliceFiles) == RMATSFileList[RMATSEventTypes=="RI"]], header=TRUE, data.table=FALSE)
-    diffSplice.A3SS = fread(diffSpliceFiles[basename(diffSpliceFiles) == RMATSFileList[RMATSEventTypes=="A3SS"]], header=TRUE, data.table=FALSE)
-    diffSplice.A5SS = fread(diffSpliceFiles[basename(diffSpliceFiles) == RMATSFileList[RMATSEventTypes=="A5SS"]], header=TRUE, data.table=FALSE)
+    diffSplice.SE <- fread(diffSpliceFiles[basename(diffSpliceFiles) == RMATSFileList[RMATSEventTypes=="SE"]], header=TRUE, data.table=FALSE)
+    diffSplice.MXE <- fread(diffSpliceFiles[basename(diffSpliceFiles) == RMATSFileList[RMATSEventTypes=="MXE"]], header=TRUE, data.table=FALSE)
+    diffSplice.RI <- fread(diffSpliceFiles[basename(diffSpliceFiles) == RMATSFileList[RMATSEventTypes=="RI"]], header=TRUE, data.table=FALSE)
+    diffSplice.A3SS <- fread(diffSpliceFiles[basename(diffSpliceFiles) == RMATSFileList[RMATSEventTypes=="A3SS"]], header=TRUE, data.table=FALSE)
+    diffSplice.A5SS <- fread(diffSpliceFiles[basename(diffSpliceFiles) == RMATSFileList[RMATSEventTypes=="A5SS"]], header=TRUE, data.table=FALSE)
 
-    rMATSEvents = plyr::rbind.fill(cbind(diffSplice.SE, event = "SE"),
-                                   cbind(diffSplice.MXE, event = "MXE"),
-                                   cbind(diffSplice.RI, event = "RI"),
-                                   cbind(diffSplice.A3SS, event = "A3SS"),
-                                   cbind(diffSplice.A5SS, event = "A5SS"))
+    rMATSEvents <- plyr::rbind.fill(cbind(diffSplice.SE, event="SE"),
+                                   cbind(diffSplice.MXE, event="MXE"),
+                                   cbind(diffSplice.RI, event="RI"),
+                                   cbind(diffSplice.A3SS, event="A3SS"),
+                                   cbind(diffSplice.A5SS, event="A5SS"))
 
 }

@@ -6,7 +6,7 @@
 #' @family IRFinder data processing
 #' @author Beth Signal
 #' @examples
-#' irfinder_file <- list.files(system.file("extdata","irf_small/", package = "GeneStructureTools"), full.names=TRUE)
+#' irfinder_file <- list.files(system.file("extdata","irf_small/", package="GeneStructureTools"), full.names=TRUE)
 #' irf <- readIrfDataSet(irfinder_file)
 readIrfDataSet <- function(filePath){
 
@@ -42,7 +42,7 @@ readIrfDataSet <- function(filePath){
 #' @family IRFinder data processing
 #' @author Beth Signal
 #' @examples
-#' irfinder_file <- list.files(system.file("extdata","irf_small/", package = "GeneStructureTools"), full.names=TRUE)
+#' irfinder_file <- list.files(system.file("extdata","irf_small/", package="GeneStructureTools"), full.names=TRUE)
 #' irf <- readIrfDataSet(irfinder_file)
 #' irf.filtered <- filterIrfEvents(irf, FDR=0.01, psiDelta=0.1)
 #'
@@ -94,11 +94,11 @@ filterIrfEvents <- function(irfDataSet,
 #' @family IRFinder data processing
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
-#' irfinder_file <- list.files(system.file("extdata","irf_small/", package = "GeneStructureTools"), full.names=TRUE)
+#' irfinder_file <- list.files(system.file("extdata","irf_small/", package="GeneStructureTools"), full.names=TRUE)
 #' irf <- readIrfDataSet(irfinder_file)
 #' irf.filtered <- filterIrfEvents(irf, FDR=0.01, psiDelta=0.1)
 #' irf_summary <- irfTranscriptChangeSummary(irf.filtered, exons, BSgenome=g)

@@ -32,7 +32,7 @@ setGeneric("diffSplicingResults",
 #' @family whippet data processing
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet_small/",
-#' package = "GeneStructureTools")
+#' package="GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
 #' diffSplicingResults <- diffSplicingResults(wds)
@@ -61,7 +61,7 @@ setGeneric("readCounts",
 #' @family whippet data processing
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet_small/",
-#' package = "GeneStructureTools")
+#' package="GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
 #' readCounts <- readCounts(wds)
@@ -90,7 +90,7 @@ setGeneric("junctions",
 #' @family whippet data processing
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet_small/",
-#' package = "GeneStructureTools")
+#' package="GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
 #' junctions <- junctions(wds)
@@ -117,7 +117,7 @@ setGeneric("coordinates",
 #' @family whippet data processing
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet_small/",
-#' package = "GeneStructureTools")
+#' package="GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
 #' coordinates <- coordinates(wds)
@@ -166,7 +166,7 @@ setGeneric("extractEvent",
 #' @family rmats data processing
 #' @examples
 #' rmats_directory <- system.file("extdata","rmats_small/",
-#' package = "GeneStructureTools")
+#' package="GeneStructureTools")
 #' rds <- readRmatsDataSet(rmats_directory)
 #' rds.SE <- extractEvent(rds, "SE")
 setMethod("extractEvent", signature="rmatsDataSet",
@@ -206,7 +206,7 @@ setGeneric("irfResults",
 #' (originally from a whippet .diff file)
 #' @family irf data processing
 #' irfinder_file <- list.files(system.file("extdata","irf_small/",
-#' package = "GeneStructureTools"), full.names=TRUE)
+#' package="GeneStructureTools"), full.names=TRUE)
 #' irf <- readIrfDataSet(irfinder_file)
 #' irf.results <- irfResults(irfDataSet)
 setMethod("irfResults", signature="irfDataSet",

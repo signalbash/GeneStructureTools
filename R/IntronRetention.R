@@ -13,12 +13,12 @@
 #' @author Beth Signal
 #' @examples
 #'
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' whippetFiles <- system.file("extdata","whippet_small/",
-#' package = "GeneStructureTools")
+#' package="GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
 #' wds.intronRetention <- filterWhippetEvents(wds, eventTypes="RI")
@@ -40,8 +40,8 @@ findIntronContainingTranscripts <- function(input,
 
     if(is(input, "whippetDataSet")){
         whippetDataSet <- filterWhippetEvents(input,
-                                              probability = 0,
-                                              psiDelta = 0,
+                                              probability=0,
+                                              psiDelta=0,
                                               eventTypes="RI")
 
         eventCoords <- coordinates(whippetDataSet)
@@ -240,12 +240,12 @@ findIntronContainingTranscripts <- function(input,
 #' @author Beth Signal
 #' @examples
 #'
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' whippetFiles <- system.file("extdata","whippet_small/",
-#' package = "GeneStructureTools")
+#' package="GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
 #' wds.intronRetention <- filterWhippetEvents(wds, eventTypes="RI")
@@ -264,7 +264,7 @@ findIntronContainingTranscripts <- function(input,
 #' addIntronInTranscript(exons.intronRetention, exons, match="retain")
 addIntronInTranscript <- function(flankingExons,
                                   exons,
-                                  whippetDataSet = NULL,
+                                  whippetDataSet=NULL,
                                   match="exact",
                                   glueExons=TRUE){
 
@@ -289,8 +289,8 @@ addIntronInTranscript <- function(flankingExons,
 
     if(!is.null(whippetDataSet)){
         whippetDataSet <- filterWhippetEvents(whippetDataSet,
-                                              probability = 0,
-                                              psiDelta = 0,
+                                              probability=0,
+                                              psiDelta=0,
                                               eventTypes="RI")
 
         eventCoords <- coordinates(whippetDataSet)
@@ -315,7 +315,7 @@ addIntronInTranscript <- function(flankingExons,
                     paste0(exons$transcript_id, exons$exon_number))
 
         eventCoords <- GRanges(seqnames=seqnames(exons[c(m1)]),
-                               ranges = IRanges(start=end(exons[c(m1)]),
+                               ranges=IRanges(start=end(exons[c(m1)]),
                                                 end=start(exons[c(m2)])),
                                strand=strand(exons[c(m1)]),
                                id=flankingExons$from)
@@ -339,7 +339,7 @@ addIntronInTranscript <- function(flankingExons,
     mcols(eventCoords) <-
         cbind(mcols(eventCoords),
               S4Vectors::DataFrame(
-                  new_transcript_id = paste0(eventCoords$transcript_id,
+                  new_transcript_id=paste0(eventCoords$transcript_id,
                                              "+AS ", eventCoords$exon_id)))
     flankingExons$new_transcript_id <- paste0(flankingExons$transcript_id,
                                               "+AS ", flankingExons$from)

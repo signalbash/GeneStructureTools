@@ -14,7 +14,7 @@
 #' transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Neurl1a"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #' # longest ORF for each transcripts
-#' orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = TRUE)
+#' orfs <- getOrfs(transcript, BSgenome=g, returnLongestOnly=TRUE)
 #' geneModelAnnotated <- annotateGeneModel(transcript, orfs)
 annotateGeneModel <- function(transcripts, orfs){
 

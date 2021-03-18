@@ -10,11 +10,11 @@
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
-#' rmats_directory <- system.file("extdata","rmats_small/", package = "GeneStructureTools")
+#' rmats_directory <- system.file("extdata","rmats_small/", package="GeneStructureTools")
 #' rds <- readRmatsDataSet(rmats_directory)
 #' rds.filtered <- filterRmatsEvents(rds, FDR=0.01, psiDelta=0.1)
 #'
@@ -185,11 +185,11 @@ skipExonByJunction <- function(rmatsEvents,
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
-#' rmats_directory <- system.file("extdata","rmats_small/", package = "GeneStructureTools")
+#' rmats_directory <- system.file("extdata","rmats_small/", package="GeneStructureTools")
 #' rds <- readRmatsDataSet(rmats_directory)
 #' rds.filtered <- filterRmatsEvents(rds, FDR=0.01, psiDelta=0.1)
 #'
@@ -223,11 +223,11 @@ altIntronRmats <- function(rmatsEvents, exons){
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
-#' rmats_directory <- system.file("extdata","rmats_small/", package = "GeneStructureTools")
+#' rmats_directory <- system.file("extdata","rmats_small/", package="GeneStructureTools")
 #' rds <- readRmatsDataSet(rmats_directory)
 #' rds.filtered <- filterRmatsEvents(rds, FDR=0.01, psiDelta=0.1)
 #'

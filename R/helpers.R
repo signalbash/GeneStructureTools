@@ -194,7 +194,7 @@ annotateEventCoords <- function(eventCoords, betweenExons, exons){
 #' @importFrom rlang .data
 #' @family data processing
 #' @author Beth Signal
-findOverlaps.junc = function(query, subject, type=c("start", "end")){
+findOverlaps.junc <- function(query, subject, type=c("start", "end")){
 
     if(any(type == "start")){
 
@@ -236,7 +236,7 @@ findOverlaps.junc = function(query, subject, type=c("start", "end")){
 #' @import GenomicRanges
 #' @author Beth Signal
 overlap2matrix <- function(ol, maxn=7){
-    mat <- matrix(nrow = maxn, ncol = maxn, data = 1)
+    mat <- matrix(nrow=maxn, ncol=maxn, data=1)
 
     for(i in seq_len(nrow(mat))){
         mat[i,i] <- 0
@@ -410,14 +410,14 @@ addSets <- function(clusterGRanges.noset){
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-#' package = "GeneStructureTools"))
+#' package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' exons.duplicated <- c(exons[1:4], exons[1:4])
 #' length(exons.duplicated)
 #' exons.deduplicated <- removeSameExon(exons.duplicated)
 #' length(exons.deduplicated)
 removeSameExon <- function(exons){
-    samesies <- findOverlaps(exons, type = "equal")
+    samesies <- findOverlaps(exons, type="equal")
     samesies <- samesies[samesies@from > samesies@to]
     if(length(samesies) > 0){
         exons <- exons[-unique(samesies@from)]
@@ -631,8 +631,8 @@ makeNewLeafExons <- function(altIntronLocs, junctionRanges, clusterExons, splice
 #' @family leafcutter splicing isoform creation
 #' @author Beth Signal
 makeNewLeafExonsUnanchored <- function(altIntronLocs, junctionRanges, clusterExons){
-    clusterExons.alt3 <- makeNewLeafExons(altIntronLocs, junctionRanges, clusterExons, splice.type = 3)
-    clusterExons.alt5 <- makeNewLeafExons(altIntronLocs, junctionRanges, clusterExons, splice.type = 5)
+    clusterExons.alt3 <- makeNewLeafExons(altIntronLocs, junctionRanges, clusterExons, splice.type=3)
+    clusterExons.alt5 <- makeNewLeafExons(altIntronLocs, junctionRanges, clusterExons, splice.type=5)
 
     ids <- clusterExons.alt5$transcript_id
     ce.alt.length <- length(clusterExons.alt3)

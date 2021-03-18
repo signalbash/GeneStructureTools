@@ -7,10 +7,10 @@
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf",
-#' package = "GeneStructureTools"))
+#' package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' exons.reformat <- reformatExons(exons)
-reformatExons = function(exons){
+reformatExons <- function(exons){
 
     # add first/last annotation (speeds up later steps)
     if(!("first_last" %in% colnames(mcols(exons)))){
@@ -37,10 +37,10 @@ reformatExons = function(exons){
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf",
-#' package = "GeneStructureTools"))
+#' package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' introns <- exonsToIntrons(exons)
-exonsToIntrons = function(exons){
+exonsToIntrons <- function(exons){
 
     exons_df <- as.data.frame(exons)
     exons_df <- exons_df[,c("seqnames", "start", "end", "strand", "transcript_id", "exon_number")]
@@ -80,7 +80,7 @@ exonsToIntrons = function(exons){
 #' @author Beth Signal
 #' @examples
 #' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf",
-#' package = "GeneStructureTools"))
+#' package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' transcritps <- exonsToTranscripts(exons)
 exonsToTranscripts <- function(exons){

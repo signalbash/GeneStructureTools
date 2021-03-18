@@ -18,11 +18,11 @@
 #' @author Beth Signal
 #' @examples
 #' leafcutterFiles <- list.files(system.file("extdata","leaf_small/",
-#' package = "GeneStructureTools"), full.names = TRUE)
+#' package="GeneStructureTools"), full.names=TRUE)
 #' leafcutterIntrons <- read.delim(leafcutterFiles[grep("intron_results",
 #' leafcutterFiles)],stringsAsFactors=FALSE)
 #' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf",
-#' package = "GeneStructureTools"))
+#' package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' # single cluster processing
 #' cluster <- leafcutterIntrons[leafcutterIntrons$cluster=="chr17:clu_20975_+",]
@@ -53,7 +53,7 @@ alternativeIntronUsage <- function(altIntronLocs, exons, replaceInternalExons=TR
                                          exons$gene_id[olExons$subjectHits]])
         # find transcripts which contain the cluster region
         olTrans <- as.data.frame(findOverlaps(clusterGRanges.max,
-                                              transcripts, type = "within"))
+                                              transcripts, type="within"))
         clusterTranscripts <- transcripts[unique(olTrans$subjectHits)]
         #transcript_exons <- exons[exons$transcript_id %in%
         # clusterTranscripts$transcript_id,]
@@ -67,14 +67,14 @@ alternativeIntronUsage <- function(altIntronLocs, exons, replaceInternalExons=TR
             if(any(clusterGRanges$direction=="-")){
                 clusterGRanges.dnre <-
                     addSets(clusterGRanges[clusterGRanges$direction=="-"])
-                setlist = unique(clusterGRanges.dnre$set)
-                clusterGRanges.dnre$set = match(clusterGRanges.dnre$set, setlist)
+                setlist=unique(clusterGRanges.dnre$set)
+                clusterGRanges.dnre$set=match(clusterGRanges.dnre$set, setlist)
             }
             if(any(clusterGRanges$direction=="+")){
                 clusterGRanges.upre <-
                     addSets(clusterGRanges[clusterGRanges$direction=="+"])
-                setlist = unique(clusterGRanges.upre$set)
-                clusterGRanges.upre$set = match(clusterGRanges.upre$set, setlist)
+                setlist <- unique(clusterGRanges.upre$set)
+                clusterGRanges.upre$set <- match(clusterGRanges.upre$set, setlist)
             }
             if(any(clusterGRanges$direction=="+") & any(clusterGRanges$direction=="-")){
                 clusterGRanges.upre$set <-
@@ -126,9 +126,9 @@ alternativeIntronUsage <- function(altIntronLocs, exons, replaceInternalExons=TR
             setTrack <- vector()
             for(m in seq_along(move)){
                 if(clusterGRanges$verdict[move[m]] == "cryptic_threeprime"){
-                    clusterExons.alt <- makeNewLeafExons(altIntronLocs, clusterGRanges.intron[move[m]], clusterExons, splice.type = 3)
+                    clusterExons.alt <- makeNewLeafExons(altIntronLocs, clusterGRanges.intron[move[m]], clusterExons, splice.type=3)
                 }else if(clusterGRanges$verdict[move[m]] == "cryptic_fiveprime"){
-                    clusterExons.alt <- makeNewLeafExons(altIntronLocs, clusterGRanges.intron[move[m]], clusterExons, splice.type = 5)
+                    clusterExons.alt <- makeNewLeafExons(altIntronLocs, clusterGRanges.intron[move[m]], clusterExons, splice.type=5)
                 }else if(clusterGRanges$verdict[move[m]] == "cryptic_unanchored"){
                     clusterExons.alt <- makeNewLeafExonsUnanchored(altIntronLocs, clusterGRanges.intron[move[m]], clusterExons)
                 }
@@ -222,12 +222,12 @@ alternativeIntronUsage <- function(altIntronLocs, exons, replaceInternalExons=TR
                 clusterGRanges.start <- clusterGRanges[clusterGRanges$set==i]
                 end(clusterGRanges.start) <- start(clusterGRanges.start)
                 overlapsStart <-
-                    findOverlaps(clusterGRanges.start, rmExons, type = "end")
+                    findOverlaps(clusterGRanges.start, rmExons, type="end")
                 #overlaps end of the intron
                 clusterGRanges.end <- clusterGRanges[clusterGRanges$set==i]
                 start(clusterGRanges.end) <- end(clusterGRanges.end)
                 overlapsEnd <-
-                    findOverlaps(clusterGRanges.end, rmExons, type = "start")
+                    findOverlaps(clusterGRanges.end, rmExons, type="start")
 
                 exonsStart <- rmExons[overlapsStart@to]
                 exonsStart <- removeSameExon(exonsStart)
@@ -244,9 +244,9 @@ alternativeIntronUsage <- function(altIntronLocs, exons, replaceInternalExons=TR
                 InternalExons <- InternalExons[unique(overlapsIntron$queryHits)]
 
                 overlapsExonStart <- findOverlaps(clusterGRanges.start,
-                                                  clusterExonsBounding, type = "end")
+                                                  clusterExonsBounding, type="end")
                 overlapsExonEnd <- findOverlaps(clusterGRanges.end,
-                                                clusterExonsBounding, type = "start")
+                                                clusterExonsBounding, type="start")
 
                 keepTranscriptIds <-
                     clusterExonsBounding$transcript_id[overlapsExonStart@to]
@@ -401,8 +401,8 @@ alternativeIntronUsage <- function(altIntronLocs, exons, replaceInternalExons=TR
 #'
 #'
 #' junction_files <- list.files(system.file("extdata","leaf_small",
-#' package = "GeneStructureTools"), full.names = TRUE, pattern=".junc")
-#' leaf_junc = readLeafcutterJunctions(junction_files)
+#' package="GeneStructureTools"), full.names=TRUE, pattern=".junc")
+#' leaf_junc <- readLeafcutterJunctions(junction_files)
 
 readLeafcutterJunctions <- function(junctionFiles, minReads=10){
 

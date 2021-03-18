@@ -18,35 +18,35 @@
 #' @author Beth Signal
 #' @examples
 #'
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' whippetFiles <- system.file("extdata","whippet_small/",
-#' package = "GeneStructureTools")
+#' package="GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
-#' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
+#' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta=0.2)
 #' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
 #' variableWidth=0, findIntrons=FALSE)
 #' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
 #'
 #' orfsSkipped <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
-#' BSgenome = g)
+#' BSgenome=g)
 #' orfsIncluded <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="included_exon"],
-#' BSgenome = g)
+#' BSgenome=g)
 #' orfDiff(orfsSkipped, orfsIncluded, filterNMD=FALSE)
 #'
 #' orfsProteinCoding <- getOrfs(exons[exons$gene_name=="Tmem208" &
-#' exons$transcript_type=="protein_coding"], BSgenome = g)
+#' exons$transcript_type=="protein_coding"], BSgenome=g)
 #' orfsNMD <- getOrfs(exons[exons$gene_name=="Tmem208" &
-#' exons$transcript_type=="nonsense_mediated_decay"], BSgenome = g)
+#' exons$transcript_type=="nonsense_mediated_decay"], BSgenome=g)
 #' orfDiff(orfsProteinCoding, orfsNMD, filterNMD=FALSE)
 orfDiff <- function(orfsX,
                     orfsY,
-                    filterNMD = TRUE,
-                    geneSimilarity = TRUE,
-                    compareUTR = TRUE,
+                    filterNMD=TRUE,
+                    geneSimilarity=TRUE,
+                    compareUTR=TRUE,
                     compareBy="gene",
                     allORFs=NULL,
                     uniprotData=NULL,
@@ -54,33 +54,33 @@ orfDiff <- function(orfsX,
     if(filterNMD == TRUE){
         orfChanges <- attrChangeAltSpliced(orfsX[which(orfsX$nmd_prob_manual < 0.5),],
                                            orfsY[which(orfsY$nmd_prob_manual < 0.5),],
-                                           attribute = "orf_length",
-                                           compareBy = compareBy,
-                                           useMax = TRUE,
-                                           compareUTR = compareUTR)
+                                           attribute="orf_length",
+                                           compareBy=compareBy,
+                                           useMax=TRUE,
+                                           compareUTR=compareUTR)
 
         orfChanges.filterx <- attrChangeAltSpliced(
             orfsX[which(orfsX$nmd_prob_manual < 0.5),],
             orfsY,
-            attribute = "orf_length",
-            compareBy = compareBy,
-            useMax = TRUE,
-            compareUTR = compareUTR)
+            attribute="orf_length",
+            compareBy=compareBy,
+            useMax=TRUE,
+            compareUTR=compareUTR)
         orfChanges.filtery <-
             attrChangeAltSpliced(orfsX,
                                  orfsY[which(orfsY$nmd_prob_manual < 0.5),],
-                                 attribute = "orf_length",
-                                 compareBy = compareBy,
-                                 useMax = TRUE,
-                                 compareUTR = compareUTR)
+                                 attribute="orf_length",
+                                 compareBy=compareBy,
+                                 useMax=TRUE,
+                                 compareUTR=compareUTR)
 
         orfChanges.nofilter <-
             attrChangeAltSpliced(orfsX,
                                  orfsY,
-                                 attribute = "orf_length",
-                                 compareBy = compareBy,
-                                 useMax = TRUE,
-                                 compareUTR = compareUTR)
+                                 attribute="orf_length",
+                                 compareBy=compareBy,
+                                 useMax=TRUE,
+                                 compareUTR=compareUTR)
 
         if(nrow(orfChanges) > 0){
             orfChanges$filtered <- "both"
@@ -102,9 +102,9 @@ orfDiff <- function(orfsX,
         orfChanges <- rbind(orfChanges, orfChanges.nofilter[add,])
 
     }else{
-        orfChanges <- attrChangeAltSpliced(orfsX,orfsY,attribute = "orf_length",
-                                           compareBy=compareBy,useMax = TRUE,
-                                           compareUTR = compareUTR)
+        orfChanges <- attrChangeAltSpliced(orfsX,orfsY,attribute="orf_length",
+                                           compareBy=compareBy,useMax=TRUE,
+                                           compareUTR=compareUTR)
         orfChanges$filtered <- FALSE
     }
 
@@ -284,7 +284,7 @@ orfDiff <- function(orfsX,
         orfsY2 <- orfsY[match(paste0(orfChanges$id, "_", orfChanges$orf_length_y), orfsY$id_with_len),]
         orfYContains <- apply(orfsY2[,c('orf_sequence','gene_id')],1, function(x) featureTypes(seqFeats.sub, x))
 
-        contains <- data.frame(x = orfXContains, y=orfYContains)
+        contains <- data.frame(x=orfXContains, y=orfYContains)
         # compare orfsX and orfsY
         comp <- t(apply(contains, 1, compareContains))
 
@@ -311,7 +311,7 @@ compareContains <- function(contains){
     uX <- unique(unlist(stringr::str_split(contains[1], ";")))
     uY <- unique(unlist(stringr::str_split(contains[2], ";")))
     uXvals <- paste(uX[!uX %in% uY], collapse=";")
-    uYvals <- paste(uY[!uY %in% uX], collapse = ";")
+    uYvals <- paste(uY[!uY %in% uX], collapse=";")
 
     return(c(uXvals, uYvals))
 }
@@ -349,7 +349,7 @@ featureTypes <- function(seqFeatures, orf){
 #' @param useMax use max as the summary function when multiple isoforms are aggregated?
 #' If FALSE, will use min instead.
 #' @param compareUTR compare the UTR lengths between transcripts?
-#' Only runs if attribute = "orf_length"
+#' Only runs if attribute="orf_length"
 #' @return data.frame with attribute changes
 #' @export
 #' @import stringr
@@ -358,30 +358,30 @@ featureTypes <- function(seqFeatures, orf){
 #' @family transcript isoform comparisons
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' whippetFiles <- system.file("extdata","whippet_small/",
-#' package = "GeneStructureTools")
+#' package="GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
-#' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
+#' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta=0.2)
 #' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
 #' variableWidth=0, findIntrons=FALSE)
 #' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
 #'
 #' orfsSkipped <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
-#' BSgenome = g)
+#' BSgenome=g)
 #' orfsIncluded <- getOrfs(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="included_exon"],
-#' BSgenome = g)
-#' attrChangeAltSpliced(orfsSkipped, orfsIncluded,attribute = "orf_length")
+#' BSgenome=g)
+#' attrChangeAltSpliced(orfsSkipped, orfsIncluded,attribute="orf_length")
 attrChangeAltSpliced <- function(orfsX,
                                  orfsY,
-                                 attribute = "orf_length",
-                                 compareBy = "gene",
-                                 useMax = TRUE,
-                                 compareUTR = FALSE){
+                                 attribute="orf_length",
+                                 compareBy="gene",
+                                 useMax=TRUE,
+                                 compareUTR=FALSE){
 
     if(nrow(orfsX) > 0 & nrow(orfsY) > 0){
 

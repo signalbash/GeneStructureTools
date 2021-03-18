@@ -15,31 +15,31 @@
 #' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' whippetFiles <- system.file("extdata","whippet_small/",
-#' package = "GeneStructureTools")
+#' package="GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
-#' wds.altAce <- filterWhippetEvents(wds, eventTypes="AA", psiDelta=0.1, probability = 0.8)
+#' wds.altAce <- filterWhippetEvents(wds, eventTypes="AA", psiDelta=0.1, probability=0.8)
 #' jncPairs.altAce <- findJunctionPairs(wds.altAce, type="AA")
 #'
-#' wds.altDon <- filterWhippetEvents(wds, eventTypes="AD", psiDelta=0.1, probability = 0.8)
+#' wds.altDon <- filterWhippetEvents(wds, eventTypes="AD", psiDelta=0.1, probability=0.8)
 #' jncPairs.altDon <- findJunctionPairs(wds.altDon, type="AD")
 #'
-#' wds.altFirst <- filterWhippetEvents(wds, eventTypes="AF",psiDelta=0.1, probability = 0.8)
+#' wds.altFirst <- filterWhippetEvents(wds, eventTypes="AF",psiDelta=0.1, probability=0.8)
 #' jncPairs.altFirst <- findJunctionPairs(wds.altFirst, type="AF")
 #'
-#' wds.altLast <- filterWhippetEvents(wds, eventTypes="AL",psiDelta=0.1, probability = 0.8)
+#' wds.altLast <- filterWhippetEvents(wds, eventTypes="AL",psiDelta=0.1, probability=0.8)
 #' jncPairs.altLast <- findJunctionPairs(wds.altLast, type="AL")
 findJunctionPairs <- function(whippetDataSet, type=NA){
 
 
     whippetDataSet <- filterWhippetEvents(whippetDataSet,
-                                          probability = 0,
-                                          psiDelta = 0,
+                                          probability=0,
+                                          psiDelta=0,
                                           eventTypes=type)
 
     eventCoords <- coordinates(whippetDataSet)
@@ -227,27 +227,27 @@ findJunctionPairs <- function(whippetDataSet, type=NA){
 #' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' whippetFiles <- system.file("extdata","whippet_small/",
-#' package = "GeneStructureTools")
+#' package="GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
-#' wds.altAce <- filterWhippetEvents(wds, eventTypes="AA", psiDelta=0.1, probability = 0.8)
+#' wds.altAce <- filterWhippetEvents(wds, eventTypes="AA", psiDelta=0.1, probability=0.8)
 #' jncPairs.altAce <- findJunctionPairs(wds.altAce, type="AA")
 #' transcripts.altAce <- replaceJunction(wds.altAce, jncPairs.altAce, exons, type="AA")
 #'
-#' wds.altDon <- filterWhippetEvents(wds, eventTypes="AD", psiDelta=0.1, probability = 0.8)
+#' wds.altDon <- filterWhippetEvents(wds, eventTypes="AD", psiDelta=0.1, probability=0.8)
 #' jncPairs.altDon <- findJunctionPairs(wds.altDon, type="AD")
 #' transcripts.altDon <- replaceJunction(wds.altDon, jncPairs.altDon, exons, type="AD")
 #'
-#' wds.altFirst <- filterWhippetEvents(wds, eventTypes="AF",psiDelta=0.1, probability = 0.8)
+#' wds.altFirst <- filterWhippetEvents(wds, eventTypes="AF",psiDelta=0.1, probability=0.8)
 #' jncPairs.altFirst <- findJunctionPairs(wds.altFirst, type="AF")
 #' transcripts.altFirst <- replaceJunction(wds.altFirst, jncPairs.altFirst, exons, type="AF")
 #'
-#' wds.altLast <- filterWhippetEvents(wds, eventTypes="AL",psiDelta=0.1, probability = 0.8)
+#' wds.altLast <- filterWhippetEvents(wds, eventTypes="AL",psiDelta=0.1, probability=0.8)
 #' jncPairs.altLast <- findJunctionPairs(wds.altLast, type="AL")
 #' transcripts.altLast <- replaceJunction(wds.altLast, jncPairs.altLast, exons, type="AL")
 replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
@@ -620,10 +620,10 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
 
         # remove overlapping exons
         longRange <- replacementExonsFirstLast
-        rangeDF <- data.frame(start_1 = start(replacementExonsFirstLast),
-                              start_2 = start(junctionReplacementExons),
-                              end_1 = end(replacementExonsFirstLast),
-                              end_2 = end(junctionReplacementExons))
+        rangeDF <- data.frame(start_1=start(replacementExonsFirstLast),
+                              start_2=start(junctionReplacementExons),
+                              end_1=end(replacementExonsFirstLast),
+                              end_2=end(junctionReplacementExons))
         start(longRange) <- apply(rangeDF[,c(1,2)], 1, min)
         end(longRange) <- apply(rangeDF[,c(3,4)], 1, max)
 
@@ -694,7 +694,7 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type=NA){
 #' @family gtf manipulation
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' exons.altName <- exons
 #' exons.altName$transcript_id <- paste(exons.altName$transcript_id, "duplicated", sep="_")

@@ -12,15 +12,15 @@
 #' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' whippetFiles <- system.file("extdata","whippet_small/",
-#' package = "GeneStructureTools")
+#' package="GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
-#' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
+#' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta=0.2)
 #' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
 #' variableWidth=0, findIntrons=FALSE)
 #'
@@ -35,8 +35,8 @@ findExonContainingTranscripts <- function(input,
     if(is(input, "whippetDataSet")){
         # check all are CE
         whippetDataSet <- filterWhippetEvents(input,
-                                              probability = 0,
-                                              psiDelta = 0,
+                                              probability=0,
+                                              psiDelta=0,
                                               eventTypes="CE")
 
         eventCoords <- coordinates(whippetDataSet)
@@ -217,15 +217,15 @@ findExonContainingTranscripts <- function(input,
 #' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
 #' whippetFiles <- system.file("extdata","whippet_small/",
-#' package = "GeneStructureTools")
+#' package="GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
-#' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
+#' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta=0.2)
 #' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
 #' variableWidth=0, findIntrons=FALSE)
 #' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
@@ -261,8 +261,8 @@ skipExonInTranscript <- function(skippedExons,
     if(!is.null(whippetDataSet)){
         # check all are CE
         whippetDataSet <- filterWhippetEvents(whippetDataSet,
-                                              probability = 0,
-                                              psiDelta = 0,
+                                              probability=0,
+                                              psiDelta=0,
                                               eventTypes="CE")
 
         eventCoords <- coordinates(whippetDataSet)
@@ -280,7 +280,7 @@ skipExonInTranscript <- function(skippedExons,
     }else{
         m <- match(skippedExons$gene_id, exons$gene_id)
         eventCoords <- GRanges(seqnames=seqnames(exons[m]),
-                               ranges = IRanges(start=skippedExons$start,
+                               ranges=IRanges(start=skippedExons$start,
                                                 end=skippedExons$end),
                                strand=strand(exons[m]),
                                id=skippedExons$alt_id)
@@ -311,7 +311,7 @@ skipExonInTranscript <- function(skippedExons,
                                        gtfTranscripts$transcript_id,"+AS ",
                                        eventCoords$exon_id[m])))
     mcols(eventCoords) <- cbind(mcols(eventCoords),
-                                DataFrame(new_transcript_id = paste0(
+                                DataFrame(new_transcript_id=paste0(
                                     eventCoords$transcript_id,"+AS ",
                                     eventCoords$exon_id)))
 
@@ -487,7 +487,7 @@ skipExonInTranscript <- function(skippedExons,
 #' @family gtf manipulation
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' exons <- reorderExonNumbers(exons)
 reorderExonNumbers <- function(exons, by="transcript_id"){

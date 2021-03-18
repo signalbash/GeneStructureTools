@@ -11,7 +11,7 @@
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
-#' package = "GeneStructureTools"), full.names = TRUE)
+#' package="GeneStructureTools"), full.names=TRUE)
 #' jncFiles <- whippetFiles[grep(".jnc", whippetFiles)]
 #' whippetJNC <- readWhippetJNCfiles(jncFiles)
 readWhippetJNCfiles <- function(files, minCount=0){
@@ -42,7 +42,7 @@ readWhippetJNCfiles <- function(files, minCount=0){
     }
 
     colnames(whip.all)[-c(1:5)] <- gsub(".jnc.gz","", basename(files))
-    whip.all$count <- rowSums(whip.all[,-c(1:5)], na.rm = TRUE)
+    whip.all$count <- rowSums(whip.all[,-c(1:5)], na.rm=TRUE)
 
     whip.all <- whip.all[which(whip.all$count >= minCount),]
 
@@ -69,7 +69,7 @@ readWhippetJNCfiles <- function(files, minCount=0){
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
-#' package = "GeneStructureTools"), full.names = TRUE)
+#' package="GeneStructureTools"), full.names=TRUE)
 #' psiFiles <- whippetFiles[grep(".psi", whippetFiles)]
 #' whippetPSI <- readWhippetPSIfiles(psiFiles)
 readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
@@ -140,7 +140,7 @@ readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
-#' package = "GeneStructureTools"), full.names = TRUE)
+#' package="GeneStructureTools"), full.names=TRUE)
 #' diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
 #' whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
 readWhippetDIFFfiles <- function(files){
@@ -191,7 +191,7 @@ readWhippetDIFFfiles <- function(files){
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- list.files(system.file("extdata","whippet/",
-#' package = "GeneStructureTools"), full.names = TRUE)
+#' package="GeneStructureTools"), full.names=TRUE)
 #' diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
 #' whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
 #' whippetCoords <- formatWhippetEvents(whippetDiffSplice)
@@ -221,7 +221,7 @@ formatWhippetEvents <- function(whippet){
 #' @author Beth Signal
 #' @examples
 #' whippetFiles <- system.file("extdata","whippet/",
-#' package = "GeneStructureTools")
+#' package="GeneStructureTools")
 #' wds <- readWhippetDataSet(whippetFiles)
 readWhippetDataSet <- function(filePath="."){
 

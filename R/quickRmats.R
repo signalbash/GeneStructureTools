@@ -7,7 +7,7 @@
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
-#' rmats_filePath <- system.file("extdata","rmats_small/", package = "GeneStructureTools")
+#' rmats_filePath <- system.file("extdata","rmats_small/", package="GeneStructureTools")
 #' rds <- readRmatsDataSet(rmats_filePath)
 readRmatsDataSet <- function(filePath, type="JC"){
 
@@ -53,7 +53,7 @@ readRmatsDataSet <- function(filePath, type="JC"){
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
-#' rmats_directory <- system.file("extdata","rmats_small/", package = "GeneStructureTools")
+#' rmats_directory <- system.file("extdata","rmats_small/", package="GeneStructureTools")
 #' rds <- readRmatsDataSet(rmats_directory)
 #' rds.filtered <- filterRmatsEvents(rds, FDR=0.01, psiDelta=0.1)
 #' # filter by gene name/id
@@ -134,14 +134,14 @@ filterRmatsEvents <- function(rmatsDataSet,
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf", package="GeneStructureTools"))
 #' exons <- gtf[gtf$type=="exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
-#' rmats_directory <- system.file("extdata","rmats_small/", package = "GeneStructureTools")
+#' rmats_directory <- system.file("extdata","rmats_small/", package="GeneStructureTools")
 #' rds <- readRmatsDataSet(rmats_directory)
 #' rds.filtered <- filterRmatsEvents(rds, FDR=0.01, psiDelta=0.1)
-#' rmats_summary <- rmatsTranscriptChangeSummary(rmatsDataSet = rds.filtered, exons, BSgenome=g)
+#' rmats_summary <- rmatsTranscriptChangeSummary(rmatsDataSet=rds.filtered, exons, BSgenome=g)
 
 rmatsTranscriptChangeSummary <- function(rmatsDataSet,
                                          exons=NULL,
