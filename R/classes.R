@@ -6,12 +6,14 @@
 #' @rdname whippetDataSet-class
 #' @exportClass whippetDataSet
 #' @import methods
-setClass("whippetDataSet", slots=list(coordinates="GRanges",
-                                      diffSplicingResults="data.frame",
-                                      comparisons="character",
-                                      junctions="GRanges",
-                                      readCounts="data.frame",
-                                      filePath="character"))
+setClass("whippetDataSet", slots = list(
+    coordinates = "GRanges",
+    diffSplicingResults = "data.frame",
+    comparisons = "character",
+    junctions = "GRanges",
+    readCounts = "data.frame",
+    filePath = "character"
+))
 
 #' Method diffSplicingResults
 #' @name diffSplicingResults
@@ -20,10 +22,9 @@ setClass("whippetDataSet", slots=list(coordinates="GRanges",
 #' @import methods
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 setGeneric("diffSplicingResults",
-           def=function(whippetDataSet)
-           {
-               standardGeneric("diffSplicingResults")
-           }
+    def = function(whippetDataSet) {
+        standardGeneric("diffSplicingResults")
+    }
 )
 
 #' @rdname diffSplicingResults-methods
@@ -31,16 +32,17 @@ setGeneric("diffSplicingResults",
 #' (originally from a whippet .diff file)
 #' @family whippet data processing
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet_small/",
-#' package="GeneStructureTools")
+#' whippetFiles <- system.file("extdata", "whippet_small/",
+#'     package = "GeneStructureTools"
+#' )
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
 #' diffSplicingResults <- diffSplicingResults(wds)
-setMethod("diffSplicingResults", signature="whippetDataSet",
-          definition=function(whippetDataSet)
-          {
-              return(whippetDataSet@diffSplicingResults)
-          }
+setMethod("diffSplicingResults",
+    signature = "whippetDataSet",
+    definition = function(whippetDataSet) {
+        return(whippetDataSet@diffSplicingResults)
+    }
 )
 
 #' Method readCounts
@@ -50,26 +52,26 @@ setMethod("diffSplicingResults", signature="whippetDataSet",
 #' @import methods
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 setGeneric("readCounts",
-           def=function(whippetDataSet)
-           {
-               standardGeneric("readCounts")
-           }
+    def = function(whippetDataSet) {
+        standardGeneric("readCounts")
+    }
 )
 #' @rdname readCounts-methods
 #' @return whippet read count data.frame
 #' (originally from a whippet .psi file)
 #' @family whippet data processing
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet_small/",
-#' package="GeneStructureTools")
+#' whippetFiles <- system.file("extdata", "whippet_small/",
+#'     package = "GeneStructureTools"
+#' )
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
 #' readCounts <- readCounts(wds)
-setMethod("readCounts", signature="whippetDataSet",
-          definition=function(whippetDataSet)
-          {
-              return(whippetDataSet@readCounts)
-          }
+setMethod("readCounts",
+    signature = "whippetDataSet",
+    definition = function(whippetDataSet) {
+        return(whippetDataSet@readCounts)
+    }
 )
 
 #' Method junctions
@@ -79,26 +81,26 @@ setMethod("readCounts", signature="whippetDataSet",
 #' @import methods
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 setGeneric("junctions",
-           def=function(whippetDataSet)
-           {
-               standardGeneric("junctions")
-           }
+    def = function(whippetDataSet) {
+        standardGeneric("junctions")
+    }
 )
 #' @rdname junctions-methods
 #' @return junctions GRanges object
 #' (originally from a whippet .jnc file)
 #' @family whippet data processing
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet_small/",
-#' package="GeneStructureTools")
+#' whippetFiles <- system.file("extdata", "whippet_small/",
+#'     package = "GeneStructureTools"
+#' )
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
 #' junctions <- junctions(wds)
-setMethod("junctions", signature="whippetDataSet",
-          definition=function(whippetDataSet)
-          {
-              return(whippetDataSet@junctions)
-          }
+setMethod("junctions",
+    signature = "whippetDataSet",
+    definition = function(whippetDataSet) {
+        return(whippetDataSet@junctions)
+    }
 )
 
 #' Method coordinates
@@ -107,25 +109,25 @@ setMethod("junctions", signature="whippetDataSet",
 #' @exportMethod coordinates
 #' @param whippetDataSet whippetDataSet generated from \code{readWhippetDataSet()}
 setGeneric("coordinates",
-           def=function(whippetDataSet)
-           {
-               standardGeneric("coordinates")
-           }
+    def = function(whippetDataSet) {
+        standardGeneric("coordinates")
+    }
 )
 #' @rdname coordinates-methods
 #' @return whippet splicing event coordinates as a GRanges object
 #' @family whippet data processing
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet_small/",
-#' package="GeneStructureTools")
+#' whippetFiles <- system.file("extdata", "whippet_small/",
+#'     package = "GeneStructureTools"
+#' )
 #' wds <- readWhippetDataSet(whippetFiles)
 #'
 #' coordinates <- coordinates(wds)
-setMethod("coordinates", signature="whippetDataSet",
-          definition=function(whippetDataSet)
-          {
-              return(whippetDataSet@coordinates)
-          }
+setMethod("coordinates",
+    signature = "whippetDataSet",
+    definition = function(whippetDataSet) {
+        return(whippetDataSet@coordinates)
+    }
 )
 
 
@@ -138,12 +140,14 @@ setMethod("coordinates", signature="whippetDataSet",
 #' @rdname rmatsDataSet-class
 #' @exportClass rmatsDataSet
 #' @import methods
-setClass("rmatsDataSet", slots=list(SE="data.frame",
-                                    MXE="data.frame",
-                                    RI="data.frame",
-                                    A3SS="data.frame",
-                                    A5SS="data.frame",
-                                    filePath="character"))
+setClass("rmatsDataSet", slots = list(
+    SE = "data.frame",
+    MXE = "data.frame",
+    RI = "data.frame",
+    A3SS = "data.frame",
+    A5SS = "data.frame",
+    filePath = "character"
+))
 
 #' Method extractEvent
 #' @name extractEvent
@@ -154,10 +158,9 @@ setClass("rmatsDataSet", slots=list(SE="data.frame",
 #' @param eventType specific event type to extract results for.
 #' Must be SE/MXE/RI/A5SS/A3SS.
 setGeneric("extractEvent",
-           def=function(rmatsDataSet, eventType)
-           {
-               standardGeneric("extractEvent")
-           }
+    def = function(rmatsDataSet, eventType) {
+        standardGeneric("extractEvent")
+    }
 )
 
 #' @rdname extractEvent-methods
@@ -165,15 +168,16 @@ setGeneric("extractEvent",
 #' (originally from a whippet .diff file)
 #' @family rmats data processing
 #' @examples
-#' rmats_directory <- system.file("extdata","rmats_small/",
-#' package="GeneStructureTools")
+#' rmats_directory <- system.file("extdata", "rmats_small/",
+#'     package = "GeneStructureTools"
+#' )
 #' rds <- readRmatsDataSet(rmats_directory)
 #' rds.SE <- extractEvent(rds, "SE")
-setMethod("extractEvent", signature="rmatsDataSet",
-          definition=function(rmatsDataSet, eventType)
-          {
-              return(slot(rmatsDataSet, eventType))
-          }
+setMethod("extractEvent",
+    signature = "rmatsDataSet",
+    definition = function(rmatsDataSet, eventType) {
+        return(slot(rmatsDataSet, eventType))
+    }
 )
 
 #' Class irfDataSet
@@ -184,9 +188,11 @@ setMethod("extractEvent", signature="rmatsDataSet",
 #' @rdname irfDataSet-class
 #' @exportClass irfDataSet
 #' @import methods
-setClass("irfDataSet", slots=list(coordinates="GRanges",
-                                  IRFresults="data.frame",
-                                  filePath="character"))
+setClass("irfDataSet", slots = list(
+    coordinates = "GRanges",
+    IRFresults = "data.frame",
+    filePath = "character"
+))
 
 #' Method irfResults
 #' @name irfResults
@@ -195,10 +201,9 @@ setClass("irfDataSet", slots=list(coordinates="GRanges",
 #' @import methods
 #' @param irfDataSet irfDataSet generated from \code{readIRFDataSet()}
 setGeneric("irfResults",
-           def=function(irfDataSet)
-           {
-               standardGeneric("irfResults")
-           }
+    def = function(irfDataSet) {
+        standardGeneric("irfResults")
+    }
 )
 
 #' @rdname irfResults-methods
@@ -209,9 +214,9 @@ setGeneric("irfResults",
 #' package="GeneStructureTools"), full.names=TRUE)
 #' irf <- readIrfDataSet(irfinder_file)
 #' irf.results <- irfResults(irfDataSet)
-setMethod("irfResults", signature="irfDataSet",
-          definition=function(irfDataSet)
-          {
-              return(slot(irfDataSet, "IRFresults"))
-          }
+setMethod("irfResults",
+    signature = "irfDataSet",
+    definition = function(irfDataSet) {
+        return(slot(irfDataSet, "IRFresults"))
+    }
 )

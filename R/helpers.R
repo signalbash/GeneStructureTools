@@ -7,14 +7,14 @@
 #' @import methods
 #' @family rmats data processing
 #' @author Beth Signal
-annotateOverlapRmats <- function(rmatsGRanges, exons, exon_number=1){
+annotateOverlapRmats <- function(rmatsGRanges, exons, exon_number = 1) {
     ol <- as.data.frame(findOverlaps(rmatsGRanges, exons))
     ol$from_id <- rmatsGRanges$id[ol$queryHits]
     ol$transcript_id <- exons$transcript_id[ol$subjectHits]
     ol$exon_id <- exons$exon_id[ol$subjectHits]
     ol$exon_number <- exons$exon_number[ol$subjectHits]
     ol$event_id <- paste0(seqnames(rmatsGRanges)[ol$queryHits], ":", rmatsGRanges$event_id[ol$queryHits])
-    colnames(ol)[match(c('exon_id', 'exon_number') ,colnames(ol))] <- paste0(c('exon_id', 'exon_number'), exon_number)
+    colnames(ol)[match(c("exon_id", "exon_number"), colnames(ol))] <- paste0(c("exon_id", "exon_number"), exon_number)
     return(ol)
 }
 
@@ -26,22 +26,22 @@ annotateOverlapRmats <- function(rmatsGRanges, exons, exon_number=1){
 #' @importFrom rlang .data
 #' @family rmats data processing
 #' @author Beth Signal
-removeDuplicatePairs <- function(betweenExons){
-
+removeDuplicatePairs <- function(betweenExons) {
     hasDups <- which(duplicated(paste0(betweenExons$new_transcript_id)))
-    if(length(hasDups) > 0){
-        betweenExons.duplicates <- betweenExons[betweenExons$new_transcript_id %in% betweenExons$new_transcript_id[hasDups],]
+    if (length(hasDups) > 0) {
+        betweenExons.duplicates <- betweenExons[betweenExons$new_transcript_id %in% betweenExons$new_transcript_id[hasDups], ]
         betweenExons.duplicates$exon_num_range <- abs(as.numeric(betweenExons.duplicates$exon_number1) - as.numeric(betweenExons.duplicates$exon_number2))
-        betweenExons.duplicates <- betweenExons.duplicates[order(betweenExons.duplicates$new_transcript_id, betweenExons.duplicates$exon_num_range*-1),]
-        betweenExons.duplicates <- betweenExons.duplicates[!duplicated(betweenExons.duplicates$new_transcript_id),]
+        betweenExons.duplicates <- betweenExons.duplicates[order(betweenExons.duplicates$new_transcript_id, betweenExons.duplicates$exon_num_range * -1), ]
+        betweenExons.duplicates <- betweenExons.duplicates[!duplicated(betweenExons.duplicates$new_transcript_id), ]
         betweenExons.duplicates$exon_num_range <- NULL
 
-        betweenExons <- rbind(betweenExons[which(!(betweenExons$new_transcript_id %in% betweenExons$new_transcript_id[hasDups])),],
-                              betweenExons.duplicates)
+        betweenExons <- rbind(
+            betweenExons[which(!(betweenExons$new_transcript_id %in% betweenExons$new_transcript_id[hasDups])), ],
+            betweenExons.duplicates
+        )
     }
 
     return(betweenExons)
-
 }
 
 #' Duplicate a reference Granges (exon-level) for each diff-splicing event/transcript combination required.
@@ -52,41 +52,49 @@ removeDuplicatePairs <- function(betweenExons){
 #' @import methods
 #' @family rmats data processing
 #' @author Beth Signal
-duplicateReference <- function(betweenExons, exons){
+duplicateReference <- function(betweenExons, exons) {
     # transcripts containing the exon pairs
     transcripts <- as.data.frame(table(betweenExons$transcript_id))
     gtfTranscripts <- exons[exons$transcript_id %in% transcripts$Var1]
 
     m <- match(gtfTranscripts$transcript_id, betweenExons$transcript_id)
 
-    mcols(gtfTranscripts) <- cbind(mcols(gtfTranscripts),
-                                   DataFrame(new_transcript_id=paste0(
-                                       gtfTranscripts$transcript_id, "+AS ",
-                                       betweenExons$from_id[m], "-",
-                                       betweenExons$event_id[m])))
+    mcols(gtfTranscripts) <- cbind(
+        mcols(gtfTranscripts),
+        DataFrame(new_transcript_id = paste0(
+            gtfTranscripts$transcript_id, "+AS ",
+            betweenExons$from_id[m], "-",
+            betweenExons$event_id[m]
+        ))
+    )
 
     needsDuplicated <- which(!(betweenExons$new_transcript_id %in%
-                                   gtfTranscripts$new_transcript_id))
+        gtfTranscripts$new_transcript_id))
 
-    if(length(needsDuplicated) > 0){
+    if (length(needsDuplicated) > 0) {
         gtfTranscripts_add <- gtfTranscripts[
             gtfTranscripts$transcript_id %in%
-                betweenExons$transcript_id[needsDuplicated]]
+                betweenExons$transcript_id[needsDuplicated]
+        ]
     }
 
-    while(length(needsDuplicated) > 0){
+    while (length(needsDuplicated) > 0) {
         gtfTranscripts_add <- gtfTranscripts_add[
             gtfTranscripts_add$transcript_id %in%
-                betweenExons$transcript_id[needsDuplicated]]
-        m <- match(gtfTranscripts_add$transcript_id,
-                   betweenExons$transcript_id[needsDuplicated])
+                betweenExons$transcript_id[needsDuplicated]
+        ]
+        m <- match(
+            gtfTranscripts_add$transcript_id,
+            betweenExons$transcript_id[needsDuplicated]
+        )
         gtfTranscripts_add$new_transcript_id <- paste0(
             gtfTranscripts_add$transcript_id, "+AS ",
             betweenExons$from_id[needsDuplicated][m], "-",
-            betweenExons$event_id[needsDuplicated][m])
+            betweenExons$event_id[needsDuplicated][m]
+        )
         gtfTranscripts <- c(gtfTranscripts, gtfTranscripts_add)
         needsDuplicated <- which(!(betweenExons$new_transcript_id %in%
-                                       gtfTranscripts$new_transcript_id))
+            gtfTranscripts$new_transcript_id))
     }
 
     return(gtfTranscripts)
@@ -100,9 +108,9 @@ duplicateReference <- function(betweenExons, exons){
 #' @import methods
 #' @family rmats data processing
 #' @author Beth Signal
-betweenNumbers <- function(a, b){
-    ab.range <- seq(as.numeric(a),as.numeric(b))
-    ab.range <- ab.range[!(ab.range %in% c(a,b))]
+betweenNumbers <- function(a, b) {
+    ab.range <- seq(as.numeric(a), as.numeric(b))
+    ab.range <- ab.range[!(ab.range %in% c(a, b))]
     return(ab.range)
 }
 
@@ -115,8 +123,8 @@ betweenNumbers <- function(a, b){
 #' @import methods
 #' @family rmats data processing
 #' @author Beth Signal
-removeExonsBetween <- function(betweenExons, gtfTranscripts){
-    remove <- apply(betweenExons[,c('exon_number1', 'exon_number2', 'new_transcript_id')], 1, function(x) paste0(x[3], " ", betweenNumbers(x[1], x[2])))
+removeExonsBetween <- function(betweenExons, gtfTranscripts) {
+    remove <- apply(betweenExons[, c("exon_number1", "exon_number2", "new_transcript_id")], 1, function(x) paste0(x[3], " ", betweenNumbers(x[1], x[2])))
     gtfTranscripts.rm <- gtfTranscripts[which(!(paste0(gtfTranscripts$new_transcript_id, " ", gtfTranscripts$exon_number) %in% unlist(remove)))]
     return(gtfTranscripts.rm)
 }
@@ -129,10 +137,10 @@ removeExonsBetween <- function(betweenExons, gtfTranscripts){
 #' @import methods
 #' @family rmats data processing
 #' @author Beth Signal
-splitLongExons <- function(betweenExons, gtfTranscripts){
+splitLongExons <- function(betweenExons, gtfTranscripts) {
     # make sure there is > 1 exon in the pair (i.e. split a single long exon into two)
     duplicate.index <- which(betweenExons$exon_number1 == betweenExons$exon_number2)
-    if(length(duplicate.index) > 0){
+    if (length(duplicate.index) > 0) {
         duplicate <- paste0(betweenExons$exon_id1[duplicate.index], "_", betweenExons$new_transcript_id[duplicate.index])
         betweenExons$exon_id1[duplicate.index] <- paste0(betweenExons$exon_id1[duplicate.index], "_1")
         betweenExons$exon_id2[duplicate.index] <- paste0(betweenExons$exon_id2[duplicate.index], "_2")
@@ -146,11 +154,13 @@ splitLongExons <- function(betweenExons, gtfTranscripts){
         duplicate.granges.2$exon_number <- as.character(as.numeric(duplicate.granges.2$exon_number) + 0.5)
         duplicate.granges.2$exon_id <- paste0(duplicate.granges.2$exon_id, "_2")
 
-        gtfTranscripts <- c(gtfTranscripts[which(!(paste0(gtfTranscripts$exon_id, "_", gtfTranscripts$new_transcript_id) %in% duplicate))],
-                           duplicate.granges.1, duplicate.granges.2)
+        gtfTranscripts <- c(
+            gtfTranscripts[which(!(paste0(gtfTranscripts$exon_id, "_", gtfTranscripts$new_transcript_id) %in% duplicate))],
+            duplicate.granges.1, duplicate.granges.2
+        )
     }
 
-    splitReturn <- list(ranges=gtfTranscripts, between=betweenExons)
+    splitReturn <- list(ranges = gtfTranscripts, between = betweenExons)
     return(splitReturn)
 }
 
@@ -164,10 +174,10 @@ splitLongExons <- function(betweenExons, gtfTranscripts){
 #' @import methods
 #' @family rmats data processing
 #' @author Beth Signal
-annotateEventCoords <- function(eventCoords, betweenExons, exons){
+annotateEventCoords <- function(eventCoords, betweenExons, exons) {
 
-    #eventCoords <- GRanges(seqnames=input$chr, ranges=IRanges(start=input$exonStart_0base+1, end=input$exonEnd), strand=input$strand, id=input$ID)
-    #seqlevelsStyle(eventCoords)=seqlevelsStyle(exons)[1]
+    # eventCoords <- GRanges(seqnames=input$chr, ranges=IRanges(start=input$exonStart_0base+1, end=input$exonEnd), strand=input$strand, id=input$ID)
+    # seqlevelsStyle(eventCoords)=seqlevelsStyle(exons)[1]
 
     # create ranges for skipped exons
     eventCoords <- eventCoords[match(betweenExons$from_id, eventCoords$id)]
@@ -177,12 +187,14 @@ annotateEventCoords <- function(eventCoords, betweenExons, exons){
     eventCoords$gene_id <- exons$gene_id[match(eventCoords$transcript_id, exons$transcript_id)]
     eventCoords$exon_id <- unlist(lapply(str_split(betweenExons$new_transcript_id, "[+]AS[ ]"), "[[", 2))
     eventCoords$exon_number <- NA
-    mcols(eventCoords) <- cbind(mcols(eventCoords),
-                                DataFrame(new_transcript_id=paste0(
-                                    eventCoords$transcript_id,"+AS ",
-                                    eventCoords$exon_id)))
+    mcols(eventCoords) <- cbind(
+        mcols(eventCoords),
+        DataFrame(new_transcript_id = paste0(
+            eventCoords$transcript_id, "+AS ",
+            eventCoords$exon_id
+        ))
+    )
     return(eventCoords)
-
 }
 
 #' Find overlaps where the start/end coordinates are the same
@@ -194,40 +206,36 @@ annotateEventCoords <- function(eventCoords, betweenExons, exons){
 #' @importFrom rlang .data
 #' @family data processing
 #' @author Beth Signal
-findOverlaps.junc <- function(query, subject, type=c("start", "end")){
-
-    if(any(type == "start")){
-
+findOverlaps.junc <- function(query, subject, type = c("start", "end")) {
+    if (any(type == "start")) {
         query.start <- query
         end(query.start) <- start(query.start)
         subject.start <- subject
         end(subject.start) <- start(subject.start)
 
-        ol.start <- findOverlaps(query.start, subject.start, type="equal")
+        ol.start <- findOverlaps(query.start, subject.start, type = "equal")
     }
 
-    if(any(type == "end")){
-
+    if (any(type == "end")) {
         query.end <- query
         start(query.end) <- end(query.end)
         subject.end <- subject
         start(subject.end) <- end(subject.end)
 
-        ol.end <- findOverlaps(query.end, subject.end, type="equal")
+        ol.end <- findOverlaps(query.end, subject.end, type = "equal")
     }
 
-    if("start" %in% type & "end" %in% type){
+    if ("start" %in% type & "end" %in% type) {
         ol.df <- rbind(as.data.frame(ol.start), as.data.frame(ol.end))
         ol.df <- arrange(ol.df, queryHits, subjectHits)
-        ol <- S4Vectors::Hits(from=ol.df$queryHits, to=ol.df$subjectHits, nLnode=S4Vectors::nLnode(ol.start), nRnode=S4Vectors::nRnode(ol.start), sort.by.query=TRUE)
-    }else if("start" %in% type){
+        ol <- S4Vectors::Hits(from = ol.df$queryHits, to = ol.df$subjectHits, nLnode = S4Vectors::nLnode(ol.start), nRnode = S4Vectors::nRnode(ol.start), sort.by.query = TRUE)
+    } else if ("start" %in% type) {
         ol <- ol.start
-    }else if("end" %in% type){
+    } else if ("end" %in% type) {
         ol <- ol.end
     }
 
     return(ol)
-
 }
 #' Create a 0/1 matrix from a Ranges overlap
 #' @param ol ranges overlaps from findOverlaps()
@@ -235,11 +243,11 @@ findOverlaps.junc <- function(query, subject, type=c("start", "end")){
 #' @keywords internal
 #' @import GenomicRanges
 #' @author Beth Signal
-overlap2matrix <- function(ol, maxn=7){
-    mat <- matrix(nrow=maxn, ncol=maxn, data=1)
+overlap2matrix <- function(ol, maxn = 7) {
+    mat <- matrix(nrow = maxn, ncol = maxn, data = 1)
 
-    for(i in seq_len(nrow(mat))){
-        mat[i,i] <- 0
+    for (i in seq_len(nrow(mat))) {
+        mat[i, i] <- 0
         mat[i, ol$subjectHits[ol$queryHits == i]] <- 0
     }
 
@@ -251,68 +259,65 @@ overlap2matrix <- function(ol, maxn=7){
 #' @keywords internal
 #' @import GenomicRanges
 #' @author Beth Signal
-matrix2combinations <-function(mat){
+matrix2combinations <- function(mat) {
     maxn <- nrow(mat)
     ignorecols <- vector()
-    newMat <- matrix(nrow=1, ncol=maxn, data=NA)
+    newMat <- matrix(nrow = 1, ncol = maxn, data = NA)
     newMatLine <- newMat
 
-    for(j in seq_len(maxn)){
+    for (j in seq_len(maxn)) {
+        if (all(is.na(newMatLine[, j]))) {
+            newMatLine[, j] <- 1
 
-        if(all(is.na(newMatLine[,j]))){
-            newMatLine[,j] <- 1
-
-            if(any(mat[-c(j, ignorecols),j] == 0) & !all(mat[-c(j, ignorecols),j] == 0)){
-                n <- which(mat[,j] == 0)
+            if (any(mat[-c(j, ignorecols), j] == 0) & !all(mat[-c(j, ignorecols), j] == 0)) {
+                n <- which(mat[, j] == 0)
                 n <- n[which(!(n %in% c(j, ignorecols)))]
 
-                if(length(n) <= 1){
+                if (length(n) <= 1) {
                     newMatLineadd <- newMatLine
-                    if(n > j){
-                        newMatLineadd[,j] <- NA
-                        newMatLineadd[,n] <- 1
+                    if (n > j) {
+                        newMatLineadd[, j] <- NA
+                        newMatLineadd[, n] <- 1
 
                         newMatLine <- rbind(newMatLine, newMatLineadd)
-                    }else{
-                        newMatLineadd[,j][which(!is.na(newMatLineadd[,n]))] <- NA
+                    } else {
+                        newMatLineadd[, j][which(!is.na(newMatLineadd[, n]))] <- NA
                         newMatLine <- newMatLineadd
                     }
-                }else{
-                    newMatLine[,j] <- NA
+                } else {
+                    newMatLine[, j] <- NA
                     newMatLineadd <- newMatLine
 
                     n.low <- n[n < j]
-                    for(nx in n.low){
-                        newMatLineadd <- newMatLineadd[is.na(newMatLineadd[,nx]),]
-                        if(!is.matrix(newMatLineadd)){
+                    for (nx in n.low) {
+                        newMatLineadd <- newMatLineadd[is.na(newMatLineadd[, nx]), ]
+                        if (!is.matrix(newMatLineadd)) {
                             newMatLineadd <- t(as.matrix(newMatLineadd))
                         }
                     }
                     n.high <- n[n > j]
 
-                    newMatLineadd[,n.high] <- NA
-                    newMatLineadd[,j] <- 1
+                    newMatLineadd[, n.high] <- NA
+                    newMatLineadd[, j] <- 1
                     newMatLine <- rbind(newMatLine, newMatLineadd)
-
                 }
-            }else if(all(mat[-j,j] == 0)){
+            } else if (all(mat[-j, j] == 0)) {
                 ignorecols <- append(ignorecols, j)
-                newMatLine[,-j] <- NA
-                newMatLine[,j] <- 1
+                newMatLine[, -j] <- NA
+                newMatLine[, j] <- 1
 
-                if(exists("newMat.singles")){
-                    newMat.singles <- rbind(newMat.singles,newMatLine[1,])
-                }else{
-                    newMat.singles <- newMatLine[1,]
+                if (exists("newMat.singles")) {
+                    newMat.singles <- rbind(newMat.singles, newMatLine[1, ])
+                } else {
+                    newMat.singles <- newMatLine[1, ]
                 }
                 newMatLine <- newMat
             }
             newMat <- newMatLine
             newMatLine <- newMat
         }
-
     }
-    if(exists("newMat.singles")){
+    if (exists("newMat.singles")) {
         newMat <- rbind(newMat, newMat.singles)
     }
 
@@ -333,31 +338,29 @@ matrix2combinations <-function(mat){
     #     newMat <- newMat[-rm,]
     # }
 
-    for(x in seq_len(nrow(mat))){
-
-        dontCombine <- which(mat[x,] == 0)
+    for (x in seq_len(nrow(mat))) {
+        dontCombine <- which(mat[x, ] == 0)
         dontCombine <- dontCombine[dontCombine != x]
 
-        for(y in seq_along(dontCombine)){
-            rm <- which(newMat[,x] == 1 & newMat[,dontCombine[y]] == 1)
-            if(length(rm) > 0){
-                newMat <- newMat[-rm,]
+        for (y in seq_along(dontCombine)) {
+            rm <- which(newMat[, x] == 1 & newMat[, dontCombine[y]] == 1)
+            if (length(rm) > 0) {
+                newMat <- newMat[-rm, ]
             }
         }
     }
 
 
     combos <- (apply(newMat, 1, function(x) which(!is.na(x))))
-    if(is.matrix(combos)){
+    if (is.matrix(combos)) {
         combinationList <- list()
-        for(i in seq_len(ncol(combos))){
-            combinationList[[i]] <- combos[,i]
+        for (i in seq_len(ncol(combos))) {
+            combinationList[[i]] <- combos[, i]
         }
         return(combinationList)
-    }else{
+    } else {
         return(combos)
     }
-
 }
 #' Add set numbers to introns
 #'
@@ -368,24 +371,23 @@ matrix2combinations <-function(mat){
 #' @import GenomicRanges
 #' @importFrom plyr desc
 #' @author Beth Signal
-addSets <- function(clusterGRanges.noset){
-
+addSets <- function(clusterGRanges.noset) {
     clusterGRanges.noset$set <- 1
 
     ol <- as.data.frame(findOverlaps(clusterGRanges.noset))
-    ol <- ol[ol$queryHits != ol$subjectHits,]
+    ol <- ol[ol$queryHits != ol$subjectHits, ]
     ol$setFrom <- clusterGRanges.noset$set[ol$queryHits]
     ol$setTo <- clusterGRanges.noset$set[ol$subjectHits]
-    ol <- ol[ol$setFrom == ol$setTo,]
+    ol <- ol[ol$setFrom == ol$setTo, ]
 
-    if(nrow(ol) > 0){
-        combinationList <- matrix2combinations(overlap2matrix(ol, maxn=length(clusterGRanges.noset)))
+    if (nrow(ol) > 0) {
+        combinationList <- matrix2combinations(overlap2matrix(ol, maxn = length(clusterGRanges.noset)))
 
-        sets <- unlist(mapply(function(x,y) rep(x,y), seq_along(combinationList), lapply(combinationList, length)))
+        sets <- unlist(mapply(function(x, y) rep(x, y), seq_along(combinationList), lapply(combinationList, length)))
 
         clusterGRanges.sets <- clusterGRanges.noset[unlist(combinationList)]
         clusterGRanges.sets$set <- sets
-    }else{
+    } else {
         clusterGRanges.sets <- clusterGRanges.noset
         clusterGRanges.sets$set <- 1
     }
@@ -409,17 +411,18 @@ addSets <- function(clusterGRanges.noset){
 #' @family gtf manipulation
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf",
-#' package="GeneStructureTools"))
-#' exons <- gtf[gtf$type=="exon"]
+#' gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf",
+#'     package = "GeneStructureTools"
+#' ))
+#' exons <- gtf[gtf$type == "exon"]
 #' exons.duplicated <- c(exons[1:4], exons[1:4])
 #' length(exons.duplicated)
 #' exons.deduplicated <- removeSameExon(exons.duplicated)
 #' length(exons.deduplicated)
-removeSameExon <- function(exons){
-    samesies <- findOverlaps(exons, type="equal")
+removeSameExon <- function(exons) {
+    samesies <- findOverlaps(exons, type = "equal")
     samesies <- samesies[samesies@from > samesies@to]
-    if(length(samesies) > 0){
+    if (length(samesies) > 0) {
         exons <- exons[-unique(samesies@from)]
     }
     return(exons)
@@ -435,32 +438,31 @@ removeSameExon <- function(exons){
 #' @importFrom rtracklayer import
 #' @family leafcutter splicing isoform creation
 #' @author Beth Signal
-leafcutterIntronsToExons <- function(clusterGRanges, junctions){
+leafcutterIntronsToExons <- function(clusterGRanges, junctions) {
     clusterGRanges <- clusterGRanges[order(start(clusterGRanges))]
     sets <- as.data.frame(table(clusterGRanges$set))
-    sets <- sets[which(sets$Freq > 1),]
+    sets <- sets[which(sets$Freq > 1), ]
 
-    for(s in seq_along(nrow(sets))){
-        clusterGRanges.set <- clusterGRanges[clusterGRanges$set==sets$Var1]
+    for (s in seq_along(nrow(sets))) {
+        clusterGRanges.set <- clusterGRanges[clusterGRanges$set == sets$Var1]
         clusterGRanges.set <- clusterGRanges.set[order(start(clusterGRanges.set))]
         newStarts <- end(clusterGRanges.set)[-length(clusterGRanges.set)]
         newEnds <- start(clusterGRanges.set)[-1]
         clusterExons <- clusterGRanges.set[-1]
-        ranges(clusterExons) <- IRanges(start=newStarts, end=newEnds)
+        ranges(clusterExons) <- IRanges(start = newStarts, end = newEnds)
 
-        if(s == 1){
+        if (s == 1) {
             clusterExons.all <- clusterExons
-        }else{
+        } else {
             clusterExons.all <- c(clusterExons.all, clusterExons)
         }
     }
 
-    if(nrow(sets) > 0){
+    if (nrow(sets) > 0) {
         return(clusterExons.all)
-    }else{
+    } else {
         return(NULL)
     }
-
 }
 #' Create new exon ranges for a cryptic splice junction
 #'
@@ -474,147 +476,148 @@ leafcutterIntronsToExons <- function(clusterGRanges, junctions){
 #' @import GenomicRanges
 #' @family leafcutter splicing isoform creation
 #' @author Beth Signal
-makeNewLeafExons <- function(altIntronLocs, junctionRanges, clusterExons, splice.type){
-
+makeNewLeafExons <- function(altIntronLocs, junctionRanges, clusterExons, splice.type) {
     strand.var <- as.character(strand(junctionRanges))
 
     # find anything that overlaps the 'cryptic' end of the junction
     junctionRanges.end <- junctionRanges
-    if((strand.var == "+" & splice.type==3) | (strand.var == "-" & splice.type==5)){
+    if ((strand.var == "+" & splice.type == 3) | (strand.var == "-" & splice.type == 5)) {
         start(junctionRanges.end) <- end(junctionRanges.end)
-    }else{
+    } else {
         end(junctionRanges.end) <- start(junctionRanges.end)
     }
     ol <- findOverlaps(junctionRanges.end, clusterExons)
 
     # if junction is not a smaller version of known exon
-    if(length(ol@to) == 0){
+    if (length(ol@to) == 0) {
 
-        #next exon following/preceding on the cryptic side
-        if(splice.type==3){
+        # next exon following/preceding on the cryptic side
+        if (splice.type == 3) {
             near <- precede(junctionRanges, clusterExons)
-        }else{
+        } else {
             near <- follow(junctionRanges, clusterExons)
         }
         # if there's nothing (i.e. novel first/last junction)
-        if(is.na(near)){
+        if (is.na(near)) {
             near <- nearest(junctionRanges, clusterExons)
             clusterExons.alt <- clusterExons[near]
-            #make an exon with length==100
-            if((strand.var == "+" & splice.type==3) | (strand.var == "-" & splice.type==5)){
-                ranges(clusterExons.alt) <- IRanges(start=end(junctionRanges)+1, width=100)
-            }else{
-                ranges(clusterExons.alt) <- IRanges(end=start(junctionRanges)-1, width=100)
+            # make an exon with length==100
+            if ((strand.var == "+" & splice.type == 3) | (strand.var == "-" & splice.type == 5)) {
+                ranges(clusterExons.alt) <- IRanges(start = end(junctionRanges) + 1, width = 100)
+            } else {
+                ranges(clusterExons.alt) <- IRanges(end = start(junctionRanges) - 1, width = 100)
             }
-            if(splice.type == 3){
-                clusterExons.alt$exon_number <- as.numeric(clusterExons.alt$exon_number)+1
-            }else{
-                clusterExons.alt$exon_number <- as.numeric(clusterExons.alt$exon_number)-1
+            if (splice.type == 3) {
+                clusterExons.alt$exon_number <- as.numeric(clusterExons.alt$exon_number) + 1
+            } else {
+                clusterExons.alt$exon_number <- as.numeric(clusterExons.alt$exon_number) - 1
             }
-        }else{
+        } else {
             clusterExons.alt <- clusterExons[near]
             # all exons w/ same exon start/end
-            if((strand.var == "+" & splice.type==3) | (strand.var == "-" & splice.type==5)){
-                same <- findOverlaps(clusterExons.alt, clusterExons, type="start")
-            }else{
-                same <- findOverlaps(clusterExons.alt, clusterExons, type="end")
+            if ((strand.var == "+" & splice.type == 3) | (strand.var == "-" & splice.type == 5)) {
+                same <- findOverlaps(clusterExons.alt, clusterExons, type = "start")
+            } else {
+                same <- findOverlaps(clusterExons.alt, clusterExons, type = "end")
             }
             clusterExons.alt <- clusterExons[same@to]
         }
-        #paired exon -- for transcript id matching
+        # paired exon -- for transcript id matching
         junctionRanges.start <- junctionRanges
         junctionRanges.cluster <- junctionRanges
-        ranges(junctionRanges.cluster) <- IRanges(start=min(altIntronLocs$start),
-                                                  end=max(altIntronLocs$end))
+        ranges(junctionRanges.cluster) <- IRanges(
+            start = min(altIntronLocs$start),
+            end = max(altIntronLocs$end)
+        )
 
-        if(splice.type == 3){
-            if(strand.var == "+"){
-                start(junctionRanges.start) <- start(junctionRanges.start) -1
+        if (splice.type == 3) {
+            if (strand.var == "+") {
+                start(junctionRanges.start) <- start(junctionRanges.start) - 1
                 end(junctionRanges.start) <- start(junctionRanges.start)
-                ol <- findOverlaps(junctionRanges.start, clusterExons, type="end")@to
+                ol <- findOverlaps(junctionRanges.start, clusterExons, type = "end")@to
                 end(junctionRanges.cluster) <- start(junctionRanges.cluster)
-                ol <- c(ol,findOverlaps(junctionRanges.cluster, clusterExons, type="end")@to)
-            }else{
-                end(junctionRanges.start) <- end(junctionRanges.start) +1
+                ol <- c(ol, findOverlaps(junctionRanges.cluster, clusterExons, type = "end")@to)
+            } else {
+                end(junctionRanges.start) <- end(junctionRanges.start) + 1
                 start(junctionRanges.start) <- end(junctionRanges.start)
-                ol <- findOverlaps(junctionRanges.start, clusterExons, type="start")@to
+                ol <- findOverlaps(junctionRanges.start, clusterExons, type = "start")@to
                 start(junctionRanges.cluster) <- end(junctionRanges.cluster)
-                ol <- c(ol,findOverlaps(junctionRanges.cluster, clusterExons, type="start")@to)
+                ol <- c(ol, findOverlaps(junctionRanges.cluster, clusterExons, type = "start")@to)
             }
             ol <- c(ol, precede(junctionRanges, clusterExons))
-        }else{
-            if(strand.var == "+"){
-                end(junctionRanges.start) <- end(junctionRanges.start) +1
+        } else {
+            if (strand.var == "+") {
+                end(junctionRanges.start) <- end(junctionRanges.start) + 1
                 start(junctionRanges.start) <- end(junctionRanges.start)
-                ol <- findOverlaps(junctionRanges.start, clusterExons, type="start")@to
+                ol <- findOverlaps(junctionRanges.start, clusterExons, type = "start")@to
                 start(junctionRanges.cluster) <- end(junctionRanges.cluster)
-                ol <- c(ol,findOverlaps(junctionRanges.cluster, clusterExons, type="start")@to)
-            }else{
-                start(junctionRanges.start) <- start(junctionRanges.start) -1
+                ol <- c(ol, findOverlaps(junctionRanges.cluster, clusterExons, type = "start")@to)
+            } else {
+                start(junctionRanges.start) <- start(junctionRanges.start) - 1
                 end(junctionRanges.start) <- start(junctionRanges.start)
-                ol <- findOverlaps(junctionRanges.start, clusterExons, type="end")@to
+                ol <- findOverlaps(junctionRanges.start, clusterExons, type = "end")@to
                 end(junctionRanges.cluster) <- start(junctionRanges.cluster)
-                ol <- c(ol,findOverlaps(junctionRanges.cluster, clusterExons, type="end")@to)
+                ol <- c(ol, findOverlaps(junctionRanges.cluster, clusterExons, type = "end")@to)
             }
             ol <- c(ol, precede(junctionRanges, clusterExons))
         }
         ol <- unique(ol)
         ol <- ol[which(!is.na(ol))]
 
-        if((strand.var == "+" & splice.type==3) | (strand.var == "-" & splice.type==5)){
-            ol <- findOverlaps(clusterExons[ol], clusterExons, type="end")
-        }else{
-            ol <- findOverlaps(clusterExons[ol], clusterExons, type="start")
+        if ((strand.var == "+" & splice.type == 3) | (strand.var == "-" & splice.type == 5)) {
+            ol <- findOverlaps(clusterExons[ol], clusterExons, type = "end")
+        } else {
+            ol <- findOverlaps(clusterExons[ol], clusterExons, type = "start")
         }
         ol <- ol[!duplicated(ol@to)]
 
         ids <- clusterExons$transcript_id[ol@to]
         ce.alt.length <- length(clusterExons.alt)
 
-        #rep ids so transcript id will match across junctions
-        clusterExons.alt <- rep(clusterExons.alt, length(ids)+1)
+        # rep ids so transcript id will match across junctions
+        clusterExons.alt <- rep(clusterExons.alt, length(ids) + 1)
         clusterExons.alt$transcript_id[-(seq_len(ce.alt.length))] <-
-            rep(ids, each=ce.alt.length)
+            rep(ids, each = ce.alt.length)
 
         exon.ids <- paste(start(clusterExons.alt), end(clusterExons.alt), clusterExons.alt$transcript_id)
         clusterExons.alt <- clusterExons.alt[!duplicated(exon.ids)]
-
-    }else{
+    } else {
         clusterExons.alt <- clusterExons[ol@to]
 
-        #check for a F*&$#@^& pair
+        # check for a F*&$#@^& pair
         junctionRanges.cluster <- junctionRanges
-        ranges(junctionRanges.cluster) <- IRanges(start=min(altIntronLocs$start),
-                                                  end=max(altIntronLocs$end))
+        ranges(junctionRanges.cluster) <- IRanges(
+            start = min(altIntronLocs$start),
+            end = max(altIntronLocs$end)
+        )
 
 
-        if((strand.var == "+" & splice.type == 3)|(strand.var == "-" & splice.type == 5)){
+        if ((strand.var == "+" & splice.type == 3) | (strand.var == "-" & splice.type == 5)) {
             end(junctionRanges.cluster) <- start(junctionRanges.cluster)
-            ol <- findOverlaps(junctionRanges.cluster, clusterExons, type="end")@to
-        }else{
+            ol <- findOverlaps(junctionRanges.cluster, clusterExons, type = "end")@to
+        } else {
             start(junctionRanges.cluster) <- end(junctionRanges.cluster)
-            ol <- findOverlaps(junctionRanges.cluster, clusterExons, type="start")@to
+            ol <- findOverlaps(junctionRanges.cluster, clusterExons, type = "start")@to
         }
 
         ids <- clusterExons$transcript_id[ol]
 
         ce.alt.length <- length(clusterExons.alt)
 
-        #rep ids so transcript id will match across junctions
-        clusterExons.alt <- rep(clusterExons.alt, length(ids)+1)
+        # rep ids so transcript id will match across junctions
+        clusterExons.alt <- rep(clusterExons.alt, length(ids) + 1)
         clusterExons.alt$transcript_id[-(seq_len(ce.alt.length))] <-
-            rep(ids, each=ce.alt.length)
+            rep(ids, each = ce.alt.length)
 
         exon.ids <- paste(start(clusterExons.alt), end(clusterExons.alt), clusterExons.alt$transcript_id)
         clusterExons.alt <- clusterExons.alt[!duplicated(exon.ids)]
-
     }
 
-    #make sure all the ends are the same
-    if((strand.var == "+" & splice.type==3) | (strand.var == "-" & splice.type==5)){
-        start(clusterExons.alt) <- end(junctionRanges)+1
-    }else{
-        end(clusterExons.alt) <- start(junctionRanges)-1
+    # make sure all the ends are the same
+    if ((strand.var == "+" & splice.type == 3) | (strand.var == "-" & splice.type == 5)) {
+        start(clusterExons.alt) <- end(junctionRanges) + 1
+    } else {
+        end(clusterExons.alt) <- start(junctionRanges) - 1
     }
 
     return(clusterExons.alt)
@@ -630,25 +633,25 @@ makeNewLeafExons <- function(altIntronLocs, junctionRanges, clusterExons, splice
 #' @import GenomicRanges
 #' @family leafcutter splicing isoform creation
 #' @author Beth Signal
-makeNewLeafExonsUnanchored <- function(altIntronLocs, junctionRanges, clusterExons){
-    clusterExons.alt3 <- makeNewLeafExons(altIntronLocs, junctionRanges, clusterExons, splice.type=3)
-    clusterExons.alt5 <- makeNewLeafExons(altIntronLocs, junctionRanges, clusterExons, splice.type=5)
+makeNewLeafExonsUnanchored <- function(altIntronLocs, junctionRanges, clusterExons) {
+    clusterExons.alt3 <- makeNewLeafExons(altIntronLocs, junctionRanges, clusterExons, splice.type = 3)
+    clusterExons.alt5 <- makeNewLeafExons(altIntronLocs, junctionRanges, clusterExons, splice.type = 5)
 
     ids <- clusterExons.alt5$transcript_id
     ce.alt.length <- length(clusterExons.alt3)
-    #rep ids so transcript id will match across junctions
-    clusterExons.alt3 <- rep(clusterExons.alt3, length(ids)+1)
+    # rep ids so transcript id will match across junctions
+    clusterExons.alt3 <- rep(clusterExons.alt3, length(ids) + 1)
     clusterExons.alt3$transcript_id[-(seq_len(ce.alt.length))] <-
-        rep(ids, each=ce.alt.length)
+        rep(ids, each = ce.alt.length)
     exon.ids <- paste(start(clusterExons.alt3), end(clusterExons.alt3), clusterExons.alt3$transcript_id)
     clusterExons.alt3 <- clusterExons.alt3[!duplicated(exon.ids)]
 
     ids <- clusterExons.alt3$transcript_id
     ce.alt.length <- length(clusterExons.alt5)
-    #rep ids so transcript id will match across junctions
-    clusterExons.alt5 <- rep(clusterExons.alt5, length(ids)+1)
+    # rep ids so transcript id will match across junctions
+    clusterExons.alt5 <- rep(clusterExons.alt5, length(ids) + 1)
     clusterExons.alt5$transcript_id[-(seq_len(ce.alt.length))] <-
-        rep(ids, each=ce.alt.length)
+        rep(ids, each = ce.alt.length)
     exon.ids <- paste(start(clusterExons.alt5), end(clusterExons.alt5), clusterExons.alt5$transcript_id)
     clusterExons.alt5 <- clusterExons.alt5[!duplicated(exon.ids)]
 

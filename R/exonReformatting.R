@@ -6,14 +6,15 @@
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf",
-#' package="GeneStructureTools"))
-#' exons <- gtf[gtf$type=="exon"]
+#' gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf",
+#'     package = "GeneStructureTools"
+#' ))
+#' exons <- gtf[gtf$type == "exon"]
 #' exons.reformat <- reformatExons(exons)
-reformatExons <- function(exons){
+reformatExons <- function(exons) {
 
     # add first/last annotation (speeds up later steps)
-    if(!("first_last" %in% colnames(mcols(exons)))){
+    if (!("first_last" %in% colnames(mcols(exons)))) {
         t <- as.data.frame(table(exons$transcript_id))
         exons$first_last <- NA
         exons$first_last[exons$exon_number == 1] <- "first"
@@ -36,36 +37,37 @@ reformatExons <- function(exons){
 #' @family rmats data processing
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf",
-#' package="GeneStructureTools"))
-#' exons <- gtf[gtf$type=="exon"]
+#' gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf",
+#'     package = "GeneStructureTools"
+#' ))
+#' exons <- gtf[gtf$type == "exon"]
 #' introns <- exonsToIntrons(exons)
-exonsToIntrons <- function(exons){
-
+exonsToIntrons <- function(exons) {
     exons_df <- as.data.frame(exons)
-    exons_df <- exons_df[,c("seqnames", "start", "end", "strand", "transcript_id", "exon_number")]
-    exons_df <- exons_df[order(exons_df$transcript_id, exons_df$start, exons_df$end),]
+    exons_df <- exons_df[, c("seqnames", "start", "end", "strand", "transcript_id", "exon_number")]
+    exons_df <- exons_df[order(exons_df$transcript_id, exons_df$start, exons_df$end), ]
     exons_df$intron_start <- exons_df$end
     exons_df$intron_end <- dplyr::lead(exons_df$start)
 
     rm <- which(dplyr::lead(exons_df$transcript_id) != exons_df$transcript_id)
 
-    exons_df <- exons_df[-rm,]
-    exons_df <- exons_df[-nrow(exons_df),]
+    exons_df <- exons_df[-rm, ]
+    exons_df <- exons_df[-nrow(exons_df), ]
     min_exon_n <- aggregate(exon_number ~ transcript_id, exons_df, min)
-    if(!all(min_exon_n$exon_number == 1)){
-        exons_df$exon_number[exons_df$strand=="-"] <- as.numeric(exons_df$exon_number[exons_df$strand=="-"]) - 1
+    if (!all(min_exon_n$exon_number == 1)) {
+        exons_df$exon_number[exons_df$strand == "-"] <- as.numeric(exons_df$exon_number[exons_df$strand == "-"]) - 1
     }
 
-    introns <- GRanges(seqnames=exons_df$seqnames, ranges=IRanges(start=exons_df$intron_start, end=exons_df$intron_end),
-                       strand=exons_df$strand, transcript_id=exons_df$transcript_id, exon_number=exons_df$exon_number)
+    introns <- GRanges(
+        seqnames = exons_df$seqnames, ranges = IRanges(start = exons_df$intron_start, end = exons_df$intron_end),
+        strand = exons_df$strand, transcript_id = exons_df$transcript_id, exon_number = exons_df$exon_number
+    )
     m <- match(introns$transcript_id, exons$transcript_id)
     introns$gene_id <- exons$gene_id[m]
     introns$gene_name <- exons$gene_name[m]
 
-    mcols(introns) <- DataFrame(dplyr::left_join(as.data.frame(mcols(introns)),  as.data.frame(mcols(exons))))
+    mcols(introns) <- DataFrame(dplyr::left_join(as.data.frame(mcols(introns)), as.data.frame(mcols(exons))))
     return(introns)
-
 }
 #' Convert an exon-level gtf annotation to a transcript-level gtf annotation
 #'
@@ -78,17 +80,17 @@ exonsToIntrons <- function(exons){
 #' @family gtf manipulation
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","gencode.vM25.small.gtf",
-#' package="GeneStructureTools"))
-#' exons <- gtf[gtf$type=="exon"]
+#' gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf",
+#'     package = "GeneStructureTools"
+#' ))
+#' exons <- gtf[gtf$type == "exon"]
 #' transcritps <- exonsToTranscripts(exons)
-exonsToTranscripts <- function(exons){
-
-    exons.df <- data.frame(t_id=exons$transcript_id, start=start(exons), end=end(exons))
+exonsToTranscripts <- function(exons) {
+    exons.df <- data.frame(t_id = exons$transcript_id, start = start(exons), end = end(exons))
     txRanges <- aggregate(start ~ t_id, exons.df, min)
-    txRanges$end <- aggregate(end ~ t_id, exons.df, max)[,2]
+    txRanges$end <- aggregate(end ~ t_id, exons.df, max)[, 2]
 
-    transcripts <- exons[!duplicated(exons$transcript_id),]
+    transcripts <- exons[!duplicated(exons$transcript_id), ]
     transcripts$exon_id <- NULL
     transcripts$exon_number <- NULL
     transcripts$first_last <- NULL
@@ -111,7 +113,6 @@ exonsToTranscripts <- function(exons){
 #' @author Beth Signal
 #' @examples
 #' removeVersion("ENSMUSG00000001017.15")
-
-removeVersion <- function(ids){
+removeVersion <- function(ids) {
     return(unlist(lapply(stringr::str_split(ids, "[.]"), "[[", 1)))
 }

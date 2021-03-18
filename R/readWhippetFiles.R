@@ -10,51 +10,54 @@
 #' @family whippet data processing
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- list.files(system.file("extdata","whippet_small/",
-#' package="GeneStructureTools"), full.names=TRUE)
+#' whippetFiles <- list.files(system.file("extdata", "whippet_small/",
+#'     package = "GeneStructureTools"
+#' ), full.names = TRUE)
 #' jncFiles <- whippetFiles[grep(".jnc", whippetFiles)]
 #' whippetJNC <- readWhippetJNCfiles(jncFiles)
-readWhippetJNCfiles <- function(files, minCount=0){
+readWhippetJNCfiles <- function(files, minCount = 0) {
+    for (f in seq_along(files)) {
+        whip <- data.table::fread(files[f], data.table = FALSE)
+        colnames(whip) <- c("chromosome", "start", "end", "id", "count", "strand")
 
-
-    for(f in seq_along(files)){
-        whip <- data.table::fread(files[f], data.table=FALSE)
-        colnames(whip) <- c("chromosome","start","end","id","count","strand")
-
-        if(exists("whip.all")){
+        if (exists("whip.all")) {
             m <- match(whip$id, whip.all$id)
             n <- match(whip.all$id, whip$id)
-            whip.all <- cbind(whip.all, new_count=whip[n,5])
+            whip.all <- cbind(whip.all, new_count = whip[n, 5])
             addCols <- ncol(whip.all) - 6
 
-            if(any(is.na(m))){
-                whip.add <- whip[which(is.na(m)),c(1:4,6)]
-                for(c in 1:(addCols)){
-                    whip.add <- cbind(whip.add, count=NA)
+            if (any(is.na(m))) {
+                whip.add <- whip[which(is.na(m)), c(1:4, 6)]
+                for (c in 1:(addCols)) {
+                    whip.add <- cbind(whip.add, count = NA)
                 }
-                whip.add <- cbind(whip.add, count=whip$count[which(is.na(m))])
+                whip.add <- cbind(whip.add, count = whip$count[which(is.na(m))])
                 colnames(whip.add) <- colnames(whip.all)
-                whip.all <- rbind(whip.all,whip.add)
+                whip.all <- rbind(whip.all, whip.add)
             }
-        }else{
-            whip.all <- whip[,c(1:4,6,5)]
+        } else {
+            whip.all <- whip[, c(1:4, 6, 5)]
         }
     }
 
-    colnames(whip.all)[-c(1:5)] <- gsub(".jnc.gz","", basename(files))
-    whip.all$count <- rowSums(whip.all[,-c(1:5)], na.rm=TRUE)
+    colnames(whip.all)[-c(1:5)] <- gsub(".jnc.gz", "", basename(files))
+    whip.all$count <- rowSums(whip.all[, -c(1:5)], na.rm = TRUE)
 
-    whip.all <- whip.all[which(whip.all$count >= minCount),]
+    whip.all <- whip.all[which(whip.all$count >= minCount), ]
 
     geneIds <- unlist(lapply(stringr::str_split(whip.all$id, ":"), "[[", 1))
 
-    jncCoords <- GRanges(seqnames=S4Vectors::Rle(whip.all$chrom),
-                         ranges=IRanges::IRanges(start=as.numeric(whip.all$start),
-                                                 end=as.numeric(whip.all$end)),
-                         strand=whip.all$strand,
-                         id=whip.all$id,
-                         gene=geneIds,
-                         junction_count=whip.all$count)
+    jncCoords <- GRanges(
+        seqnames = S4Vectors::Rle(whip.all$chrom),
+        ranges = IRanges::IRanges(
+            start = as.numeric(whip.all$start),
+            end = as.numeric(whip.all$end)
+        ),
+        strand = whip.all$strand,
+        id = whip.all$id,
+        gene = geneIds,
+        junction_count = whip.all$count
+    )
     return(jncCoords)
 }
 
@@ -68,65 +71,75 @@ readWhippetJNCfiles <- function(files, minCount=0){
 #' @family whippet data processing
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- list.files(system.file("extdata","whippet_small/",
-#' package="GeneStructureTools"), full.names=TRUE)
+#' whippetFiles <- list.files(system.file("extdata", "whippet_small/",
+#'     package = "GeneStructureTools"
+#' ), full.names = TRUE)
 #' psiFiles <- whippetFiles[grep(".psi", whippetFiles)]
 #' whippetPSI <- readWhippetPSIfiles(psiFiles)
-readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
-
-    for(f in seq_along(files)){
-        whip <- data.table::fread(files[f], data.table=FALSE)
+readWhippetPSIfiles <- function(files, attribute = "Total_Reads", maxNA = NA) {
+    for (f in seq_along(files)) {
+        whip <- data.table::fread(files[f], data.table = FALSE)
         wantedCol <- which(colnames(whip) == attribute)
 
-        if(exists("whip.all")){
-            if(nrow(whip.all) == nrow(whip)){
-                whip.all <- cbind(whip.all, whip[,wantedCol])
+        if (exists("whip.all")) {
+            if (nrow(whip.all) == nrow(whip)) {
+                whip.all <- cbind(whip.all, whip[, wantedCol])
 
                 # if some weird matching is going on
-            }else{
+            } else {
                 # match first by truely unique name
-                uniqueName.all <- paste(whip.all$Gene,whip.all$Coord,
-                                              whip.all$Type,whip.all$Node, sep="_")
-                uniqueName.new <- paste(whip$Gene,whip$Coord,
-                                              whip$Type,whip$Node, sep="_")
+                uniqueName.all <- paste(whip.all$Gene, whip.all$Coord,
+                    whip.all$Type, whip.all$Node,
+                    sep = "_"
+                )
+                uniqueName.new <- paste(whip$Gene, whip$Coord,
+                    whip$Type, whip$Node,
+                    sep = "_"
+                )
                 m <- match(uniqueName.all, uniqueName.new)
                 # match second by unique name WITHOUT node
-                uniqueName.all.noNode <- paste(whip.all$Gene,whip.all$Coord,
-                                              whip.all$Type, sep="_")
-                uniqueName.new.noNode <- paste(whip$Gene,whip$Coord,
-                                          whip$Type, sep="_")
+                uniqueName.all.noNode <- paste(whip.all$Gene, whip.all$Coord,
+                    whip.all$Type,
+                    sep = "_"
+                )
+                uniqueName.new.noNode <- paste(whip$Gene, whip$Coord,
+                    whip$Type,
+                    sep = "_"
+                )
                 n <- match(uniqueName.all.noNode, uniqueName.new.noNode)
                 m[which(is.na(m))] <- n[which(is.na(m))]
 
                 # add in matching
-                whip.all <- cbind(whip.all, whip[m,wantedCol])
+                whip.all <- cbind(whip.all, whip[m, wantedCol])
 
                 # add additional rows for non-matches
                 addRows <- which(!((seq_len(nrow(whip))) %in% m))
 
                 # make a 'blank' data.frame
-                whip.add <- whip.all[1:length(addRows),]
-                whip.add[,c(1:5)] <- whip[addRows,c(1:5)]
-                for(r in seq(6, (ncol(whip.add)-1))){
-                    whip.add[,r] <- NA
+                whip.add <- whip.all[1:length(addRows), ]
+                whip.add[, c(1:5)] <- whip[addRows, c(1:5)]
+                for (r in seq(6, (ncol(whip.add) - 1))) {
+                    whip.add[, r] <- NA
                 }
-                whip.add[,ncol(whip.add)] <- whip[addRows,wantedCol]
+                whip.add[, ncol(whip.add)] <- whip[addRows, wantedCol]
             }
-
-        } else{
-            whip.all <- whip[,c(1:5,wantedCol)]
+        } else {
+            whip.all <- whip[, c(1:5, wantedCol)]
         }
     }
 
-    colnames(whip.all)[-(1:5)] <- gsub(".psi.gz","", basename(files))
+    colnames(whip.all)[-(1:5)] <- gsub(".psi.gz", "", basename(files))
 
-    whip.all$na_count <- apply(whip.all[,-c(1:5)], 1, function(x)
-        length(which(is.na(x))))
-    whip.all$unique_name <- paste(whip.all$Gene,whip.all$Coord,
-                                  whip.all$Type,whip.all$Node, sep="_")
-    if(!is.na(maxNA)){
+    whip.all$na_count <- apply(whip.all[, -c(1:5)], 1, function(x) {
+          length(which(is.na(x)))
+      })
+    whip.all$unique_name <- paste(whip.all$Gene, whip.all$Coord,
+        whip.all$Type, whip.all$Node,
+        sep = "_"
+    )
+    if (!is.na(maxNA)) {
         keep <- which(whip.all$na_count <= maxNA)
-        whip.all <- whip.all[keep,]
+        whip.all <- whip.all[keep, ]
     }
     return(whip.all)
 }
@@ -139,37 +152,42 @@ readWhippetPSIfiles <- function(files, attribute="Total_Reads", maxNA=NA){
 #' @family whippet data processing
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- list.files(system.file("extdata","whippet_small/",
-#' package="GeneStructureTools"), full.names=TRUE)
+#' whippetFiles <- list.files(system.file("extdata", "whippet_small/",
+#'     package = "GeneStructureTools"
+#' ), full.names = TRUE)
 #' diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
 #' whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
-readWhippetDIFFfiles <- function(files){
-
-    for(f in seq_along(files)){
+readWhippetDIFFfiles <- function(files) {
+    for (f in seq_along(files)) {
         whip <- data.table::fread(files[f],
-                                  data.table=FALSE, skip=1)
+            data.table = FALSE, skip = 1
+        )
 
-        #remove the NA column
+        # remove the NA column
         keepcol <- which(!(apply(whip, 2, function(x) all(is.na(x)))))
-        whip <- whip[,keepcol]
+        whip <- whip[, keepcol]
 
-        colnames(whip) <- c("gene", "node","coord","strand","type",
-                            "psi_a","psi_b","psi_delta",
-                            "probability","complexity","entropy")
-        whip$unique_name <- paste(whip$gene,whip$coord,whip$type,
-                                  whip$node, sep="_")
-        whip$comparison <- gsub(".diff.gz","", basename(files[f]))
+        colnames(whip) <- c(
+            "gene", "node", "coord", "strand", "type",
+            "psi_a", "psi_b", "psi_delta",
+            "probability", "complexity", "entropy"
+        )
+        whip$unique_name <- paste(whip$gene, whip$coord, whip$type,
+            whip$node,
+            sep = "_"
+        )
+        whip$comparison <- gsub(".diff.gz", "", basename(files[f]))
         conditions <- unique(whip$comparison)
         conditionsSplit <- stringr::str_split(conditions, "_")
         condition1 <- unlist(lapply(conditionsSplit, "[[", 1))
-        condition2 <- unlist(lapply(conditionsSplit, function(x) tail(x, n=1)))
+        condition2 <- unlist(lapply(conditionsSplit, function(x) tail(x, n = 1)))
 
         whip$condition_1 <- condition1[match(conditions, whip$comparison)]
         whip$condition_2 <- condition2[match(conditions, whip$comparison)]
 
-        if(exists("whip.all")){
+        if (exists("whip.all")) {
             whip.all <- rbind(whip.all, whip)
-        } else{
+        } else {
             whip.all <- whip
         }
     }
@@ -190,24 +208,28 @@ readWhippetDIFFfiles <- function(files){
 #' @family whippet data processing
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- list.files(system.file("extdata","whippet_small/",
-#' package="GeneStructureTools"), full.names=TRUE)
+#' whippetFiles <- list.files(system.file("extdata", "whippet_small/",
+#'     package = "GeneStructureTools"
+#' ), full.names = TRUE)
 #' diffFiles <- whippetFiles[grep(".diff", whippetFiles)]
 #' whippetDiffSplice <- readWhippetDIFFfiles(diffFiles)
 #' whippetCoords <- formatWhippetEvents(whippetDiffSplice)
-formatWhippetEvents <- function(whippet){
+formatWhippetEvents <- function(whippet) {
+    whippet <- whippet[!duplicated(whippet$coord), ]
 
-    whippet <- whippet[!duplicated(whippet$coord),]
+    chromosome <- unlist(lapply(stringr::str_split(whippet$coord, ":"), "[[", 1))
+    range <- unlist(lapply(stringr::str_split(whippet$coord, ":"), "[[", 2))
+    start <- unlist(lapply(stringr::str_split(range, "-"), "[[", 1))
+    end <- unlist(lapply(stringr::str_split(range, "-"), "[[", 2))
 
-    chromosome <- unlist(lapply(stringr::str_split(whippet$coord,":"), "[[",1))
-    range <- unlist(lapply(stringr::str_split(whippet$coord,":"), "[[",2))
-    start <- unlist(lapply(stringr::str_split(range,"-"), "[[",1))
-    end <- unlist(lapply(stringr::str_split(range,"-"), "[[",2))
-
-    eventCoords <- GRanges(seqnames=S4Vectors::Rle(chromosome),
-                           ranges=IRanges::IRanges(start=as.numeric(start),
-                                                   end=as.numeric(end)),
-                           strand=whippet$strand, id=whippet$coord)
+    eventCoords <- GRanges(
+        seqnames = S4Vectors::Rle(chromosome),
+        ranges = IRanges::IRanges(
+            start = as.numeric(start),
+            end = as.numeric(end)
+        ),
+        strand = whippet$strand, id = whippet$coord
+    )
     return(eventCoords)
 }
 
@@ -220,33 +242,34 @@ formatWhippetEvents <- function(whippet){
 #' @family whippet data processing
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet_small/",
-#' package="GeneStructureTools")
+#' whippetFiles <- system.file("extdata", "whippet_small/",
+#'     package = "GeneStructureTools"
+#' )
 #' wds <- readWhippetDataSet(whippetFiles)
-readWhippetDataSet <- function(filePath="."){
-
+readWhippetDataSet <- function(filePath = ".") {
     fileNames <- list.files(filePath)
-    wds <- new("whippetDataSet", filePath=filePath)
+    wds <- new("whippetDataSet", filePath = filePath)
     filesDiff <- fileNames[grep(".diff.gz", fileNames)]
-    if(length(filesDiff) > 0){
+    if (length(filesDiff) > 0) {
         slot(wds, "diffSplicingResults") <- readWhippetDIFFfiles(
-            paste0(filePath, "/", filesDiff))
+            paste0(filePath, "/", filesDiff)
+        )
         slot(wds, "comparisons") <- unique(diffSplicingResults(wds)$comparison)
         slot(wds, "coordinates") <-
             formatWhippetEvents(diffSplicingResults(wds))
         m <- match(diffSplicingResults(wds)$coord, coordinates(wds)$id)
         slot(wds, "diffSplicingResults") <-
-            cbind(diffSplicingResults(wds), coord_match=m)
+            cbind(diffSplicingResults(wds), coord_match = m)
     }
 
     filesJnc <- fileNames[grep(".jnc.gz", fileNames)]
-    if(length(filesJnc) > 0){
+    if (length(filesJnc) > 0) {
         slot(wds, "junctions") <-
             readWhippetJNCfiles(paste0(filePath, "/", filesJnc))
     }
 
     filesPsi <- fileNames[grep(".psi.gz", fileNames)]
-    if(length(filesPsi) > 0){
+    if (length(filesPsi) > 0) {
         slot(wds, "readCounts") <-
             readWhippetPSIfiles(paste0(filePath, "/", filesPsi))
     }
