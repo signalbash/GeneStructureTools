@@ -4,8 +4,13 @@
 \alias{skipExonInTranscript}
 \title{Remove and include a skipped exon from the transcripts it overlaps}
 \usage{
-skipExonInTranscript(skippedExons, exons, glueExons = TRUE,
-  whippetDataSet = NULL, match = "exact")
+skipExonInTranscript(
+  skippedExons,
+  exons,
+  glueExons = TRUE,
+  whippetDataSet = NULL,
+  match = "exact"
+)
 }
 \arguments{
 \item{skippedExons}{data.frame generataed by findExonContainingTranscripts()}
@@ -30,33 +35,35 @@ GRanges with transcripts skipping exons
 Remove and include a skipped exon from the transcripts it overlaps
 }
 \examples{
-whippetFiles <- system.file("extdata","whippet/",
-package = "GeneStructureTools")
-wds <- readWhippetDataSet(whippetFiles)
-wds <- filterWhippetEvents(wds)
-
-gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-package = "GeneStructureTools"))
-exons <- gtf[gtf$type=="exon"]
-transcripts <- gtf[gtf$type=="transcript"]
+gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf", package = "GeneStructureTools"))
+exons <- gtf[gtf$type == "exon"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
-wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
-exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
-variableWidth=0, findIntrons=FALSE, transcripts)
-ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
+whippetFiles <- system.file("extdata", "whippet_small/",
+    package = "GeneStructureTools"
+)
+wds <- readWhippetDataSet(whippetFiles)
 
-exonFromGRanges <- exons[exons$exon_id == "ENSMUSE00001271768.1"]
+wds.exonSkip <- filterWhippetEvents(wds, eventTypes = "CE", psiDelta = 0.2)
+exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
+    variableWidth = 0, findIntrons = FALSE
+)
+ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet = wds.exonSkip)
+
+exonFromGRanges <- exons[exons$exon_id == "ENSMUSE00000414559.2"]
 exons.exonSkip <- findExonContainingTranscripts(exonFromGRanges, exons,
-variableWidth=0, findIntrons=FALSE, transcripts)
-ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, match="skip")
+    variableWidth = 0, findIntrons = FALSE
+)
+ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, match = "skip")
 }
 \seealso{
-Other whippet splicing isoform creation: \code{\link{addIntronInTranscript}},
-  \code{\link{findExonContainingTranscripts}},
-  \code{\link{findIntronContainingTranscripts}},
-  \code{\link{findJunctionPairs}},
-  \code{\link{replaceJunction}}
+Other whippet splicing isoform creation: 
+\code{\link{addIntronInTranscript}()},
+\code{\link{alterTranscriptStartEnds}()},
+\code{\link{findExonContainingTranscripts}()},
+\code{\link{findIntronContainingTranscripts}()},
+\code{\link{findJunctionPairs}()},
+\code{\link{replaceJunction}()}
 }
 \author{
 Beth Signal

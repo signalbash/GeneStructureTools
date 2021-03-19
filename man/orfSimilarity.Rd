@@ -21,15 +21,17 @@ percentage of orfB contained in orfA
 calculate percentage of orfB contained in orfA
 }
 \examples{
-orfSimilarity("MFGLDIYAGTRSSFRQFSLT","MFGLDIYAGTRSSFRQFSLT")
-orfSimilarity("MFGLDIYAGTRSSFRQFSLT","MFGLDIYAFRQFSLT")
-orfSimilarity("MFGLDIYAFRQFSLT","MFGLDIYAGTRSSFRQFSLT")
-orfSimilarity("MFGLDIYAGTRXXFRQFSLT","MFGLDIYAGTRSSFRQFSLT")
-orfSimilarity("MFGLDIYAGTRXXFSLT","MFGLDIYAGTRSSFRQFSLT", 1)
+orfSimilarity("MFGLDIYAGTRSSFRQFSLT", "MFGLDIYAGTRSSFRQFSLT")
+orfSimilarity("MFGLDIYAGTRSSFRQFSLT", "MFGLDIYAFRQFSLT")
+orfSimilarity("MFGLDIYAFRQFSLT", "MFGLDIYAGTRSSFRQFSLT")
+orfSimilarity("MFGLDIYAGTRXXFRQFSLT", "MFGLDIYAGTRSSFRQFSLT")
+orfSimilarity("MFGLDIYAGTRXXFSLT", "MFGLDIYAGTRSSFRQFSLT", 1)
 }
 \seealso{
-Other ORF annotation: \code{\link{getOrfs}},
-  \code{\link{getUOrfs}}, \code{\link{maxLocation}}
+Other ORF annotation: 
+\code{\link{getOrfs}()},
+\code{\link{getUOrfs}()},
+\code{\link{maxLocation}()}
 }
 \author{
 Beth Signal

@@ -23,17 +23,20 @@ data.frame with all upstream ORF details.
 Get upstream open reading frames for transcripts with annotated main ORFs
 }
 \examples{
-gtf <- rtracklayer::import(system.file("extdata", "example_gtf.gtf",
-package="GeneStructureTools"))
-transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Neurl1a"]
+gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf",
+    package = "GeneStructureTools"
+))
+transcript <- gtf[gtf$type == "exon" & gtf$gene_name == "Tmem208"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 # longest ORF for each transcripts
 orfs <- getOrfs(transcript, BSgenome = g, returnLongestOnly = FALSE)
 uORFS <- getUOrfs(transcript, BSgenome = g, orfs = orfs, findExonB = TRUE)
 }
 \seealso{
-Other ORF annotation: \code{\link{getOrfs}},
-  \code{\link{maxLocation}}, \code{\link{orfSimilarity}}
+Other ORF annotation: 
+\code{\link{getOrfs}()},
+\code{\link{maxLocation}()},
+\code{\link{orfSimilarity}()}
 }
 \author{
 Beth Signal

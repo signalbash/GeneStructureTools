@@ -4,8 +4,12 @@
 \alias{alternativeIntronUsage}
 \title{Create transcripts with alternative intron usage}
 \usage{
-alternativeIntronUsage(altIntronLocs, exons, replaceInternalExons = TRUE,
-  junctions = NULL)
+alternativeIntronUsage(
+  altIntronLocs,
+  exons,
+  replaceInternalExons = TRUE,
+  junctions = NULL
+)
 }
 \arguments{
 \item{altIntronLocs}{data.frame containing information from the
@@ -16,6 +20,8 @@ Note that only one cluster of alternative introns can be processed at a time.}
 (no gene, transcript, CDS etc.)}
 
 \item{replaceInternalExons}{replace any internal transcript exons with inferred exons from multi-intron leafcutter intron sets?}
+
+\item{junctions}{GRanges object from readLeafcutterJunctions()}
 }
 \value{
 GRanges object with all potential alternative isoforms skipping the
@@ -25,29 +31,28 @@ introns specified in either the upregulated or downregulated locations
 Creates transcript isoforms from alternative intron usage tested by leafcutter
 }
 \examples{
-leafcutterFiles <- list.files(system.file("extdata","leafcutter/",
-package = "GeneStructureTools"), full.names = TRUE)
-leafcutterIntrons <- read.delim(leafcutterFiles[grep("intron_results",
-leafcutterFiles)],stringsAsFactors=FALSE)
-gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-package = "GeneStructureTools"))
-exons <- gtf[gtf$type=="exon"]
+leafcutterFiles <- list.files(system.file("extdata", "leaf_small/",
+    package = "GeneStructureTools"
+), full.names = TRUE)
+leafcutterIntrons <- read.delim(leafcutterFiles[grep(
+    "intron_results",
+    leafcutterFiles
+)], stringsAsFactors = FALSE)
+gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf",
+    package = "GeneStructureTools"
+))
+exons <- gtf[gtf$type == "exon"]
 # single cluster processing
-cluster <- leafcutterIntrons[leafcutterIntrons$cluster=="chr16:clu_1396",]
-altIsoforms1396 <- alternativeIntronUsage(cluster, exons)
-unique(altIsoforms1396$transcript_id)
-cluster <- leafcutterIntrons[leafcutterIntrons$cluster=="chr16:clu_1395",]
-altIsoforms1395 <- alternativeIntronUsage(cluster, exons)
-unique(altIsoforms1395$transcript_id)
-# multiple cluster processing
-altIsoforms1396plus1395 <- alternativeIntronUsage(cluster, c(exons, altIsoforms1396))
-unique(altIsoforms1396plus1395$transcript_id)
+cluster <- leafcutterIntrons[leafcutterIntrons$cluster == "chr17:clu_20975_+", ]
+altIsoforms20975 <- alternativeIntronUsage(cluster, exons)
+unique(altIsoforms20975$transcript_id)
 }
 \seealso{
-Other leafcutter splicing isoform creation: \code{\link{leafcutterIntronsToExons}},
-  \code{\link{makeNewLeafExonsUnanchored}},
-  \code{\link{makeNewLeafExons}},
-  \code{\link{readLeafcutterJunctions}}
+Other leafcutter splicing isoform creation: 
+\code{\link{leafcutterIntronsToExons}()},
+\code{\link{makeNewLeafExonsUnanchored}()},
+\code{\link{makeNewLeafExons}()},
+\code{\link{readLeafcutterJunctions}()}
 }
 \author{
 Beth Signal

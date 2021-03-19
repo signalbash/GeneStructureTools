@@ -24,16 +24,17 @@ GRanges object with transcripts containing alternative junctions.
 Find transcripts overlapping first/last exons and alter their transcription start site or transcription end site
 }
 \examples{
-whippetFiles <- system.file("extdata","whippet/",
-package = "GeneStructureTools")
-wds <- readWhippetDataSet(whippetFiles)
-
-gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-package = "GeneStructureTools"))
-exons <- gtf[gtf$type=="exon"]
+gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf", package = "GeneStructureTools"))
+exons <- gtf[gtf$type == "exon"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
-#TODO: ADD EXAMPLES
+whippetFiles <- system.file("extdata", "whippet_small/",
+    package = "GeneStructureTools"
+)
+wds <- readWhippetDataSet(whippetFiles)
+
+wds.TS <- filterWhippetEvents(wds, eventTypes = "TS", psiDelta = 0.1, probability = 0.95)
+alterTranscriptStartEnds(whippetDataSet = wds.TS, exons = exons, unfilteredWDS = wds, type = "TS")
 }
 \seealso{
 Other whippet splicing isoform creation: 

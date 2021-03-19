@@ -23,34 +23,36 @@ data.frame with all flanking exon pairs
 Given the location of a whole retained intron, find transcripts which splice out this intron
 }
 \examples{
-whippetFiles <- system.file("extdata","whippet/",
-package = "GeneStructureTools")
-wds <- readWhippetDataSet(whippetFiles)
-wds <- filterWhippetEvents(wds)
 
-gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-package = "GeneStructureTools"))
-exons <- gtf[gtf$type=="exon"]
+gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf", package = "GeneStructureTools"))
+exons <- gtf[gtf$type == "exon"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
-wds.intronRetention <- filterWhippetEvents(wds, eventTypes="RI")
-exons.intronRetention <- findIntronContainingTranscripts(input=wds.intronRetention, exons)
+whippetFiles <- system.file("extdata", "whippet_small/",
+    package = "GeneStructureTools"
+)
+wds <- readWhippetDataSet(whippetFiles)
 
-exonsFromGRanges <- exons[exons$transcript_id=="ENSMUST00000139129.8" &
-exons$exon_number \%in\% c(3,4)]
+wds.intronRetention <- filterWhippetEvents(wds, eventTypes = "RI")
+exons.intronRetention <- findIntronContainingTranscripts(input = wds.intronRetention, exons)
+
+exonsFromGRanges <- exons[exons$transcript_id == "ENSMUST00000040372.13" &
+    exons$exon_number \%in\% c(2, 3)]
 intronFromGRanges <- exonsFromGRanges[1]
 GenomicRanges::start(intronFromGRanges) <-
-GenomicRanges::end(exonsFromGRanges[exonsFromGRanges$exon_number==3])
+    GenomicRanges::end(exonsFromGRanges[exonsFromGRanges$exon_number == 2])
 GenomicRanges::end(intronFromGRanges) <-
-GenomicRanges::start(exonsFromGRanges[exonsFromGRanges$exon_number==4])
+    GenomicRanges::start(exonsFromGRanges[exonsFromGRanges$exon_number == 3])
 exons.intronRetention <- findIntronContainingTranscripts(intronFromGRanges, exons)
 }
 \seealso{
-Other whippet splicing isoform creation: \code{\link{addIntronInTranscript}},
-  \code{\link{findExonContainingTranscripts}},
-  \code{\link{findJunctionPairs}},
-  \code{\link{replaceJunction}},
-  \code{\link{skipExonInTranscript}}
+Other whippet splicing isoform creation: 
+\code{\link{addIntronInTranscript}()},
+\code{\link{alterTranscriptStartEnds}()},
+\code{\link{findExonContainingTranscripts}()},
+\code{\link{findJunctionPairs}()},
+\code{\link{replaceJunction}()},
+\code{\link{skipExonInTranscript}()}
 }
 \author{
 Beth Signal

@@ -17,11 +17,17 @@ GRanges object with junctions
 \description{
 Create junction ranges from STAR junction files
 }
+\examples{
+junction_files <- list.files(system.file("extdata","leaf_small",
+package="GeneStructureTools"), full.names=TRUE, pattern=".junc")
+leaf_junc <- readLeafcutterJunctions(junction_files)
+}
 \seealso{
-Other leafcutter splicing isoform creation: \code{\link{alternativeIntronUsage}},
-  \code{\link{leafcutterIntronsToExons}},
-  \code{\link{makeNewLeafExonsUnanchored}},
-  \code{\link{makeNewLeafExons}}
+Other leafcutter splicing isoform creation: 
+\code{\link{alternativeIntronUsage}()},
+\code{\link{leafcutterIntronsToExons}()},
+\code{\link{makeNewLeafExonsUnanchored}()},
+\code{\link{makeNewLeafExons}()}
 }
 \author{
 Beth Signal

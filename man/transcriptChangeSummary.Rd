@@ -4,11 +4,19 @@
 \alias{transcriptChangeSummary}
 \title{Compare open reading frames for two sets of paired transcripts}
 \usage{
-transcriptChangeSummary(transcriptsX, transcriptsY, BSgenome, exons,
-  NMD = FALSE, NMDModel = NULL, compareBy = "gene",
-  orfPrediction = "allFrames", compareToGene = FALSE,
-  whippetDataSet = NULL, rearrangeXY = TRUE, exportGTF = NULL,
-  uniprotData = NULL, uniprotSeqFeatures = NULL, selectLongest = 1)
+transcriptChangeSummary(
+  transcriptsX,
+  transcriptsY,
+  BSgenome,
+  exons,
+  dataSet = NULL,
+  exportGTF = NULL,
+  NMD = FALSE,
+  compareBy = "gene",
+  orfPrediction = "allFrames",
+  compareToGene = FALSE,
+  selectLongest = 1
+)
 }
 \arguments{
 \item{transcriptsX}{GRanges object with exon annotations for
@@ -21,26 +29,18 @@ all transcripts to be compared for the 'alternative' condition}
 
 \item{exons}{GRanges object made from a GTF containing exon coordinates}
 
-\item{NMD}{Use NMD predictions? (Note: notNMD must be installed to use this feature)}
+\item{dataSet}{whippetDataSet/rMATSDataSet generated from \code{readWhippetDataSet()} or \code{readrMATSDataSet()}
+Use if PSI directionality should be taken into account when comparing isoforms.}
 
-\item{NMDModel}{Use the "base" or "lncRNA" NMD model?}
+\item{exportGTF}{file name to export alternative isoform GTFs (default=\code{NULL})}
 
-\item{compareBy}{compare isoforms by 'transcript' id, or aggregate all changes occuring by 'gene'}
+\item{NMD}{Use NMD predictions? This will filter ORFs out of comparisons if they are likely to be NMD-targeted.}
+
+\item{compareBy}{compare isoforms by 'transcript' id, or aggregate all changes occurring by 'gene'}
 
 \item{orfPrediction}{What type of orf predictions to return. default= \code{"allFrames"}}
 
 \item{compareToGene}{compare alternative isoforms to all normal gene isoforms (in exons)}
-
-\item{whippetDataSet}{whippetDataSet generated from \code{readWhippetDataSet()}
-Use if PSI directionality should be taken into account when comparing isoforms.}
-
-\item{rearrangeXY}{should PSI directionality be taken into account?}
-
-\item{exportGTF}{file name to export alternative isoform GTFs (default=\code{NULL})}
-
-\item{uniprotData}{data.frame of uniprot sequence information}
-
-\item{uniprotSeqFeatures}{data.frame of uniprot sequence features}
 
 \item{selectLongest}{passed to getORFs()}
 }
@@ -51,28 +51,32 @@ Summarised ORF changes data.frame
 Compare open reading frames for two sets of paired transcripts
 }
 \examples{
-whippetFiles <- system.file("extdata","whippet/",
-package = "GeneStructureTools")
-wds <- readWhippetDataSet(whippetFiles)
-wds <- filterWhippetEvents(wds)
-
-gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-package = "GeneStructureTools"))
-exons <- gtf[gtf$type=="exon"]
+gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf",
+    package = "GeneStructureTools"
+))
+exons <- gtf[gtf$type == "exon"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
-wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
+whippetFiles <- system.file("extdata", "whippet_small/",
+    package = "GeneStructureTools"
+)
+wds <- readWhippetDataSet(whippetFiles)
+
+wds.exonSkip <- filterWhippetEvents(wds, eventTypes = "CE", psiDelta = 0.2)
 
 exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
-variableWidth=0, findIntrons=FALSE, transcripts)
-ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
-transcriptChangeSummary(ExonSkippingTranscripts[ExonSkippingTranscripts$set=="included_exon"],
-ExonSkippingTranscripts[ExonSkippingTranscripts$set=="skipped_exon"],
-BSgenome=g,exons)
+    variableWidth = 0, findIntrons = FALSE
+)
+ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet = wds.exonSkip)
+transcriptChangeSummary(ExonSkippingTranscripts[ExonSkippingTranscripts$set == "included_exon"],
+    ExonSkippingTranscripts[ExonSkippingTranscripts$set == "skipped_exon"],
+    BSgenome = g, exons
+)
 }
 \seealso{
-Other transcript isoform comparisons: \code{\link{attrChangeAltSpliced}},
-  \code{\link{orfDiff}}
+Other transcript isoform comparisons: 
+\code{\link{attrChangeAltSpliced}()},
+\code{\link{orfDiff}()}
 }
 \author{
 Beth Signal

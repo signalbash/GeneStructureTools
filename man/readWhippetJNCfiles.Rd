@@ -18,21 +18,24 @@ GRanges object with junctions
 Read in a list of whippet .jnc.gz files and format as a GRanges object
 }
 \examples{
-whippetFiles <- list.files(system.file("extdata","whippet/",
-package = "GeneStructureTools"), full.names = TRUE)
+whippetFiles <- list.files(system.file("extdata", "whippet_small/",
+    package = "GeneStructureTools"
+), full.names = TRUE)
 jncFiles <- whippetFiles[grep(".jnc", whippetFiles)]
 whippetJNC <- readWhippetJNCfiles(jncFiles)
 }
 \seealso{
-Other whippet data processing: \code{\link{coordinates}},
-  \code{\link{diffSplicingResults}},
-  \code{\link{filterWhippetEvents}},
-  \code{\link{formatWhippetEvents}},
-  \code{\link{junctions}}, \code{\link{readCounts}},
-  \code{\link{readWhippetDIFFfiles}},
-  \code{\link{readWhippetDataSet}},
-  \code{\link{readWhippetPSIfiles}},
-  \code{\link{whippetTranscriptChangeSummary}}
+Other whippet data processing: 
+\code{\link{coordinates}()},
+\code{\link{diffSplicingResults}()},
+\code{\link{filterWhippetEvents}()},
+\code{\link{formatWhippetEvents}()},
+\code{\link{junctions}()},
+\code{\link{readCounts}()},
+\code{\link{readWhippetDIFFfiles}()},
+\code{\link{readWhippetDataSet}()},
+\code{\link{readWhippetPSIfiles}()},
+\code{\link{whippetTranscriptChangeSummary}()}
 }
 \author{
 Beth Signal

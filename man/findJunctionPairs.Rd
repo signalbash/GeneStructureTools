@@ -24,35 +24,35 @@ Find junctions that pair with the upsteam/downstream exon of an
 AF (alt. first exon) or an AL (alt. last exon)
 }
 \examples{
-whippetFiles <- system.file("extdata","whippet/",
-package = "GeneStructureTools")
-wds <- readWhippetDataSet(whippetFiles)
-wds <- filterWhippetEvents(wds)
-
-gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-package = "GeneStructureTools"))
-exons <- gtf[gtf$type=="exon"]
-transcripts <- gtf[gtf$type=="transcript"]
+gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf", package = "GeneStructureTools"))
+exons <- gtf[gtf$type == "exon"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
-wds.altAce <- filterWhippetEvents(wds, eventTypes="AA")
-jncPairs.altAce <- findJunctionPairs(wds.altAce, type="AA")
+whippetFiles <- system.file("extdata", "whippet_small/",
+    package = "GeneStructureTools"
+)
+wds <- readWhippetDataSet(whippetFiles)
 
-wds.altDon <- filterWhippetEvents(wds, eventTypes="AD")
-jncPairs.altDon <- findJunctionPairs(wds.altDon, type="AD")
+wds.altAce <- filterWhippetEvents(wds, eventTypes = "AA", psiDelta = 0.1, probability = 0.8)
+jncPairs.altAce <- findJunctionPairs(wds.altAce, type = "AA")
 
-wds.altFirst <- filterWhippetEvents(wds, eventTypes="AF", psiDelta=0.2)
-jncPairs.altFirst <- findJunctionPairs(wds.altFirst, type="AF")
+wds.altDon <- filterWhippetEvents(wds, eventTypes = "AD", psiDelta = 0.1, probability = 0.8)
+jncPairs.altDon <- findJunctionPairs(wds.altDon, type = "AD")
 
-wds.altLast <- filterWhippetEvents(wds, eventTypes="AL", psiDelta=0.2)
-jncPairs.altLast <- findJunctionPairs(wds.altLast, type="AL")
+wds.altFirst <- filterWhippetEvents(wds, eventTypes = "AF", psiDelta = 0.1, probability = 0.8)
+jncPairs.altFirst <- findJunctionPairs(wds.altFirst, type = "AF")
+
+wds.altLast <- filterWhippetEvents(wds, eventTypes = "AL", psiDelta = 0.1, probability = 0.8)
+jncPairs.altLast <- findJunctionPairs(wds.altLast, type = "AL")
 }
 \seealso{
-Other whippet splicing isoform creation: \code{\link{addIntronInTranscript}},
-  \code{\link{findExonContainingTranscripts}},
-  \code{\link{findIntronContainingTranscripts}},
-  \code{\link{replaceJunction}},
-  \code{\link{skipExonInTranscript}}
+Other whippet splicing isoform creation: 
+\code{\link{addIntronInTranscript}()},
+\code{\link{alterTranscriptStartEnds}()},
+\code{\link{findExonContainingTranscripts}()},
+\code{\link{findIntronContainingTranscripts}()},
+\code{\link{replaceJunction}()},
+\code{\link{skipExonInTranscript}()}
 }
 \author{
 Beth Signal
