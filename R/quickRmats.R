@@ -145,7 +145,7 @@ rmatsTranscriptChangeSummary <- function(rmatsDataSet,
                                          eventTypes = "all",
                                          BSgenome,
                                          NMD = TRUE,
-                                         exportGTF = exportGTF) {
+                                         exportGTF = NULL) {
     if (eventTypes[1] == "all") {
         eventTypes <- c("SE", "MXE", "RI", "A3SS", "A5SS")
     }
