@@ -16,20 +16,23 @@ whippetDataSet
 Import whippet results files as a whippetDataSet
 }
 \examples{
-whippetFiles <- system.file("extdata","whippet/",
-package = "GeneStructureTools")
+whippetFiles <- system.file("extdata", "whippet_small/",
+    package = "GeneStructureTools"
+)
 wds <- readWhippetDataSet(whippetFiles)
 }
 \seealso{
-Other whippet data processing: \code{\link{coordinates}},
-  \code{\link{diffSplicingResults}},
-  \code{\link{filterWhippetEvents}},
-  \code{\link{formatWhippetEvents}},
-  \code{\link{junctions}}, \code{\link{readCounts}},
-  \code{\link{readWhippetDIFFfiles}},
-  \code{\link{readWhippetJNCfiles}},
-  \code{\link{readWhippetPSIfiles}},
-  \code{\link{whippetTranscriptChangeSummary}}
+Other whippet data processing: 
+\code{\link{coordinates}()},
+\code{\link{diffSplicingResults}()},
+\code{\link{filterWhippetEvents}()},
+\code{\link{formatWhippetEvents}()},
+\code{\link{junctions}()},
+\code{\link{readCounts}()},
+\code{\link{readWhippetDIFFfiles}()},
+\code{\link{readWhippetJNCfiles}()},
+\code{\link{readWhippetPSIfiles}()},
+\code{\link{whippetTranscriptChangeSummary}()}
 }
 \author{
 Beth Signal

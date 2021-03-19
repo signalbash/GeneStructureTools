@@ -24,39 +24,41 @@ GRanges object with transcripts containing alternative junctions.
 Find transcripts containing/overlapping junctions and replace them with alternative junctions
 }
 \examples{
-whippetFiles <- system.file("extdata","whippet/",
-package = "GeneStructureTools")
-wds <- readWhippetDataSet(whippetFiles)
-wds <- filterWhippetEvents(wds)
-
-gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-package = "GeneStructureTools"))
-exons <- gtf[gtf$type=="exon"]
-transcripts <- gtf[gtf$type=="transcript"]
+gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf", package = "GeneStructureTools"))
+exons <- gtf[gtf$type == "exon"]
 g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 
-wds.altAce <- filterWhippetEvents(wds, eventTypes="AA")
-jncPairs.altAce <- findJunctionPairs(wds.altAce, type="AA")
-transcripts.altAce <- replaceJunction(wds.altAce, jncPairs.altAce, exons, type="AA")
+whippetFiles <- system.file("extdata", "whippet_small/",
+    package = "GeneStructureTools"
+)
+wds <- readWhippetDataSet(whippetFiles)
 
-wds.altDon <- filterWhippetEvents(wds, eventTypes="AD")
-jncPairs.altDon <- findJunctionPairs(wds.altDon, type="AD")
-transcripts.altDon <- replaceJunction(wds.altDon, jncPairs.altDon, exons, type="AD")
+wds.altAce <- filterWhippetEvents(wds, eventTypes = "AA", psiDelta = 0.1, probability = 0.8)
+jncPairs.altAce <- findJunctionPairs(wds.altAce, type = "AA")
+transcripts.altAce <- replaceJunction(wds.altAce, jncPairs.altAce, exons, type = "AA")
 
-wds.altFirst <- filterWhippetEvents(wds, eventTypes="AF", psiDelta=0.2)
-jncPairs.altFirst <- findJunctionPairs(wds.altFirst, type="AF")
-transcripts.altFirst <- replaceJunction(wds.altFirst, jncPairs.altFirst, exons, type="AF")
+wds.altDon <- filterWhippetEvents(wds, eventTypes = "AD", psiDelta = 0.1, probability = 0.8)
+jncPairs.altDon <- findJunctionPairs(wds.altDon, type = "AD")
+transcripts.altDon <- replaceJunction(wds.altDon, jncPairs.altDon, exons, type = "AD")
 
-wds.altLast <- filterWhippetEvents(wds, eventTypes="AL", psiDelta=0.2)
-jncPairs.altLast <- findJunctionPairs(wds.altLast, type="AL")
-transcripts.altLast <- replaceJunction(wds.altLast, jncPairs.altLast, exons, type="AL")
+wds.altFirst <- filterWhippetEvents(wds, eventTypes = "AF", psiDelta = 0.1, probability = 0.8)
+jncPairs.altFirst <- findJunctionPairs(wds.altFirst, type = "AF")
+transcripts.altFirst <- replaceJunction(wds.altFirst, jncPairs.altFirst, exons, type = "AF")
+
+wds.altLast <- filterWhippetEvents(wds, eventTypes = "AL", psiDelta = 0.1, probability = 0.8)
+jncPairs.altLast <- findJunctionPairs(wds.altLast, type = "AL")
+transcripts.altLast <- replaceJunction(wds.altLast, jncPairs.altLast, exons, type = "AL")
+
+
 }
 \seealso{
-Other whippet splicing isoform creation: \code{\link{addIntronInTranscript}},
-  \code{\link{findExonContainingTranscripts}},
-  \code{\link{findIntronContainingTranscripts}},
-  \code{\link{findJunctionPairs}},
-  \code{\link{skipExonInTranscript}}
+Other whippet splicing isoform creation: 
+\code{\link{addIntronInTranscript}()},
+\code{\link{alterTranscriptStartEnds}()},
+\code{\link{findExonContainingTranscripts}()},
+\code{\link{findIntronContainingTranscripts}()},
+\code{\link{findJunctionPairs}()},
+\code{\link{skipExonInTranscript}()}
 }
 \author{
 Beth Signal

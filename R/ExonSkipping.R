@@ -4,7 +4,6 @@
 #' @param variableWidth How many nts overhang is allowed for finding matching exons
 #' (default = 0, i.e. complete match)
 #' @param findIntrons Find transcripts where the event occurs within the intron?
-#' @param transcripts GRanges object made from a GTF containing transcript coordinates
 #' (only required if findIntrons=TRUE)
 #' @return data.frame with all overlapping exons
 #' @export
@@ -13,67 +12,67 @@
 #' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet/",
-#' package = "GeneStructureTools")
-#' wds <- readWhippetDataSet(whippetFiles)
-#' wds <- filterWhippetEvents(wds)
-#'
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-#' package = "GeneStructureTools"))
-#' exons <- gtf[gtf$type=="exon"]
-#' transcripts <- gtf[gtf$type=="transcript"]
+#' gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' exons <- gtf[gtf$type == "exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
-#' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
-#' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
-#' variableWidth=0, findIntrons=FALSE, transcripts)
+#' whippetFiles <- system.file("extdata", "whippet_small/",
+#'     package = "GeneStructureTools"
+#' )
+#' wds <- readWhippetDataSet(whippetFiles)
 #'
-#' exonFromGRanges <- exons[exons$exon_id == "ENSMUSE00001271768.1"]
+#' wds.exonSkip <- filterWhippetEvents(wds, eventTypes = "CE", psiDelta = 0.2)
+#' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
+#'     variableWidth = 0, findIntrons = FALSE
+#' )
+#'
+#' exonFromGRanges <- exons[exons$exon_id == "ENSMUSE00000414559.2"]
 #' exons.exonSkip <- findExonContainingTranscripts(exonFromGRanges, exons,
-#' variableWidth=0, findIntrons=FALSE, transcripts)
+#'     variableWidth = 0, findIntrons = FALSE
+#' )
 findExonContainingTranscripts <- function(input,
                                           exons,
-                                          variableWidth=0,
-                                          findIntrons=FALSE,
-                                          transcripts){
-
-    if(class(input) == "whippetDataSet"){
+                                          variableWidth = 0,
+                                          findIntrons = FALSE) {
+    if (is(input, "whippetDataSet")) {
         # check all are CE
         whippetDataSet <- filterWhippetEvents(input,
-                                              probability = 0,
-                                              psiDelta = 0,
-                                              eventTypes="CE")
+            probability = 0,
+            psiDelta = 0,
+            eventTypes = "CE"
+        )
 
         eventCoords <- coordinates(whippetDataSet)
-    }else if(class(input) == "GRanges"){
+    } else if (is(input, "GRanges")) {
         eventCoords <- input
-        if(!("id" %in% names(mcols(eventCoords))) &
-           "exon_id" %in% names(mcols(eventCoords))){
+        if (!("id" %in% names(mcols(eventCoords))) &
+            "exon_id" %in% names(mcols(eventCoords))) {
             eventCoords$id <- eventCoords$exon_id
-        }else{
+        } else {
             stop("please specify \"id\" or \"exon_id\" in the input")
         }
     }
 
     # remove any duplicates
-    overlaps <- GenomicRanges::findOverlaps(eventCoords, type="equal")
+    overlaps <- GenomicRanges::findOverlaps(eventCoords, type = "equal")
 
     overlaps <- overlaps[which(overlaps@from != overlaps@to)]
-    if(length(overlaps) > 0){
+    if (length(overlaps) > 0) {
         overlaps <- overlaps[which(overlaps@from < overlaps@to)]
-        if(length(overlaps) > 0){
+        if (length(overlaps) > 0) {
             duplicates <- unique(overlaps@to)
             eventCoords <- eventCoords[-duplicates]
         }
     }
 
     # whole match
-    if(variableWidth == 0){
+    if (variableWidth == 0) {
         overlaps <- GenomicRanges::findOverlaps(eventCoords, exons,
-                                                type="equal")
+            type = "equal"
+        )
         gtf.equal <- exons[overlaps@to]
         gtf.equal$from <- overlaps@from
-    }else{
+    } else {
         # find all overlaps
         overlaps <- GenomicRanges::findOverlaps(eventCoords, exons)
         gtf.equal <- exons[overlaps@to]
@@ -86,16 +85,19 @@ findExonContainingTranscripts <- function(input,
         gtf.equal <- gtf.equal[keep]
     }
 
-    gtf.equal$new_id <- paste(gtf.equal$transcript_id,gtf.equal$from, sep="_")
-    #gtf.equal$new_id <- with(as.data.frame(GenomicRanges::mcols(gtf.equal)),
+    gtf.equal$new_id <- paste(gtf.equal$transcript_id, gtf.equal$from, sep = "_")
+    # gtf.equal$new_id <- with(as.data.frame(GenomicRanges::mcols(gtf.equal)),
     # paste0(transcript_id, "_",from))
     gtf.equal$exon_number <- as.numeric(gtf.equal$exon_number)
     skippedExons <- as.data.frame(GenomicRanges::mcols(
-        gtf.equal)[,c('gene_id',
-                      'transcript_id',
-                      'transcript_type',
-                      'from',
-                      'exon_number')])
+        gtf.equal
+    )[, c(
+        "gene_id",
+        "transcript_id",
+        "transcript_type",
+        "from",
+        "exon_number"
+    )])
     skippedExons$alt_id <- eventCoords$id[skippedExons$from]
     skippedExons$from <- NULL
     skippedExons$start <- start(gtf.equal)
@@ -103,7 +105,9 @@ findExonContainingTranscripts <- function(input,
     skippedExons$overlaps <- "exon"
 
 
-    if(findIntrons == TRUE){
+    if (findIntrons == TRUE) {
+        # make a transcripts GRanges
+        transcripts <- exonsToTranscripts(exons)
         # overlaps a transcript (i.e. can overlap an intron)
         overlaps <- GenomicRanges::findOverlaps(eventCoords, transcripts)
         overlapsDF <- as.data.frame(overlaps)
@@ -112,79 +116,109 @@ findExonContainingTranscripts <- function(input,
 
         # annotate first/last exons
         # (takes ~ 2.5 sec, please do before running this function multiple times)
-        if(!("first_last" %in% colnames(mcols(exons)))){
+        if (!("first_last" %in% colnames(mcols(exons)))) {
             t <- as.data.frame(table(exons$transcript_id))
             exons$first_last <- NA
             exons$first_last[exons$exon_number == 1] <- "first"
             exons$first_last[exons$exon_number ==
-                                 t$Freq[match(exons$transcript_id,
-                                              t$Var1)]] <- "last"
+                t$Freq[match(
+                    exons$transcript_id,
+                    t$Var1
+                )]] <- "last"
         }
 
         # check that skipped exon doesn't overlap the first/last exon
         overlapsExons <- GenomicRanges::findOverlaps(
-            eventCoords, exons[which(exons$first_last %in% c("first","last"))])
+            eventCoords, exons[which(exons$first_last %in% c("first", "last"))]
+        )
         removeTranscripts <- exons$transcript_id[
-            which(exons$first_last %in% c("first","last"))][overlapsExons@to]
+            which(exons$first_last %in% c("first", "last"))
+        ][overlapsExons@to]
         overlapsDF <- overlapsDF[which(!(overlapsDF$to %in%
-                                             removeTranscripts)),]
+            removeTranscripts)), ]
 
         # gtf with ALL exons where there is an intron overlap
         gtf.within <- exons[
-            which(exons$transcript_id %in% overlapsDF$to)]
+            which(exons$transcript_id %in% overlapsDF$to)
+        ]
         gtf.within$from <- overlapsDF$from[
-            match(gtf.within$transcript_id, overlapsDF$to)]
+            match(gtf.within$transcript_id, overlapsDF$to)
+        ]
         gtf.within <- gtf.within[
-            which(!(gtf.within$transcript_id %in% c(gtf.equal$transcript_id)))]
+            which(!(gtf.within$transcript_id %in% c(gtf.equal$transcript_id)))
+        ]
 
-        if(length(gtf.within) > 0){
+        if (length(gtf.within) > 0) {
 
             # check for non-eact exon matches
-            overlappingExons <- as.data.frame(findOverlaps(eventCoords,
-                                                           gtf.within))
+            overlappingExons <- as.data.frame(findOverlaps(
+                eventCoords,
+                gtf.within
+            ))
             overlappingExons$from_id <- eventCoords$id[
-                overlappingExons$queryHits]
-            overlappingExons <- cbind(overlappingExons,
-                                      as.data.frame(gtf.within[
-                                          overlappingExons$subjectHits]))
+                overlappingExons$queryHits
+            ]
+            overlappingExons <- cbind(
+                overlappingExons,
+                as.data.frame(gtf.within[
+                    overlappingExons$subjectHits
+                ])
+            )
             overlappingExons$to_id <- gtf.within$transcript_id[
-                overlappingExons$subjectHits]
+                overlappingExons$subjectHits
+            ]
 
 
-            gtf.within$new_id <- paste0(gtf.within$transcript_id,
-                                        "_",gtf.within$from)
+            gtf.within$new_id <- paste0(
+                gtf.within$transcript_id,
+                "_", gtf.within$from
+            )
             gtf.within$exon_number <- 0
 
             overlappingIntrons <- as.data.frame(GenomicRanges::mcols(
-                gtf.within)[,c('gene_id',
-                               'transcript_id',
-                               'transcript_type',
-                               'from',
-                               'exon_number')])
+                gtf.within
+            )[, c(
+                "gene_id",
+                "transcript_id",
+                "transcript_type",
+                "from",
+                "exon_number"
+            )])
 
 
             overlappingIntrons <- overlappingIntrons[
-                which(!(duplicated(paste0(overlappingIntrons$transcript_id, "-",
-                                          overlappingIntrons$from)))),]
+                which(!(duplicated(paste0(
+                    overlappingIntrons$transcript_id, "-",
+                    overlappingIntrons$from
+                )))),
+            ]
             overlappingIntrons$alt_id <- overlappingIntrons$from
             overlappingIntrons$from <- NULL
             overlappingIntrons$start <- start(eventCoords[
-                match(overlappingIntrons$alt_id,
-                      eventCoords$id)])
+                match(
+                    overlappingIntrons$alt_id,
+                    eventCoords$id
+                )
+            ])
             overlappingIntrons$end <- end(eventCoords[
-                match(overlappingIntrons$alt_id,
-                      eventCoords$id)])
+                match(
+                    overlappingIntrons$alt_id,
+                    eventCoords$id
+                )
+            ])
             overlappingIntrons$overlaps <- "intron"
 
 
 
             # non exact matches (i.e. that have a partial intron overlap)
             nonexact <- which(overlappingIntrons$transcript_id %in%
-                                  overlappingExons$to_id)
-            if(length(nonexact) > 0){
+                overlappingExons$to_id)
+            if (length(nonexact) > 0) {
                 overlappingIntrons$overlaps[nonexact] <- "nonexact"
-                m <- match(overlappingIntrons$transcript_id,
-                           overlappingExons$transcript_id)
+                m <- match(
+                    overlappingIntrons$transcript_id,
+                    overlappingExons$transcript_id
+                )
                 # replace coordinates with known coordinates
                 overlappingIntrons$start[nonexact] <- overlappingExons$start[m][nonexact]
                 overlappingIntrons$end[nonexact] <- overlappingExons$end[m][nonexact]
@@ -193,7 +227,6 @@ findExonContainingTranscripts <- function(input,
             }
 
             skippedExons <- rbind(skippedExons, overlappingIntrons)
-
         }
     }
 
@@ -220,76 +253,80 @@ findExonContainingTranscripts <- function(input,
 #' @family whippet splicing isoform creation
 #' @author Beth Signal
 #' @examples
-#' whippetFiles <- system.file("extdata","whippet/",
-#' package = "GeneStructureTools")
-#' wds <- readWhippetDataSet(whippetFiles)
-#' wds <- filterWhippetEvents(wds)
-#'
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-#' package = "GeneStructureTools"))
-#' exons <- gtf[gtf$type=="exon"]
-#' transcripts <- gtf[gtf$type=="transcript"]
+#' gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' exons <- gtf[gtf$type == "exon"]
 #' g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 #'
-#' wds.exonSkip <- filterWhippetEvents(wds, eventTypes="CE",psiDelta = 0.2)
-#' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
-#' variableWidth=0, findIntrons=FALSE, transcripts)
-#' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet=wds.exonSkip)
+#' whippetFiles <- system.file("extdata", "whippet_small/",
+#'     package = "GeneStructureTools"
+#' )
+#' wds <- readWhippetDataSet(whippetFiles)
 #'
-#' exonFromGRanges <- exons[exons$exon_id == "ENSMUSE00001271768.1"]
+#' wds.exonSkip <- filterWhippetEvents(wds, eventTypes = "CE", psiDelta = 0.2)
+#' exons.exonSkip <- findExonContainingTranscripts(wds.exonSkip, exons,
+#'     variableWidth = 0, findIntrons = FALSE
+#' )
+#' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, whippetDataSet = wds.exonSkip)
+#'
+#' exonFromGRanges <- exons[exons$exon_id == "ENSMUSE00000414559.2"]
 #' exons.exonSkip <- findExonContainingTranscripts(exonFromGRanges, exons,
-#' variableWidth=0, findIntrons=FALSE, transcripts)
-#' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, match="skip")
+#'     variableWidth = 0, findIntrons = FALSE
+#' )
+#' ExonSkippingTranscripts <- skipExonInTranscript(exons.exonSkip, exons, match = "skip")
 skipExonInTranscript <- function(skippedExons,
                                  exons,
-                                 glueExons=TRUE,
-                                 whippetDataSet=NULL,
-                                 match="exact"){
-
-    if(!(match %in% c("exact","skip","replace"))){
+                                 glueExons = TRUE,
+                                 whippetDataSet = NULL,
+                                 match = "exact") {
+    if (!(match %in% c("exact", "skip", "replace"))) {
         message("match must be 'exact', 'skip', or 'replace'")
 
-        if(!is.null(whippetDataSet)){
+        if (!is.null(whippetDataSet)) {
             message("using match = 'exact'")
             match <- "exact"
-        }else{
+        } else {
             message("using match = 'skip'")
             match <- "skip"
         }
     }
-    if(is.null(whippetDataSet) & match=="exact"){
+    if (is.null(whippetDataSet) & match == "exact") {
         message("cannot use match = 'exact' without a whippetDataSet")
         message("using match = 'skip'")
         match <- "skip"
     }
 
     # if a whippet dataset is being used
-    if(!is.null(whippetDataSet)){
+    if (!is.null(whippetDataSet)) {
         # check all are CE
         whippetDataSet <- filterWhippetEvents(whippetDataSet,
-                                              probability = 0,
-                                              psiDelta = 0,
-                                              eventTypes="CE")
+            probability = 0,
+            psiDelta = 0,
+            eventTypes = "CE"
+        )
 
         eventCoords <- coordinates(whippetDataSet)
 
         # remove non-exact matches
-        if(match == "exact"){
+        if (match == "exact") {
             m <- match(skippedExons$alt_id, eventCoords$id)
             keep <- which((skippedExons$start) == start(eventCoords)[m] &
-                              (skippedExons$end == end(eventCoords)[m]) &
-                              skippedExons$overlaps=="exon")
-            skippedExons <- skippedExons[keep,]
+                (skippedExons$end == end(eventCoords)[m]) &
+                skippedExons$overlaps == "exon")
+            skippedExons <- skippedExons[keep, ]
         }
 
         eventCoords <- eventCoords[match(skippedExons$alt_id, eventCoords$id)]
-    }else{
+    } else {
         m <- match(skippedExons$gene_id, exons$gene_id)
-        eventCoords <- GRanges(seqnames=seqnames(exons[m]),
-                               ranges = IRanges(start=skippedExons$start,
-                                                end=skippedExons$end),
-                               strand=strand(exons[m]),
-                               id=skippedExons$alt_id)
+        eventCoords <- GRanges(
+            seqnames = seqnames(exons[m]),
+            ranges = IRanges(
+                start = skippedExons$start,
+                end = skippedExons$end
+            ),
+            strand = strand(exons[m]),
+            id = skippedExons$alt_id
+        )
     }
     eventCoords <- eventCoords[match(skippedExons$alt_id, eventCoords$id)]
     eventCoords$exon_number <- skippedExons$exon_number
@@ -300,80 +337,102 @@ skipExonInTranscript <- function(skippedExons,
     eventCoords$overlaps <- skippedExons$overlaps
 
     # replace exon coordinates with the event coordinates
-    if(match == "replace"){
+    if (match == "replace") {
         oldStarts <- start(eventCoords)
         oldEnds <- end(eventCoords)
     }
 
     ranges(eventCoords) <-
-        IRanges::IRanges(start=skippedExons$start, end=skippedExons$end)
+        IRanges::IRanges(start = skippedExons$start, end = skippedExons$end)
 
     # transcripts containing the exon
     transcripts <- as.data.frame(table(skippedExons$transcript_id))
     gtfTranscripts <- exons[exons$transcript_id %in% transcripts$Var1]
     m <- match(gtfTranscripts$transcript_id, eventCoords$transcript_id)
-    mcols(gtfTranscripts) <- cbind(mcols(gtfTranscripts),
-                                   DataFrame(new_transcript_id=paste0(
-                                       gtfTranscripts$transcript_id,"+AS ",
-                                       eventCoords$exon_id[m])))
-    mcols(eventCoords) <- cbind(mcols(eventCoords),
-                                DataFrame(new_transcript_id = paste0(
-                                    eventCoords$transcript_id,"+AS ",
-                                    eventCoords$exon_id)))
+    mcols(gtfTranscripts) <- cbind(
+        mcols(gtfTranscripts),
+        DataFrame(new_transcript_id = paste0(
+            gtfTranscripts$transcript_id, "+AS ",
+            eventCoords$exon_id[m]
+        ))
+    )
+    mcols(eventCoords) <- cbind(
+        mcols(eventCoords),
+        DataFrame(new_transcript_id = paste0(
+            eventCoords$transcript_id, "+AS ",
+            eventCoords$exon_id
+        ))
+    )
 
     mcols(gtfTranscripts) <- mcols(
-        gtfTranscripts)[,c('gene_id','transcript_id',
-                           'transcript_type','exon_id',
-                           'exon_number', 'new_transcript_id')]
+        gtfTranscripts
+    )[, c(
+        "gene_id", "transcript_id",
+        "transcript_type", "exon_id",
+        "exon_number", "new_transcript_id"
+    )]
     mcols(eventCoords) <- mcols(
-        eventCoords)[,c('gene_id','transcript_id',
-                        'transcript_type','exon_id',
-                        'exon_number','new_transcript_id',
-                        'overlaps')]
+        eventCoords
+    )[, c(
+        "gene_id", "transcript_id",
+        "transcript_type", "exon_id",
+        "exon_number", "new_transcript_id",
+        "overlaps"
+    )]
 
     needsDuplicated <- which(!(eventCoords$new_transcript_id %in%
-                                   gtfTranscripts$new_transcript_id))
+        gtfTranscripts$new_transcript_id))
 
-    if(length(needsDuplicated) > 0){
+    if (length(needsDuplicated) > 0) {
         gtfTranscripts_add <- gtfTranscripts[
             gtfTranscripts$transcript_id %in%
-                eventCoords$transcript_id[needsDuplicated]]
+                eventCoords$transcript_id[needsDuplicated]
+        ]
     }
 
-    while(length(needsDuplicated) > 0){
+    while (length(needsDuplicated) > 0) {
         gtfTranscripts_add <- gtfTranscripts_add[
             gtfTranscripts_add$transcript_id %in%
-                eventCoords$transcript_id[needsDuplicated]]
-        m <- match(gtfTranscripts_add$transcript_id,
-                   eventCoords$transcript_id[needsDuplicated])
+                eventCoords$transcript_id[needsDuplicated]
+        ]
+        m <- match(
+            gtfTranscripts_add$transcript_id,
+            eventCoords$transcript_id[needsDuplicated]
+        )
         gtfTranscripts_add$new_transcript_id <- paste0(
-            gtfTranscripts_add$transcript_id,"+AS ",
-            eventCoords$exon_id[needsDuplicated][m])
+            gtfTranscripts_add$transcript_id, "+AS ",
+            eventCoords$exon_id[needsDuplicated][m]
+        )
         gtfTranscripts <- c(gtfTranscripts, gtfTranscripts_add)
         needsDuplicated <- which(!(eventCoords$new_transcript_id %in%
-                                       gtfTranscripts$new_transcript_id))
+            gtfTranscripts$new_transcript_id))
     }
 
-    exon_names <- with(as.data.frame(gtfTranscripts),
-                       paste0(seqnames, ":", start,"-",end))
+    exon_names <- with(
+        as.data.frame(gtfTranscripts),
+        paste0(seqnames, ":", start, "-", end)
+    )
 
-    ol <- findOverlaps(gtfTranscripts, eventCoords, type="equal")
+    ol <- findOverlaps(gtfTranscripts, eventCoords, type = "equal")
     ol <- as.data.frame(ol)
     ol$gtf_trans_id <- gtfTranscripts$new_transcript_id[ol$queryHits]
     ol$eventCoords_id <- eventCoords$new_transcript_id[ol$subjectHits]
-    ol <- ol[ol$gtf_trans_id == ol$eventCoords_id,]
+    ol <- ol[ol$gtf_trans_id == ol$eventCoords_id, ]
 
     # add/remove exons from skipped isoforms if introns are used
-    if(match!="exact" & any(eventCoords$overlaps!="exon")){
-        ol.var <- findOverlaps(gtfTranscripts,
-                               eventCoords[eventCoords$overlaps != "exon"])
+    if (match != "exact" & any(eventCoords$overlaps != "exon")) {
+        ol.var <- findOverlaps(
+            gtfTranscripts,
+            eventCoords[eventCoords$overlaps != "exon"]
+        )
         ol.var <- as.data.frame(ol.var)
         ol.var$gtf_trans_id <-
             gtfTranscripts$new_transcript_id[ol.var$queryHits]
         ol.var$eventCoords_id <- eventCoords$new_transcript_id[
-            which(eventCoords$overlaps != "exon")][ol.var$subjectHits]
-        ol.var <- ol.var[ol.var$gtf_trans_id == ol.var$eventCoords_id,]
-        if(nrow(ol.var) > 0){
+            which(eventCoords$overlaps != "exon")
+        ][ol.var$subjectHits]
+        ol.var <- ol.var[ol.var$gtf_trans_id == ol.var$eventCoords_id, ]
+        if (nrow(ol.var) > 0) {
             ol <- rbind(ol, ol.var)
         }
     }
@@ -383,28 +442,37 @@ skipExonInTranscript <- function(skippedExons,
     gtfTranscripts.rm <- gtfTranscripts[-rm]
 
     mcols(gtfTranscripts.rm) <- mcols(
-        gtfTranscripts.rm)[,c('gene_id','new_transcript_id',
-                              'transcript_type','exon_id',
-                              'exon_number')]
+        gtfTranscripts.rm
+    )[, c(
+        "gene_id", "new_transcript_id",
+        "transcript_type", "exon_id",
+        "exon_number"
+    )]
     colnames(mcols(gtfTranscripts.rm))[2] <- "transcript_id"
 
     mcols(eventCoords) <- mcols(
-        eventCoords)[,c('gene_id','new_transcript_id',
-                        'transcript_type','exon_id',
-                        'exon_number','overlaps')]
+        eventCoords
+    )[, c(
+        "gene_id", "new_transcript_id",
+        "transcript_type", "exon_id",
+        "exon_number", "overlaps"
+    )]
     colnames(mcols(eventCoords))[2] <- "transcript_id"
 
     gtfTranscripts.rm$exon_number <- as.numeric(gtfTranscripts.rm$exon_number)
-    order <- order(gtfTranscripts.rm$transcript_id,
-                   gtfTranscripts.rm$exon_number)
+    order <- order(
+        gtfTranscripts.rm$transcript_id,
+        gtfTranscripts.rm$exon_number
+    )
     gtfTranscripts.rm <- gtfTranscripts.rm[order]
     gtfTranscripts.rm$overlaps <- eventCoords$overlaps[
-        match(gtfTranscripts.rm$transcript_id, eventCoords$new_transcript_id)]
+        match(gtfTranscripts.rm$transcript_id, eventCoords$new_transcript_id)
+    ]
 
     # add skipped exon back in
     gtfTranscripts.withExon <- gtfTranscripts.rm
     # replace with event coordinates
-    if(match == "replace"){
+    if (match == "replace") {
         start(eventCoords) <- oldStarts
         end(eventCoords) <- oldEnds
     }
@@ -418,66 +486,74 @@ skipExonInTranscript <- function(skippedExons,
 
     # rename skipped/included isoforms
     gtfTranscripts.rm$transcript_id[which(
-        gtfTranscripts.rm$set=="skipped_exon")] <-
+        gtfTranscripts.rm$set == "skipped_exon"
+    )] <-
         gsub("AS", "ASSE", gtfTranscripts.rm$transcript_id[
-            which(gtfTranscripts.rm$set=="skipped_exon")])
+            which(gtfTranscripts.rm$set == "skipped_exon")
+        ])
     gtfTranscripts.rm$transcript_id[which(
-        gtfTranscripts.rm$set=="included_exon")] <-
+        gtfTranscripts.rm$set == "included_exon"
+    )] <-
         gsub("AS", "ASIE", gtfTranscripts.rm$transcript_id[
-            which(gtfTranscripts.rm$set=="included_exon")])
+            which(gtfTranscripts.rm$set == "included_exon")
+        ])
 
-    #join together exons that are not seperated by an exon
-    if(glueExons==TRUE){
+    # join together exons that are not seperated by an exon
+    if (glueExons == TRUE) {
 
         # split pos/neg ordering
         gtfTranscripts.rm.neg <-
             gtfTranscripts.rm[which(as.logical(strand(gtfTranscripts.rm) ==
-                                                   "-"))]
-        order <- order(gtfTranscripts.rm.neg$transcript_id,
-                       plyr::desc(gtfTranscripts.rm.neg$exon_number))
+                "-"))]
+        order <- order(
+            gtfTranscripts.rm.neg$transcript_id,
+            plyr::desc(gtfTranscripts.rm.neg$exon_number)
+        )
         gtfTranscripts.rm.neg <- gtfTranscripts.rm.neg[order]
 
         gtfTranscripts.rm.pos <-
             gtfTranscripts.rm[which(as.logical(strand(gtfTranscripts.rm) ==
-                                                   "+"))]
-        gtfTranscripts.rm <- c(gtfTranscripts.rm.pos,gtfTranscripts.rm.neg)
+                "+"))]
+        gtfTranscripts.rm <- c(gtfTranscripts.rm.pos, gtfTranscripts.rm.neg)
 
-        #extend starts <---<---<---
+        # extend starts <---<---<---
         w <- which(end(ranges(gtfTranscripts.rm))[-length(gtfTranscripts.rm)] ==
-                       start(ranges(gtfTranscripts.rm[-1])))
+            start(ranges(gtfTranscripts.rm[-1])))
         gtfTranscripts.rm <- gtfTranscripts.rm
-        GenomicRanges::start(GenomicRanges::ranges(gtfTranscripts.rm))[w+1] <-
+        GenomicRanges::start(GenomicRanges::ranges(gtfTranscripts.rm))[w + 1] <-
             GenomicRanges::start(GenomicRanges::ranges(gtfTranscripts.rm))[w]
 
         # remove exons that cover now redundant regions
-        overlaps <- findOverlaps(gtfTranscripts.rm, type="within")
+        overlaps <- findOverlaps(gtfTranscripts.rm, type = "within")
         overlaps <- overlaps[overlaps@from == overlaps@to - 1]
         rm <- unique(overlaps@from)
-        if(length(rm) > 0){
+        if (length(rm) > 0) {
             gtfTranscripts.rm <- gtfTranscripts.rm[-rm]
         }
 
-        #extend ends --->--->--->
+        # extend ends --->--->--->
         overlaps <- findOverlaps(gtfTranscripts.rm)
-        overlaps <- overlaps[overlaps@from==overlaps@to +1]
+        overlaps <- overlaps[overlaps@from == overlaps@to + 1]
 
         GenomicRanges::end(GenomicRanges::ranges(
-            gtfTranscripts.rm))[overlaps@to] <-
+            gtfTranscripts.rm
+        ))[overlaps@to] <-
             GenomicRanges::end(GenomicRanges::ranges(
-                gtfTranscripts.rm))[overlaps@from]
+                gtfTranscripts.rm
+            ))[overlaps@from]
 
         # remove exons that cover now redundant regions
-        overlaps <- findOverlaps(gtfTranscripts.rm, type="within")
+        overlaps <- findOverlaps(gtfTranscripts.rm, type = "within")
         overlaps <- overlaps[overlaps@from == overlaps@to + 1]
 
         rm <- unique(overlaps@from)
-        if(length(rm) >0){
+        if (length(rm) > 0) {
             gtfTranscripts.rm <- gtfTranscripts.rm[-rm]
         }
-
     }
-    gtfTranscripts.rm$whippet_id <- unlist(lapply(stringr::str_split(
-        gtfTranscripts.rm$transcript_id, " "),"[[",2))
+    gtfTranscripts.rm$event_id <- unlist(lapply(stringr::str_split(
+        gtfTranscripts.rm$transcript_id, " "
+    ), "[[", 2))
     gtfTranscripts.rm$overlaps <- NULL
     return(gtfTranscripts.rm)
 }
@@ -493,26 +569,32 @@ skipExonInTranscript <- function(skippedExons,
 #' @family gtf manipulation
 #' @author Beth Signal
 #' @examples
-#' gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-#' package = "GeneStructureTools"))
-#' exons <- gtf[gtf$type=="exon"]
+#' gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf", package = "GeneStructureTools"))
+#' exons <- gtf[gtf$type == "exon"]
 #' exons <- reorderExonNumbers(exons)
-reorderExonNumbers <- function(exons, by="transcript_id"){
+reorderExonNumbers <- function(exons, by = "transcript_id") {
     n <- which(colnames(mcols(exons)) == by)
 
-    order <- order(mcols(exons)[,n], start(exons))
+    order <- order(mcols(exons)[, n], start(exons))
 
     exons <- exons[order]
 
-    transcriptTable <- as.data.frame(table(mcols(exons)[,n]))
+    transcriptTable <- as.data.frame(table(mcols(exons)[, n]))
     transcriptTable$strand <- as.character(strand(exons[match(
         transcriptTable$Var1,
-        mcols(exons)[,n])]))
+        mcols(exons)[, n]
+    )]))
 
     exons$exon_number <-
-        as.numeric(unlist(apply(transcriptTable, 1,
-                                function(x) if(x[3] == "+"){
-                                    c(1:(x[2]))}else{c((x[2]:1))})))
+        as.numeric(unlist(apply(
+            transcriptTable, 1,
+            function(x) {
+                if (x[3] == "+") {
+                    c(1:(x[2]))
+                } else {
+                    c((x[2]:1))
+                }
+            }
+        )))
     return(exons)
 }
-

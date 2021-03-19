@@ -16,19 +16,19 @@ gtf annotation GRanges object
 Annotate UTRs from Gencode GTF as 5' or 3'
 }
 \examples{
-gtfFile <- system.file("extdata","example_gtf.gtf",
-package = "GeneStructureTools")
+gtfFile <- system.file("extdata", "gencode.vM25.small.gtf",
+    package = "GeneStructureTools"
+)
 gtf <- rtracklayer::import(gtfFile)
 gtf <- UTR2UTR53(gtf)
 table(gtf$type)
 }
 \seealso{
-Other gtf manipulation: \code{\link{addBroadTypes}},
-  \code{\link{exonsToTranscripts}},
-  \code{\link{filterGtfOverlap}},
-  \code{\link{removeDuplicateTranscripts}},
-  \code{\link{removeSameExon}},
-  \code{\link{reorderExonNumbers}}
+Other gtf manipulation: 
+\code{\link{exonsToTranscripts}()},
+\code{\link{removeDuplicateTranscripts}()},
+\code{\link{removeSameExon}()},
+\code{\link{reorderExonNumbers}()}
 }
 \author{
 Beth Signal

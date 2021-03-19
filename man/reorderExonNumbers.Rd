@@ -19,18 +19,16 @@ The same input GRanges, but with exon numbers reordered.
 Reorder the exon numbers in a gtf annotation
 }
 \examples{
-gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-package = "GeneStructureTools"))
-exons <- gtf[gtf$type=="exon"]
+gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf", package = "GeneStructureTools"))
+exons <- gtf[gtf$type == "exon"]
 exons <- reorderExonNumbers(exons)
 }
 \seealso{
-Other gtf manipulation: \code{\link{UTR2UTR53}},
-  \code{\link{addBroadTypes}},
-  \code{\link{exonsToTranscripts}},
-  \code{\link{filterGtfOverlap}},
-  \code{\link{removeDuplicateTranscripts}},
-  \code{\link{removeSameExon}}
+Other gtf manipulation: 
+\code{\link{UTR2UTR53}()},
+\code{\link{exonsToTranscripts}()},
+\code{\link{removeDuplicateTranscripts}()},
+\code{\link{removeSameExon}()}
 }
 \author{
 Beth Signal

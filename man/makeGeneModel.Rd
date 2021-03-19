@@ -16,13 +16,15 @@ data.frame of a gene model for visualisation
 Convert GRanges gene model to data.frame for visualisation with Gviz
 }
 \examples{
-gtf <- rtracklayer::import(system.file("extdata", "example_gtf.gtf",
-package="GeneStructureTools"))
-transcript <- gtf[gtf$type=="exon" & gtf$gene_name=="Neurl1a"]
+gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf",
+    package = "GeneStructureTools"
+))
+transcript <- gtf[gtf$type == "exon" & gtf$gene_name == "Tmem208"]
 geneModel <- makeGeneModel(transcript)
 }
 \seealso{
-Other Gviz gene structure visualisation: \code{\link{annotateGeneModel}}
+Other Gviz gene structure visualisation: 
+\code{\link{annotateGeneModel}()}
 }
 \author{
 Beth Signal

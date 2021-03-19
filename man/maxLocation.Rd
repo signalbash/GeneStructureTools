@@ -22,20 +22,22 @@ Find the largest distance between two vectors of numbers
 Helper function for get_orfs
 }
 \examples{
-starts <- c(1,10,15,25)
-stops <- c(4,16,50,55)
+starts <- c(1, 10, 15, 25)
+stops <- c(4, 16, 50, 55)
 # longest start site = 25, longest stop site = 50
 maxLocation(starts, stops, longest = 1)
-starts <- c(1,10,15,25)
-stops <- c(4,14,50,55)
+starts <- c(1, 10, 15, 25)
+stops <- c(4, 14, 50, 55)
 # longest start site = 15, longest stop site = 50
 maxLocation(starts, stops, longest = 1)
 # 2nd longest start site = 10, 2nd longest stop site = 14
 maxLocation(starts, stops, longest = 2)
 }
 \seealso{
-Other ORF annotation: \code{\link{getOrfs}},
-  \code{\link{getUOrfs}}, \code{\link{orfSimilarity}}
+Other ORF annotation: 
+\code{\link{getOrfs}()},
+\code{\link{getUOrfs}()},
+\code{\link{orfSimilarity}()}
 }
 \author{
 Beth Signal

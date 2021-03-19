@@ -17,23 +17,21 @@ Removes Structural duplicates of transcripts in a GRanges object
 Note that duplicates must have different transcript ids.
 }
 \examples{
-gtf <- rtracklayer::import(system.file("extdata","example_gtf.gtf",
-package = "GeneStructureTools"))
-exons <- gtf[gtf$type=="exon"]
+gtf <- rtracklayer::import(system.file("extdata", "gencode.vM25.small.gtf", package = "GeneStructureTools"))
+exons <- gtf[gtf$type == "exon"]
 exons.altName <- exons
-exons.altName$transcript_id <- paste(exons.altName$transcript_id, "duplicated", sep="_")
+exons.altName$transcript_id <- paste(exons.altName$transcript_id, "duplicated", sep = "_")
 exons.duplicated <- c(exons, exons.altName)
 length(exons.duplicated)
 exons.deduplicated <- removeDuplicateTranscripts(exons.duplicated)
 length(exons.deduplicated)
 }
 \seealso{
-Other gtf manipulation: \code{\link{UTR2UTR53}},
-  \code{\link{addBroadTypes}},
-  \code{\link{exonsToTranscripts}},
-  \code{\link{filterGtfOverlap}},
-  \code{\link{removeSameExon}},
-  \code{\link{reorderExonNumbers}}
+Other gtf manipulation: 
+\code{\link{UTR2UTR53}()},
+\code{\link{exonsToTranscripts}()},
+\code{\link{removeSameExon}()},
+\code{\link{reorderExonNumbers}()}
 }
 \author{
 Beth Signal
