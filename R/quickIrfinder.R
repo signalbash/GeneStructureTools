@@ -117,7 +117,7 @@ irfTranscriptChangeSummary <- function(irfDataSet,
 
     orfChanges.RI <- transcriptChangeSummary(isoforms.RI[isoforms.RI$set == "retained_intron"],
         isoforms.RI[isoforms.RI$set == "spliced_intron"],
-        BSgenome = BSgenome, NMD = NMD, exportGTF = NULL, dataSet = irfDataSet
+        BSgenome = BSgenome, NMD = NMD, exportGTF = exportGTF, dataSet = irfDataSet
     )
 
     irf.signif <- irfResults(irfDataSet)
