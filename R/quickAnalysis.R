@@ -538,35 +538,3 @@ leafcutterTranscriptChangeSummary <- function(leafcutterEvents,
 
     return(leafcutterEvents.withORF)
 }
-################ FUCK
-
-readRMATS <- function(directory,
-                      type = "JC") {
-    RMATSEventTypes <- c("SE", "MXE", "RI", "A3SS", "A5SS")
-    RMATSFileList <- paste0(RMATSEventTypes, ".MATS.", type, ".txt")
-
-    allFiles <- list.files(directory, full.names = TRUE)
-    diffSpliceFiles <- allFiles[basename(allFiles) %in% RMATSFileList]
-
-    if (length(diffSpliceFiles) == 0) {
-        stop("no RMATs files in the specified directory")
-    } else if (!all(RMATSFileList %in% basename(diffSpliceFiles))) {
-        for (f in RMATSFileList[which(!(RMATSFileList %in% basename(diffSpliceFiles)))]) {
-            message(paste0("Can't find file: ", f, " please check if this file should exist in the directory"))
-        }
-    }
-
-    diffSplice.SE <- fread(diffSpliceFiles[basename(diffSpliceFiles) == RMATSFileList[RMATSEventTypes == "SE"]], header = TRUE, data.table = FALSE)
-    diffSplice.MXE <- fread(diffSpliceFiles[basename(diffSpliceFiles) == RMATSFileList[RMATSEventTypes == "MXE"]], header = TRUE, data.table = FALSE)
-    diffSplice.RI <- fread(diffSpliceFiles[basename(diffSpliceFiles) == RMATSFileList[RMATSEventTypes == "RI"]], header = TRUE, data.table = FALSE)
-    diffSplice.A3SS <- fread(diffSpliceFiles[basename(diffSpliceFiles) == RMATSFileList[RMATSEventTypes == "A3SS"]], header = TRUE, data.table = FALSE)
-    diffSplice.A5SS <- fread(diffSpliceFiles[basename(diffSpliceFiles) == RMATSFileList[RMATSEventTypes == "A5SS"]], header = TRUE, data.table = FALSE)
-
-    rMATSEvents <- plyr::rbind.fill(
-        cbind(diffSplice.SE, event = "SE"),
-        cbind(diffSplice.MXE, event = "MXE"),
-        cbind(diffSplice.RI, event = "RI"),
-        cbind(diffSplice.A3SS, event = "A3SS"),
-        cbind(diffSplice.A5SS, event = "A5SS")
-    )
-}
