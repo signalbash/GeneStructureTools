@@ -301,7 +301,7 @@ replaceJunction <- function(whippetDataSet, junctionPairs, exons, type = NA) {
 
         # all combinations of transcripts + junctions
         tidTable <- data.frame(
-            from_index = rep(seq_along(length(junctionPairs)),
+            from_index = rep(seq_along(junctionPairs),
                 each = length(tids)
             ),
             to_transcript_id = rep(
