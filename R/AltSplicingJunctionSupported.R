@@ -265,6 +265,10 @@ findJunctionPairs <- function(whippetDataSet, type = NA) {
 #' wds.altLast <- filterWhippetEvents(wds, eventTypes = "AL", psiDelta = 0.1, probability = 0.8)
 #' jncPairs.altLast <- findJunctionPairs(wds.altLast, type = "AL")
 #' transcripts.altLast <- replaceJunction(wds.altLast, jncPairs.altLast, exons, type = "AL")
+#'
+#'
+altTranscripts <- replaceJunction(whippetDataSet = wds.aa, junctionPairs = junctionPairs.aa, exons, type="AA")
+
 replaceJunction <- function(whippetDataSet, junctionPairs, exons, type = NA) {
     junctionPairs$type <- type
     range <- junctionPairs
