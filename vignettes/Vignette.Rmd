@@ -44,14 +44,13 @@ GeneStructureTools currently has functions for processing data from:
 
 **Data Preparation**
 
-We have pre-prepared data from mouse embryonic stem cell (ESC) development (Gloss et. al, 2017, Accession Number [GSE75028](https://www.ebi.ac.uk/ena/data/view/PRJNA302257)), at days 0 (0 hours) and 2 (48 hours), and run whippet on each replicate using the recommended parameters and the Gencode vM14 annotation.
-You can download the whippet, leafcutter, rMATS and IRFinder files [here](https://drive.google.com/open?id=0BxH-QCp3c0OVZXpQMDNFVUlwWDA).
+We have pre-prepared data from mouse embryonic stem cell (ESC) development (Gloss et. al, 2017, Accession Number [GSE75028](https://www.ebi.ac.uk/ena/data/view/PRJNA302257)), at days 0 (0 hours) and 2 (48 hours), and run whippet on each replicate using the recommended parameters and the Gencode vM25 annotation.
 
-You will also need to download the Gencode GTF file from [here](http://www.gencodegenes.org/mouse_releases/14.html).
+You will also need to download the Gencode GTF file from [here](http://www.gencodegenes.org/mouse_releases/25.html).
 
 For the purposes of this vignette, small subsets of these data are available in the package data (inst/extdata).
 
-Data provided is typical output for leafcutter, Whippet, rMATS, and IRFinder. For details on what each file contains, please refer to their respective manuals ( [leafcutter](http://davidaknowles.github.io/leafcutter/index.html) | [Whippet](https://github.com/timbitz/Whippet.jl) ).
+Data provided is typical output for leafcutter, Whippet, rMATS, and IRFinder. For details on what each file contains, please refer to their respective manuals ( [leafcutter](http://davidaknowles.github.io/leafcutter/index.html) | [Whippet](https://github.com/timbitz/Whippet.jl) | [rMATS](https://github.com/Xinglab/rmats-turbo) | [IRFinder](https://github.com/williamritchie/IRFinder)).
 
 ## Setup
 
@@ -175,7 +174,7 @@ intron_results <- read.delim(leafcutter_files, stringsAsFactors=FALSE)
 ```
 
 **Summarise changes in gene structures due to splicing**
-Leafcutter results files can be filtered manually prior to this step, otherwise leafcutterTranscriptChangeSummary() allows filtering by FDR. We highly reccomend this step as leafcutter modelling is not straightfoward and thus can take a very long time. We also include the ability to display a progressBar to estimate run times.
+Leafcutter results files can be filtered manually prior to this step, otherwise leafcutterTranscriptChangeSummary() allows filtering by FDR. We highly recommend this step as leafcutter modeling is not straightforward and thus can take a very long time. We also include the ability to display a progressBar to estimate run times.
 ```{r leafcutterSummary}
 # check for changes in gene/transcript structure
 leafcutter_summary <- leafcutterTranscriptChangeSummary(intron_results, 
@@ -191,7 +190,7 @@ head(leafcutter_summary[!duplicated(leafcutter_summary$cluster),])
 
 # rMATS turbo 4.0
 ## Quick analysis
-In the rMATS turbo output folder, there are two versions of the final output: [AS_Event].MATS.JC.txt and [AS_Event].MATS.JCEC.txt. "JC" uses reads that span junctions, whereas "JCEC" uses both reads spanning junctions and within exons. These will have different final results in terms of FDR and cahange is PSI, and only one type can be processed at a time by GeneStructureTools. By default this is "JC"
+In the rMATS turbo output folder, there are two versions of the final output: [AS_Event].MATS.JC.txt and [AS_Event].MATS.JCEC.txt. "JC" uses reads that span junctions, whereas "JCEC" uses both reads spanning junctions and within exons. These will have different final results in terms of FDR and change is PSI, and only one type can be processed at a time by GeneStructureTools. By default this is "JC"
 
 **Read in rMATS files**
 ```{r readRmats}
@@ -219,7 +218,7 @@ head(rmats_summary)
 
 # IRFinder 
 ## Quick analysis
-Following differential IR analysis, you should get a file comparing intron rentention in two conditions. We will use this as the input for IRFinder modeling. 
+Following differential IR analysis, you should get a file comparing intron retention in two conditions. We will use this as the input for IRFinder modeling. 
 
 **Read in IRFinder files**
 ```{r readIRFinder}
@@ -245,7 +244,7 @@ head(irf_summary)
 ```
 
 # Altering gene and transcript structures
-whippetTranscriptChangeSummary() and rMATSTranscriptChangeSummary() combine several functions for analysing changes in gene structures. While this has been made to simplify analysis from the output of these tools, individual functions can be used on other data sources or manually annotated gene structures.
+whippetTranscriptChangeSummary() and rmatsTranscriptChangeSummary() combine several functions for analysing changes in gene structures. While this has been made to simplify analysis from the output of these tools, individual functions can be used on other data sources or manually annotated gene structures.
 It may also be helpful to run each individual step if you would like to manually investigate changes to genes. 
 
 ## Exon skipping and mutually exlusive exons
@@ -283,7 +282,7 @@ skippedExonTranscripts <- skipExonInTranscript(skippedExons=exons.ce,
                                                match="skip",
                                                whippetDataSet=wds.ce)
 
-## make Gvis models
+## make Gviz models
 # set up for visualisation
 gtr <- GenomeAxisTrack()
 
@@ -329,7 +328,7 @@ diffSplice.SE.signif <- extractEvent(rmats.signif, "SE")
 isoforms.SE <- skipExonByJunction(diffSplice.SE.signif, 
                                   eventType="SE", exons=exons)
 
-## make Gvis models
+## make Gviz models
 # set up for visualisation
 gtr <- GenomeAxisTrack()
 
@@ -372,7 +371,7 @@ diffSplice.MXE.signif <- extractEvent(rmats.signif, "MXE")
 isoforms.MXE <- skipExonByJunction(diffSplice.MXE.signif, 
                                    eventType="MXE", exons=exons)
 
-## make Gvis models
+## make Gviz models
 # Set up for visualisation
 gtr <- GenomeAxisTrack()
 
@@ -448,7 +447,7 @@ geneModelRetained <- GeneRegionTrack(makeGeneModel(
     name="Alternative Isoform", showId=TRUE, fill="#94AFD8",
     transcriptAnnotation="transcript")
 
-# Only the transcript isoforms with exons at the boundries of the retained 
+# Only the transcript isoforms with exons at the boundaries of the retained 
 # intron are used for analysis, and 'novel' isoforms are created by intron 
 # retention
 plotTracks(list(gtr, geneModelAll, geneModelNormal, geneModelRetained), 
@@ -468,7 +467,7 @@ diffSplice.RI.signif <- extractEvent(rmats.signif, "RI")
 
 isoforms.RI <- altIntronRmats(diffSplice.RI.signif,  exons=exons)
 
-## make Gvis models
+## make Gviz models
 # Set up for visualisation
 gtr <- GenomeAxisTrack()
 
@@ -611,7 +610,7 @@ diffSplice.A3SS.signif <- extractEvent(rmats.signif, "A3SS")
 isoforms.A3SS <- altSpliceSiteRmats(diffSplice.A3SS.signif, 
                                     eventType="A3SS", exons=exons)
 
-## make Gvis models
+## make Gviz models
 # Set up for visualisation
 gtr <- GenomeAxisTrack()
 
@@ -650,7 +649,7 @@ diffSplice.A5SS.signif <- extractEvent(rmats.signif, "A5SS")
 isoforms.A5SS <- altSpliceSiteRmats(diffSplice.A5SS.signif, 
                                     eventType="A5SS", exons=exons)
 
-## make Gvis models
+## make Gviz models
 # Set up for visualisation
 gtr <- GenomeAxisTrack()
 
@@ -972,14 +971,14 @@ head(orfs_normal[,-8])
 
 We can also annotate upstream open reading frames for transcripts
 ```{r, upstreamORFs}
-# either as an indivudual data.frame with all uORFs
+# either as an individual data.frame with all uORFs
 upstreamORFs <- getUOrfs(normalTranscripts, BSgenome=g, 
                          orfs=orfs_normal, findExonB=TRUE)
 
 head(upstreamORFs)
 # id: transcript id
 # frame: reading frame for ORIGINAL orf data
-# overlaps_main_orf: is the entire uorf upstream of the main orf (upstream), or is there  some overlap with the main orf (downsteam) - i.e. uORF stop codon is within the main ORF
+# overlaps_main_orf: is the entire uorf upstream of the main orf (upstream), or is there  some overlap with the main orf (downstream) - i.e. uORF stop codon is within the main ORF
 # uorf_length: length of the uorf (in AA)
 # start_site_nt: position (in nt) where the uorf start codon occurs within the transcript
 # stop_site_nt: position (in nt) where the uorf stop codon occurs within the transcript
@@ -1105,10 +1104,10 @@ orfs_normal <- getOrfs(normalTranscripts, BSgenome=g,
                        returnLongestOnly=FALSE, allFrames=TRUE)
 
 orfs_retained <- getOrfs(isoforms.RI[isoforms.RI$set == "retained_intron"],
-                        BSgenome=g, returnLongestOnly=T, allFrames=TRUE)
+                        BSgenome=g, returnLongestOnly=TRUE, allFrames=TRUE)
 
 orfs_spliced <- getOrfs(isoforms.RI[isoforms.RI$set == "spliced_intron"],
-                        BSgenome=g, returnLongestOnly=T, allFrames=TRUE)
+                        BSgenome=g, returnLongestOnly=TRUE, allFrames=TRUE)
 
 
 # annotate UTR/CDS locations
